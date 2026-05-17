@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/demo-fx/cron?key=${CRON_SECRET}",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/investments/cron?key=${CRON_SECRET}",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}

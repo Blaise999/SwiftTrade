@@ -1,0 +1,1658 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Users,
+  Search,
+  Edit,
+  Plus,
+  Minus,
+  DollarSign,
+  Wallet,
+  Shield,
+  CheckCircle,
+  AlertCircle,
+  X,
+  RefreshCw,
+  Copy,
+  Eye,
+  Save,
+  UserX,
+  UserCheck,
+  Lock,
+  Unlock,
+  XCircle,
+  ExternalLink,
+} from 'lucide-react';
+
+import { useAdminAuthStore } from '@/lib/admin-store';
+import { adminService, type User as AdminUser } from '@/lib/services/admin-service';
+
+interface UserData {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+
+  balance_available: number;
+  balance_bonus: number;
+
+  total_deposited: number;
+  total_withdrawn: number;
+
+  role: string;
+  tier: string;
+  tier_level: number;
+  tier_active: boolean;
+  tier_code: string;
+
+  is_active: boolean;
+  kyc_status: string;
+
+  created_at: string;
+  last_login_at?: string | null;
+
+  deposit_address?: string | null;
+  deposit_network?: string | null;
+}
+
+const mockUsers: UserData[] = [
+  {
+    id: '1',
+    email: 'john@example.com',
+    first_name: 'John',
+    last_name: 'Doe',
+    balance_available: 5000,
+    balance_bonus: 100,
+    total_deposited: 6000,
+    total_withdrawn: 1000,
+    role: 'user',
+    tier: 'basic',
+    tier_level: 0,
+    tier_active: false,
+    tier_code: 'basic',
+    is_active: true,
+    kyc_status: 'pending',
+    created_at: '2024-01-15',
+    last_login_at: '2024-01-20',
+    deposit_address: null,
+    deposit_network: null,
+  },
+];
+
+function getStorageToken(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  const ss =
+    window.sessionStorage.getItem('swifttrade_admin_token') ||
+    window.sessionStorage.getItem('admin_token');
+
+  if (ss) return ss;
+
+  const ls =
+    window.localStorage.getItem('swifttrade_admin_token') ||
+    window.localStorage.getItem('admin_token');
+
+  if (ls) {
+    try {
+      window.sessionStorage.setItem('swifttrade_admin_token', ls);
+    } catch {}
+    return ls;
+  }
+
+  return null;
+}
+
+function getAdminToken(admin: any, sessionToken?: string | null): string | null {
+  if (sessionToken) return sessionToken;
+
+  const fromAdmin =
+    admin?.sessionToken ||
+    admin?.session_token ||
+    admin?.token ||
+    admin?.access_token ||
+    admin?.accessToken ||
+    null;
+
+  if (fromAdmin) return fromAdmin;
+
+  return getStorageToken();
+}
+
+export default function AdminUsersPage() {
+  const store: any = useAdminAuthStore();
+  const { admin, isAuthenticated } = store;
+  const sessionToken: string | null = store?.sessionToken ?? store?.token ?? null;
+
+  const token = useMemo(() => getAdminToken(admin, sessionToken), [admin, sessionToken]);
+
+  const [userWallets, setUserWallets] = useState<any[]>([]);
+  const [walletsLoading, setWalletsLoading] = useState(false);
+
+  const [users, setUsers] = useState<UserData[]>(mockUsers);
+  const [loading, setLoading] = useState(true);
+
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showUserDetailModal, setShowUserDetailModal] = useState(false);
+
+  const [editType, setEditType] = useState<'spot' | 'bonus'>('spot');
+  const [editAction, setEditAction] = useState<'add' | 'subtract' | 'set'>('add');
+  const [editAmount, setEditAmount] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [processing, setProcessing] = useState(false);
+
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    currency: '',
+    network: '',
+    address: '',
+    memo: '',
+  });
+  const [selectedWalletType, setSelectedWalletType] = useState('');
+
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [editingAddressValue, setEditingAddressValue] = useState('');
+
+  const [editingDepositAddress, setEditingDepositAddress] = useState(false);
+  const [newDepositAddress, setNewDepositAddress] = useState('');
+  const [depositNote, setDepositNote] = useState('');
+
+  const [kycDetails, setKycDetails] = useState<any | null>(null);
+  const [kycLoading, setKycLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!token) return;
+    try {
+      window.sessionStorage.setItem('swifttrade_admin_token', token);
+    } catch {}
+  }, [token]);
+
+  const apiFetch = async (path: string, init?: RequestInit) => {
+    if (!token) throw new Error('Missing admin token. Please log in again.');
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+      ...(init?.headers as any),
+    };
+
+    if (init?.body && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    const res = await fetch(path, {
+      ...init,
+      headers,
+      cache: 'no-store',
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json?.error || `Request failed (${res.status})`);
+    return json;
+  };
+
+  const loadUsers = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const json = await apiFetch('/api/admin/users');
+      if (Array.isArray(json?.users)) {
+        setUsers(json.users as UserData[]);
+      } else {
+        setUsers([]);
+      }
+    } catch (e: any) {
+      console.error('[AdminUsers] loadUsers error:', e);
+      setUsers(mockUsers);
+      setNotification({ type: 'error', message: e?.message || 'Failed to load users' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUserWallets = async (userId: string) => {
+    if (!userId) return;
+    setWalletsLoading(true);
+    try {
+      const data = await apiFetch(`/api/admin/users/${userId}/deposit-wallets`);
+      setUserWallets(Array.isArray(data?.wallets) ? data.wallets : []);
+    } catch (e: any) {
+      console.error('[AdminUsers] load wallets error:', e);
+      setUserWallets([]);
+    } finally {
+      setWalletsLoading(false);
+    }
+  };
+
+  const loadUserKycDetails = async (userId: string) => {
+    if (!userId) return;
+
+    setKycLoading(true);
+    try {
+      const data = await apiFetch(`/api/admin/users/${userId}/kyc`);
+      setKycDetails(data || null);
+    } catch (e: any) {
+      console.error('[AdminUsers] loadUserKycDetails error:', e);
+      setKycDetails(null);
+      setNotification({
+        type: 'error',
+        message: e?.message || 'Failed to load KYC details',
+      });
+    } finally {
+      setKycLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!token) return;
+    if (admin?.id) adminService.setAdminId(admin.id);
+    void loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [admin?.id, token]);
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      if (statusFilter === 'active' && !user.is_active) return false;
+      if (statusFilter === 'inactive' && user.is_active) return false;
+      if (roleFilter && user.role !== roleFilter) return false;
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        return (
+          user.email.toLowerCase().includes(q) ||
+          (user.first_name?.toLowerCase().includes(q) ?? false) ||
+          (user.last_name?.toLowerCase().includes(q) ?? false)
+        );
+      }
+
+      return true;
+    });
+  }, [users, statusFilter, roleFilter, searchQuery]);
+
+  const openEditModal = (u: UserData) => {
+    setSelectedUser(u);
+    setEditType('spot');
+    setEditAction('add');
+    setEditAmount('');
+    setEditNote('');
+    setShowEditModal(true);
+  };
+
+  const openDetailModal = (u: UserData) => {
+    setSelectedUser(u);
+    setEditingDepositAddress(false);
+    setNewDepositAddress(u.deposit_address || '');
+    setDepositNote('');
+    setShowUserDetailModal(true);
+    setKycDetails(null);
+
+    void Promise.all([loadUserWallets(u.id), loadUserKycDetails(u.id)]);
+  };
+
+  const handleEditBalance = async () => {
+    if (!selectedUser || !editAmount || !editNote) {
+      setNotification({ type: 'error', message: 'Please fill all fields including reason' });
+      return;
+    }
+
+    const amount = parseFloat(editAmount);
+    if (Number.isNaN(amount) || amount <= 0) {
+      setNotification({ type: 'error', message: 'Invalid amount' });
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
+      await apiFetch(`/api/admin/users/${selectedUser.id}/balance`, {
+        method: 'POST',
+        body: JSON.stringify({
+          type: editType,
+          action: editAction,
+          amount,
+          note: editNote,
+        }),
+      });
+
+      setNotification({ type: 'success', message: 'Balance updated successfully' });
+      await loadUsers();
+    } catch (e: any) {
+      console.error('[AdminUsers] edit balance error:', e);
+      setNotification({ type: 'error', message: e?.message || 'Failed to update balance' });
+    } finally {
+      setProcessing(false);
+      setShowEditModal(false);
+      setSelectedUser(null);
+      setEditAmount('');
+      setEditNote('');
+    }
+  };
+
+  const handleToggleUserStatus = async (user: UserData) => {
+    const action = user.is_active ? 'freeze' : 'unfreeze';
+    const reason = `User ${action}d by admin`;
+
+    try {
+      if (user.is_active) await adminService.freezeUser(user.id, reason);
+      else await adminService.unfreezeUser(user.id, reason);
+
+      setNotification({ type: 'success', message: `User ${action}d successfully` });
+      await loadUsers();
+    } catch {
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, is_active: !u.is_active } : u))
+      );
+      setNotification({ type: 'success', message: `User ${action}d locally` });
+    }
+  };
+
+  const handleChangeRole = async (user: UserData, newRole: string) => {
+    try {
+      await adminService.setUserRole(
+        user.id,
+        newRole as AdminUser['role'],
+        `Role changed to ${newRole}`
+      );
+      setNotification({ type: 'success', message: 'User role updated' });
+      await loadUsers();
+    } catch {
+      setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u)));
+      setNotification({ type: 'success', message: 'User role updated locally' });
+    }
+  };
+
+  const handleKycAction = async (userId: string, action: 'approve' | 'reject') => {
+    try {
+      const target = users.find((u) => u.id === userId);
+      const who = target?.email ?? selectedUser?.email ?? 'user';
+
+      if (action === 'approve') {
+        const json = await apiFetch(`/api/admin/kyc/${userId}/approve`, { method: 'POST' });
+
+        const next = String(json?.user?.kyc_status ?? 'verified');
+        setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, kyc_status: next } : u)));
+        if (selectedUser?.id === userId) setSelectedUser({ ...selectedUser, kyc_status: next });
+
+        setNotification({ type: 'success', message: `KYC approved for ${who}` });
+        await loadUserKycDetails(userId);
+      } else {
+        const reason = prompt('Reason for rejection (optional):') || '';
+        const json = await apiFetch(`/api/admin/kyc/${userId}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ reason }),
+        });
+
+        const next = String(json?.user?.kyc_status ?? 'rejected');
+        setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, kyc_status: next } : u)));
+        if (selectedUser?.id === userId) setSelectedUser({ ...selectedUser, kyc_status: next });
+
+        setNotification({ type: 'error', message: `KYC rejected for ${who}` });
+        await loadUserKycDetails(userId);
+      }
+    } catch (e: any) {
+      console.error('[AdminUsers] KYC action error:', e);
+      setNotification({ type: 'error', message: e?.message || 'KYC action failed' });
+    }
+  };
+
+  const handleSaveAddress = async (walletId: string) => {
+    if (!selectedUser || !editingAddressValue.trim()) return;
+    setProcessing(true);
+    try {
+      const wallet = userWallets.find((w: any) => w.id === walletId);
+      if (!wallet) throw new Error('Wallet not found');
+
+      await apiFetch(`/api/admin/users/${selectedUser.id}/deposit-wallets`, {
+        method: 'POST',
+        body: JSON.stringify({
+          currency: wallet.currency,
+          network: wallet.network,
+          address: editingAddressValue.trim(),
+          label: wallet.label,
+        }),
+      });
+
+      setNotification({ type: 'success', message: 'Wallet address updated' });
+      await loadUserWallets(selectedUser.id);
+    } catch (e: any) {
+      setNotification({ type: 'error', message: e?.message || 'Failed to update wallet' });
+    } finally {
+      setProcessing(false);
+      setEditingAddressId(null);
+      setEditingAddressValue('');
+    }
+  };
+
+  const handleAddNewAddress = async () => {
+    if (!selectedUser) return;
+    if (!newAddress.currency || !newAddress.network || !newAddress.address) return;
+
+    setProcessing(true);
+    try {
+      await apiFetch(`/api/admin/users/${selectedUser.id}/deposit-wallets`, {
+        method: 'POST',
+        body: JSON.stringify({
+          currency: newAddress.currency.toUpperCase(),
+          network: newAddress.network.toUpperCase(),
+          address: newAddress.address.trim(),
+          label: newAddress.memo || null,
+        }),
+      });
+
+      setNotification({ type: 'success', message: 'Wallet added successfully' });
+      setNewAddress({ currency: '', network: '', address: '', memo: '' });
+      setSelectedWalletType('');
+      await loadUserWallets(selectedUser.id);
+    } catch (e: any) {
+      setNotification({ type: 'error', message: e?.message || 'Failed to add wallet' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleDeleteWallet = async (walletId: string) => {
+    if (!selectedUser) return;
+    if (!confirm('Delete this wallet address?')) return;
+
+    setProcessing(true);
+    try {
+      await apiFetch(`/api/admin/users/${selectedUser.id}/deposit-wallets?wallet_id=${walletId}`, {
+        method: 'DELETE',
+      });
+
+      setNotification({ type: 'success', message: 'Wallet deleted' });
+      await loadUserWallets(selectedUser.id);
+    } catch (e: any) {
+      setNotification({ type: 'error', message: e?.message || 'Failed to delete wallet' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const walletPresets = [
+    { label: 'BTC (Bitcoin)', currency: 'BTC', network: 'BTC' },
+    { label: 'USDT (TRC20)', currency: 'USDT', network: 'TRC20' },
+    { label: 'ETH (Ethereum)', currency: 'ETH', network: 'ERC20' },
+  ];
+
+  const handlePresetChange = (value: string) => {
+    const preset = walletPresets.find((p) => p.label === value);
+    if (preset) {
+      setNewAddress({
+        ...newAddress,
+        currency: preset.currency,
+        network: preset.network,
+      });
+    }
+    setSelectedWalletType(value);
+  };
+
+  const copyToClipboard = (text: string) => {
+    void navigator.clipboard.writeText(text);
+    setNotification({ type: 'success', message: 'Copied to clipboard' });
+  };
+
+  const displayName = (u: UserData) =>
+    `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email;
+
+  const kycLabel = (s: string) => {
+    const v = String(s || '').toLowerCase();
+    if (v === 'approved') return 'verified';
+    return v || 'none';
+  };
+
+  const formatKycKey = (key: string) =>
+    key
+      .replace(/_/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/\b\w/g, (m) => m.toUpperCase());
+
+  const renderKycValue = (value: any) => {
+    if (value === null || value === undefined || value === '') return '—';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (typeof value === 'object') return JSON.stringify(value, null, 2);
+    return String(value);
+  };
+
+  if (!isAuthenticated || !admin) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-slate-400">Please log in to access this page.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`fixed top-4 right-4 z-50 p-4 rounded-xl flex items-center gap-3 ${
+              notification.type === 'success'
+                ? 'bg-profit/20 border border-profit/30'
+                : 'bg-loss/20 border border-loss/30'
+            }`}
+          >
+            {notification.type === 'success' ? (
+              <CheckCircle className="w-5 h-5 text-profit" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-loss" />
+            )}
+            <span className={notification.type === 'success' ? 'text-profit' : 'text-loss'}>
+              {notification.message}
+            </span>
+            <button onClick={() => setNotification(null)} className="ml-2">
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-cream">User Management</h1>
+          <p className="text-slate-400 mt-1">
+            Manage user accounts, balances, and deposit addresses
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={loadUsers}
+            className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-400 rounded-lg hover:bg-white/10 transition-all"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button
+            onClick={() => {
+              if (!selectedUser) {
+                setNotification({
+                  type: 'error',
+                  message: 'Select a user first (click the eye icon on a user row)',
+                });
+                return;
+              }
+              void loadUserWallets(selectedUser.id);
+              setShowAddressModal(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-gold text-void font-semibold rounded-lg hover:bg-gold/90 transition-all"
+          >
+            <Wallet className="w-4 h-4" />
+            Manage Wallets
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-electric/20 to-electric/5 rounded-xl border border-electric/20 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-electric/20 rounded-lg">
+              <Users className="w-5 h-5 text-electric" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Total Users</p>
+              <p className="text-xl font-bold text-cream">{users.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-profit/20 to-profit/5 rounded-xl border border-profit/20 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-profit/20 rounded-lg">
+              <UserCheck className="w-5 h-5 text-profit" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Active</p>
+              <p className="text-xl font-bold text-cream">
+                {users.filter((u) => u.is_active).length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-loss/20 to-loss/5 rounded-xl border border-loss/20 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-loss/20 rounded-lg">
+              <UserX className="w-5 h-5 text-loss" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Frozen</p>
+              <p className="text-xl font-bold text-cream">
+                {users.filter((u) => !u.is_active).length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-gold/20 to-gold/5 rounded-xl border border-gold/20 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gold/20 rounded-lg">
+              <Shield className="w-5 h-5 text-gold" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">KYC Verified</p>
+              <p className="text-xl font-bold text-cream">
+                {users.filter((u) => kycLabel(u.kyc_status) === 'verified').length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by email or name..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-slate-500 focus:outline-none focus:border-gold"
+          />
+        </div>
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream focus:outline-none focus:border-gold"
+        >
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Frozen</option>
+        </select>
+
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream focus:outline-none focus:border-gold"
+        >
+          <option value="">All Roles</option>
+          <option value="user">User</option>
+          <option value="support">Support</option>
+          <option value="admin">Admin</option>
+          <option value="super_admin">Super Admin</option>
+        </select>
+      </div>
+
+      <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-xs text-slate-400 border-b border-white/5">
+                <th className="text-left p-4">User</th>
+                <th className="text-right p-4">Spot</th>
+                <th className="text-right p-4">Bonus</th>
+                <th className="text-right p-4">Deposited</th>
+                <th className="text-center p-4">Role</th>
+                <th className="text-center p-4">KYC</th>
+                <th className="text-center p-4">Deposit Address</th>
+                <th className="text-center p-4">Status</th>
+                <th className="text-center p-4">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={9} className="p-8 text-center text-slate-400">
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                    Loading users...
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="p-8 text-center text-slate-400">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => {
+                  const kyc = kycLabel(user.kyc_status);
+
+                  return (
+                    <tr key={user.id} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="p-4">
+                        <div>
+                          <p className="text-cream font-medium">{displayName(user)}</p>
+                          <p className="text-sm text-slate-400">{user.email}</p>
+                        </div>
+                      </td>
+
+                      <td className="p-4 text-right">
+                        <span className="text-cream font-mono">
+                          $
+                          {(user.balance_available ?? 0).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </td>
+
+                      <td className="p-4 text-right">
+                        <span className="text-gold font-mono">
+                          $
+                          {(user.balance_bonus ?? 0).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </td>
+
+                      <td className="p-4 text-right">
+                        <span className="text-profit font-mono">
+                          $
+                          {(user.total_deposited ?? 0).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </td>
+
+                      <td className="p-4 text-center">
+                        <select
+                          value={user.role}
+                          onChange={(e) => handleChangeRole(user, e.target.value)}
+                          className="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-cream focus:outline-none"
+                        >
+                          <option value="user">User</option>
+                          <option value="support">Support</option>
+                          <option value="admin">Admin</option>
+                          <option value="super_admin">Super Admin</option>
+                        </select>
+                      </td>
+
+                      <td className="p-4 text-center">
+                        <span
+                          className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                            kyc === 'verified'
+                              ? 'bg-profit/20 text-profit'
+                              : kyc === 'pending'
+                              ? 'bg-gold/20 text-gold'
+                              : kyc === 'rejected'
+                              ? 'bg-loss/20 text-loss'
+                              : 'bg-white/10 text-slate-400'
+                          }`}
+                        >
+                          {kyc.toUpperCase()}
+                        </span>
+                      </td>
+
+                      <td className="p-4 text-center">
+                        <span className="text-sm font-mono text-cream">
+                          {user.deposit_address
+                            ? `${user.deposit_address.slice(0, 6)}...${user.deposit_address.slice(-4)}`
+                            : 'None'}
+                        </span>
+                      </td>
+
+                      <td className="p-4 text-center">
+                        <span
+                          className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                            user.is_active ? 'bg-profit/20 text-profit' : 'bg-loss/20 text-loss'
+                          }`}
+                        >
+                          {user.is_active ? 'ACTIVE' : 'FROZEN'}
+                        </span>
+                      </td>
+
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => openDetailModal(user)}
+                            className="p-1.5 bg-white/5 text-slate-400 rounded-lg hover:bg-white/10 transition-all"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => openEditModal(user)}
+                            className="p-1.5 bg-gold/10 text-gold rounded-lg hover:bg-gold/20 transition-all"
+                            title="Edit Balance"
+                          >
+                            <DollarSign className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => handleToggleUserStatus(user)}
+                            className={`p-1.5 rounded-lg transition-all ${
+                              user.is_active
+                                ? 'bg-loss/10 text-loss hover:bg-loss/20'
+                                : 'bg-profit/10 text-profit hover:bg-profit/20'
+                            }`}
+                            title={user.is_active ? 'Freeze User' : 'Unfreeze User'}
+                          >
+                            {user.is_active ? (
+                              <Lock className="w-4 h-4" />
+                            ) : (
+                              <Unlock className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showUserDetailModal && selectedUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-void/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-charcoal rounded-2xl border border-white/10 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-xl font-semibold text-cream">User Details</h3>
+                <button
+                  onClick={() => {
+                    setShowUserDetailModal(false);
+                    setKycDetails(null);
+                  }}
+                  className="p-2 hover:bg-white/10 rounded-lg"
+                >
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <p className="text-cream font-medium">{displayName(selectedUser)}</p>
+                  <p className="text-sm text-slate-400">{selectedUser.email}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-slate-400">Spot</p>
+                    <p className="text-cream font-mono">
+                      ${(selectedUser.balance_available ?? 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-slate-400">Bonus</p>
+                    <p className="text-gold font-mono">
+                      ${(selectedUser.balance_bonus ?? 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-slate-400">Deposited</p>
+                    <p className="text-profit font-mono">
+                      ${(selectedUser.total_deposited ?? 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-slate-400">Withdrawn</p>
+                    <p className="text-loss font-mono">
+                      ${(selectedUser.total_withdrawn ?? 0).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl text-sm text-slate-300 space-y-1">
+                  <p>
+                    <span className="text-slate-400">Role:</span> {selectedUser.role}
+                  </p>
+                  <p>
+                    <span className="text-slate-400">Tier:</span>{' '}
+                    {selectedUser.tier_code || selectedUser.tier || 'basic'} (Level{' '}
+                    {selectedUser.tier_level ?? 0}){' '}
+                    {selectedUser.tier_active ? (
+                      <span className="text-profit">● Active</span>
+                    ) : (
+                      <span className="text-slate-500">● Inactive</span>
+                    )}
+                  </p>
+                  <p>
+                    <span className="text-slate-400">KYC:</span>{' '}
+                    <span
+                      className={
+                        kycLabel(selectedUser.kyc_status) === 'verified'
+                          ? 'text-profit font-medium'
+                          : kycLabel(selectedUser.kyc_status) === 'pending'
+                          ? 'text-yellow-400 font-medium'
+                          : kycLabel(selectedUser.kyc_status) === 'rejected'
+                          ? 'text-loss font-medium'
+                          : ''
+                      }
+                    >
+                      {kycLabel(selectedUser.kyc_status).toUpperCase()}
+                    </span>
+                  </p>
+                  <p>
+                    <span className="text-slate-400">Status:</span>{' '}
+                    {selectedUser.is_active ? 'active' : 'frozen'}
+                  </p>
+                  <p>
+                    <span className="text-slate-400">Created:</span>{' '}
+                    {selectedUser.created_at}
+                  </p>
+                  <p>
+                    <span className="text-slate-400">Last login:</span>{' '}
+                    {selectedUser.last_login_at ?? '—'}
+                  </p>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-slate-400">Deposit Address</p>
+                    {!editingDepositAddress ? (
+                      <button
+                        onClick={() => setEditingDepositAddress(true)}
+                        className="p-1.5 bg-gold/10 text-gold rounded-lg hover:bg-gold/20 transition-all"
+                        title="Edit Deposit Address"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            if (!newDepositAddress.trim()) {
+                              setNotification({ type: 'error', message: 'Invalid address' });
+                              return;
+                            }
+                            setProcessing(true);
+                            try {
+                              await apiFetch(`/api/admin/users/${selectedUser.id}/deposit-address`, {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                  newAddress: newDepositAddress,
+                                  note: depositNote,
+                                }),
+                              });
+                              setNotification({
+                                type: 'success',
+                                message: 'Deposit address updated successfully',
+                              });
+                              await loadUsers();
+                              setSelectedUser({
+                                ...selectedUser,
+                                deposit_address: newDepositAddress,
+                              });
+                              setEditingDepositAddress(false);
+                            } catch (e: any) {
+                              setNotification({
+                                type: 'error',
+                                message: e.message || 'Failed to update address',
+                              });
+                            } finally {
+                              setProcessing(false);
+                            }
+                          }}
+                          className="p-1.5 bg-profit/20 text-profit rounded-lg hover:bg-profit/30"
+                          title="Save"
+                        >
+                          <Save className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingDepositAddress(false);
+                            setNewDepositAddress(selectedUser.deposit_address || '');
+                            setDepositNote('');
+                          }}
+                          className="p-1.5 bg-loss/20 text-loss rounded-lg hover:bg-loss/30"
+                          title="Cancel"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {!editingDepositAddress ? (
+                    <p className="text-sm text-cream font-mono">
+                      {selectedUser.deposit_address || 'Not set'}
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={newDepositAddress}
+                        onChange={(e) => setNewDepositAddress(e.target.value)}
+                        placeholder="Enter new wallet address"
+                        className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-slate-500 focus:outline-none focus:border-gold"
+                      />
+                      <input
+                        type="text"
+                        value={depositNote}
+                        onChange={(e) => setDepositNote(e.target.value)}
+                        placeholder="Reason for change (optional)"
+                        className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-slate-500 focus:outline-none focus:border-gold"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-slate-400">Deposit Wallets (Per Currency)</p>
+                    <button
+                      onClick={() => setShowAddressModal(true)}
+                      className="p-1.5 bg-gold/10 text-gold rounded-lg hover:bg-gold/20 transition-all text-xs flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" /> Add Wallet
+                    </button>
+                  </div>
+
+                  {walletsLoading ? (
+                    <p className="text-xs text-slate-500">Loading wallets…</p>
+                  ) : userWallets.length === 0 ? (
+                    <p className="text-xs text-slate-500">No per-currency wallets set.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {userWallets.map((w: any) => (
+                        <div
+                          key={w.id}
+                          className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-semibold text-cream">{w.currency}</span>
+                            <span className="text-xs text-slate-500 ml-1">({w.network})</span>
+                            {w.label && (
+                              <span className="text-xs text-slate-400 ml-2">{w.label}</span>
+                            )}
+                            <p className="text-xs font-mono text-slate-300 truncate mt-0.5">
+                              {w.address}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 ml-2 shrink-0">
+                            <button
+                              onClick={() => {
+                                setEditingAddressId(w.id);
+                                setEditingAddressValue(w.address);
+                              }}
+                              className="p-1 hover:bg-white/10 rounded"
+                              title="Edit"
+                            >
+                              <Edit className="w-3 h-3 text-slate-400" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteWallet(w.id)}
+                              className="p-1 hover:bg-loss/20 rounded"
+                              title="Delete"
+                            >
+                              <X className="w-3 h-3 text-loss" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {editingAddressId && userWallets.some((w: any) => w.id === editingAddressId) && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editingAddressValue}
+                        onChange={(e) => setEditingAddressValue(e.target.value)}
+                        className="flex-1 px-3 py-2 bg-white/5 border border-gold rounded-lg text-cream text-xs font-mono focus:outline-none"
+                        placeholder="New address"
+                      />
+                      <button
+                        onClick={() => handleSaveAddress(editingAddressId)}
+                        className="p-1.5 bg-profit/20 text-profit rounded-lg hover:bg-profit/30"
+                      >
+                        <Save className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingAddressId(null);
+                          setEditingAddressValue('');
+                        }}
+                        className="p-1.5 bg-loss/20 text-loss rounded-lg hover:bg-loss/30"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-slate-400">KYC Submission</p>
+                    {kycLoading ? (
+                      <span className="text-xs text-slate-500">Loading…</span>
+                    ) : (
+                      <span
+                        className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                          kycLabel(selectedUser.kyc_status) === 'verified'
+                            ? 'bg-profit/20 text-profit'
+                            : kycLabel(selectedUser.kyc_status) === 'pending'
+                            ? 'bg-gold/20 text-gold'
+                            : kycLabel(selectedUser.kyc_status) === 'rejected'
+                            ? 'bg-loss/20 text-loss'
+                            : 'bg-white/10 text-slate-400'
+                        }`}
+                      >
+                        {kycLabel(selectedUser.kyc_status).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  {kycLoading ? (
+                    <p className="text-sm text-slate-500">Fetching KYC details…</p>
+                  ) : !kycDetails ? (
+                    <p className="text-sm text-slate-500">No KYC details found.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {Object.entries(kycDetails.kyc_data || {}).map(([key, value]) => (
+                          <div key={key} className="bg-white/5 rounded-lg p-3">
+                            <p className="text-xs text-slate-400">{formatKycKey(key)}</p>
+                            <p className="text-cream break-words whitespace-pre-wrap">
+                              {renderKycValue(value)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="bg-white/5 rounded-lg p-3 text-sm text-slate-300 space-y-1">
+                        <p>
+                          <span className="text-slate-400">Submitted At:</span>{' '}
+                          {kycDetails.user?.kyc_submitted_at || '—'}
+                        </p>
+                        <p>
+                          <span className="text-slate-400">Reviewed At:</span>{' '}
+                          {kycDetails.user?.kyc_reviewed_at || '—'}
+                        </p>
+                        <p>
+                          <span className="text-slate-400">KYC Level:</span>{' '}
+                          {kycDetails.user?.kyc_level ?? '—'}
+                        </p>
+                        <p>
+                          <span className="text-slate-400">Rejection Reason:</span>{' '}
+                          {kycDetails.user?.kyc_rejection_reason || '—'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-slate-400">KYC Documents</p>
+                  </div>
+
+                  {kycLoading ? (
+                    <p className="text-sm text-slate-500">Loading documents…</p>
+                  ) : !kycDetails?.documents?.length ? (
+                    <p className="text-sm text-slate-500">No uploaded documents found.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {kycDetails.documents.map((doc: any) => {
+                        const link = doc.resolved_url || null;
+
+                        return (
+                          <div
+                            key={doc.id}
+                            className="p-3 bg-white/5 border border-white/10 rounded-xl"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-cream">
+                                  {doc.document_type || 'Document'}
+                                </p>
+
+                                <p className="text-xs text-slate-400 mt-1 truncate">
+                                  {doc.file_name || 'Unnamed file'}
+                                </p>
+
+                                <p className="text-xs text-slate-500 mt-1">
+                                  {doc.mime_type || 'unknown mime'} • {doc.status || 'pending'}
+                                </p>
+
+                                <p className="text-xs text-slate-500 mt-1">
+                                  Uploaded: {doc.created_at || '—'}
+                                </p>
+
+                                {doc.rejection_reason ? (
+                                  <p className="text-xs text-loss mt-1">
+                                    Reason: {doc.rejection_reason}
+                                  </p>
+                                ) : null}
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {link ? (
+                                  <>
+                                    <a
+                                      href={link}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-2 px-3 py-2 bg-gold/10 text-gold rounded-lg hover:bg-gold/20 transition-all text-sm"
+                                      title="Open document"
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                      Open
+                                    </a>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => copyToClipboard(link)}
+                                      className="inline-flex items-center gap-2 px-3 py-2 bg-white/5 text-slate-300 rounded-lg hover:bg-white/10 transition-all text-sm"
+                                      title="Copy link"
+                                    >
+                                      <Copy className="w-4 h-4" />
+                                      Copy
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span className="text-xs text-loss">No URL</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {(kycLabel(selectedUser.kyc_status) === 'pending' ||
+                  kycLabel(selectedUser.kyc_status) === 'rejected' ||
+                  kycLabel(selectedUser.kyc_status) === 'none') && (
+                  <div className="p-3 bg-yellow-500/5 rounded-xl border border-yellow-500/10">
+                    <p className="text-xs text-yellow-400 font-medium mb-3">
+                      {kycLabel(selectedUser.kyc_status) === 'pending'
+                        ? '⏳ KYC Pending Review'
+                        : '🔑 KYC Actions'}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleKycAction(selectedUser.id, 'approve')}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-profit/20 text-profit text-sm font-semibold rounded-lg hover:bg-profit/30 transition-all border border-profit/20"
+                      >
+                        <CheckCircle className="w-4 h-4" /> Approve KYC
+                      </button>
+
+                      {kycLabel(selectedUser.kyc_status) !== 'rejected' && (
+                        <button
+                          onClick={() => handleKycAction(selectedUser.id, 'reject')}
+                          className="flex-1 flex items-center justify-center gap-2 py-2 bg-loss/20 text-loss text-sm font-semibold rounded-lg hover:bg-loss/30 transition-all border border-loss/20"
+                        >
+                          <XCircle className="w-4 h-4" /> Reject KYC
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {kycLabel(selectedUser.kyc_status) === 'verified' && (
+                  <div className="p-3 bg-profit/5 rounded-xl border border-profit/10 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-profit" />
+                    <span className="text-sm text-profit font-medium">KYC Verified ✓</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showEditModal && selectedUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-void/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-charcoal rounded-2xl border border-white/10 p-6 max-w-md w-full"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-cream">Edit Balance</h3>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg"
+                >
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <p className="text-sm text-cream font-medium">{displayName(selectedUser)}</p>
+                  <p className="text-xs text-slate-400">{selectedUser.email}</p>
+                  <div className="flex gap-4 mt-2">
+                    <span className="text-xs text-slate-400">
+                      Spot: ${selectedUser.balance_available.toLocaleString()}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      Bonus: ${selectedUser.balance_bonus.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Account Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setEditType('spot')}
+                      className={`p-3 rounded-xl border transition-all ${
+                        editType === 'spot'
+                          ? 'border-gold bg-gold/10 text-gold'
+                          : 'border-white/10 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      Spot
+                    </button>
+                    <button
+                      onClick={() => setEditType('bonus')}
+                      className={`p-3 rounded-xl border transition-all ${
+                        editType === 'bonus'
+                          ? 'border-gold bg-gold/10 text-gold'
+                          : 'border-white/10 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      Bonus
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Action</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => setEditAction('add')}
+                      className={`p-2 rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                        editAction === 'add'
+                          ? 'border-profit bg-profit/10 text-profit'
+                          : 'border-white/10 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add
+                    </button>
+                    <button
+                      onClick={() => setEditAction('subtract')}
+                      className={`p-2 rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                        editAction === 'subtract'
+                          ? 'border-loss bg-loss/10 text-loss'
+                          : 'border-white/10 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      <Minus className="w-4 h-4" />
+                      Subtract
+                    </button>
+                    <button
+                      onClick={() => setEditAction('set')}
+                      className={`p-2 rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                        editAction === 'set'
+                          ? 'border-electric bg-electric/10 text-electric'
+                          : 'border-white/10 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Set
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Amount</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input
+                      type="number"
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-slate-500 focus:outline-none focus:border-gold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Note (for audit)</label>
+                  <input
+                    type="text"
+                    value={editNote}
+                    onChange={(e) => setEditNote(e.target.value)}
+                    placeholder="Reason for adjustment..."
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-slate-500 focus:outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 py-3 bg-white/5 text-slate-400 font-semibold rounded-xl hover:bg-white/10 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEditBalance}
+                    disabled={!editAmount || !editNote || processing}
+                    className="flex-1 py-3 bg-gold text-void font-semibold rounded-xl hover:bg-gold/90 transition-all disabled:opacity-50"
+                  >
+                    {processing ? 'Saving…' : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAddressModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-void/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-charcoal rounded-2xl border border-white/10 p-6 max-w-3xl w-full"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-xl font-semibold text-cream">
+                  {selectedUser ? `Wallets — ${selectedUser.email}` : 'Manage Deposit Addresses'}
+                </h3>
+                <button
+                  onClick={() => setShowAddressModal(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg"
+                >
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+
+              <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-xs text-slate-400 border-b border-white/5">
+                        <th className="text-left p-4">Currency</th>
+                        <th className="text-left p-4">Network</th>
+                        <th className="text-left p-4">Address</th>
+                        <th className="text-center p-4">Status</th>
+                        <th className="text-right p-4">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userWallets.map((addr: any) => (
+                        <tr key={addr.id} className="border-b border-white/5 hover:bg-white/5">
+                          <td className="p-4">
+                            <span className="text-sm font-medium text-cream">{addr.currency}</span>
+                          </td>
+                          <td className="p-4">
+                            <span className="text-sm text-slate-400">{addr.network}</span>
+                          </td>
+                          <td className="p-4">
+                            {editingAddressId === addr.id ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={editingAddressValue}
+                                  onChange={(e) => setEditingAddressValue(e.target.value)}
+                                  className="flex-1 px-3 py-2 bg-white/5 border border-gold rounded text-cream text-sm font-mono focus:outline-none"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => handleSaveAddress(addr.id)}
+                                  className="p-2 bg-profit rounded hover:bg-profit/80"
+                                  title="Save"
+                                >
+                                  <Save className="w-4 h-4 text-void" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingAddressId(null);
+                                    setEditingAddressValue('');
+                                  }}
+                                  className="p-2 bg-loss/20 rounded hover:bg-loss/30"
+                                  title="Cancel"
+                                >
+                                  <X className="w-4 h-4 text-loss" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-mono text-cream">
+                                  {String(addr.address).slice(0, 10)}...{String(addr.address).slice(-8)}
+                                </span>
+                                <button
+                                  onClick={() => copyToClipboard(addr.address)}
+                                  className="p-1 hover:bg-white/10 rounded"
+                                  title="Copy"
+                                >
+                                  <Copy className="w-3 h-3 text-slate-400" />
+                                </button>
+                              </div>
+                            )}
+                            {addr.label ? (
+                              <p className="text-xs text-slate-500 mt-1">Label: {addr.label}</p>
+                            ) : null}
+                          </td>
+                          <td className="p-4 text-center">
+                            <span
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                addr.is_active !== false
+                                  ? 'bg-profit/10 text-profit'
+                                  : 'bg-loss/10 text-loss'
+                              }`}
+                            >
+                              {addr.is_active !== false ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => {
+                                  setEditingAddressId(addr.id);
+                                  setEditingAddressValue(addr.address);
+                                }}
+                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                title="Edit Address"
+                              >
+                                <Edit className="w-4 h-4 text-slate-400" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteWallet(addr.id)}
+                                className="p-2 hover:bg-loss/20 rounded-lg transition-colors"
+                                title="Delete wallet"
+                              >
+                                <X className="w-4 h-4 text-loss" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+
+                      {userWallets.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="p-6 text-center text-slate-400">
+                            No deposit addresses yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <label className="block text-sm text-slate-400">Select Wallet Type (Preset)</label>
+                <select
+                  value={selectedWalletType}
+                  onChange={(e) => handlePresetChange(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-cream focus:outline-none focus:border-gold"
+                >
+                  <option value="">Custom</option>
+                  {walletPresets.map((preset) => (
+                    <option key={preset.label} value={preset.label}>
+                      {preset.label}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-slate-500 focus:outline-none focus:border-gold uppercase"
+                  placeholder="Currency (e.g., BTC)"
+                  value={newAddress.currency}
+                  onChange={(e) =>
+                    setNewAddress((p) => ({ ...p, currency: e.target.value.toUpperCase() }))
+                  }
+                />
+                <input
+                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-slate-500 focus:outline-none focus:border-gold"
+                  placeholder="Network (e.g., TRC20)"
+                  value={newAddress.network}
+                  onChange={(e) => setNewAddress((p) => ({ ...p, network: e.target.value }))}
+                />
+                <input
+                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-slate-500 focus:outline-none focus:border-gold font-mono"
+                  placeholder="Wallet address"
+                  value={newAddress.address}
+                  onChange={(e) => setNewAddress((p) => ({ ...p, address: e.target.value }))}
+                />
+                <input
+                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-slate-500 focus:outline-none focus:border-gold"
+                  placeholder="Memo (optional)"
+                  value={newAddress.memo}
+                  onChange={(e) => setNewAddress((p) => ({ ...p, memo: e.target.value }))}
+                />
+                <button
+                  onClick={handleAddNewAddress}
+                  disabled={!newAddress.currency || !newAddress.network || !newAddress.address}
+                  className="w-full py-3 bg-gold text-void font-semibold rounded-xl hover:bg-gold/90 transition-all disabled:opacity-50"
+                >
+                  Add New Wallet
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
