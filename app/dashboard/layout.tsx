@@ -45,10 +45,9 @@ const navigation = [
     children: [
       { name: 'Cryptocurrency', href: '/dashboard/trade/crypto', icon: Bitcoin },
       { name: 'Forex', href: '/dashboard/trade/fx', icon: DollarSign },
-      { name: 'Stocks', href: '/dashboard/trade/stocks', icon: BarChart3 },
     ],
   },
-  { name: 'Invest', href: '/dashboard/invest', icon: TrendingUp, badge: 'NEW' },
+  { name: 'Stocks & ETFs', href: '/dashboard/invest', icon: TrendingUp, badge: 'NEW' },
   { name: 'SwiftBridge', href: '/dashboard/bridge', icon: Globe, badge: 'NEW' },
   { name: 'Portfolio', href: '/dashboard/portfolio', icon: BarChart3 },
   { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },

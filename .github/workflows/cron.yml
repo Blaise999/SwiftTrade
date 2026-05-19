@@ -1,0 +1,33 @@
+name: Swift Trade Cron
+
+# External scheduler that replaces Vercel cron (Hobby plan only allows
+# 2 daily jobs). This calls the master /api/cron/run endpoint.
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   CRON_ENDPOINT  e.g. https://your-domain.com/api/cron/run
+#   CRON_SECRET    same value as the CRON_SECRET env var on the server
+
+on:
+  schedule:
+    # every 5 minutes (GitHub's minimum is 5m; may be delayed under load)
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}   # allow manual "Run workflow" button
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call cron endpoint
+        run: |
+          if [ -z "${{ secrets.CRON_ENDPOINT }}" ]; then
+            echo "CRON_ENDPOINT secret not set"; exit 1
+          fi
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.CRON_ENDPOINT }}")
+          echo "HTTP $code"
+          cat /tmp/out.json
+          # 200 ok, 207 = some job failed but endpoint healthy
+          if [ "$code" != "200" ] && [ "$code" != "207" ]; then
+            exit 1
+          fi
