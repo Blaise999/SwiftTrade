@@ -234,6 +234,26 @@ export default function PortfolioPage() {
   const [shieldMsg, setShieldMsg] = useState('');
   const [openTrades, setOpenTrades] = useState<OpenTrade[]>([]);
   const [tradesLoading, setTradesLoading] = useState(true);
+  const [investValue, setInvestValue] = useState(0);
+  const [investPnl, setInvestPnl] = useState(0);
+  const [investPositions, setInvestPositions] = useState<any[]>([]);
+
+  // Fetch stock/ETF holdings from the invest flow so they count as
+  // portfolio everywhere (totals + allocation + holdings list).
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      try {
+        const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
+        const j = await r.json().catch(() => ({}));
+        if (j?.ok) {
+          setInvestValue(Number(j.totalValue) || 0);
+          setInvestPnl(Number(j.totalPnl) || 0);
+          setInvestPositions(Array.isArray(j.positions) ? j.positions : []);
+        }
+      } catch {/* silent */}
+    })();
+  }, [user?.id]);
 
   // Fetch open FX/stock trades via API (service key, no client auth needed)
   useEffect(() => {
@@ -321,8 +341,9 @@ export default function PortfolioPage() {
   const totalPnL = getTotalUnrealizedPnL();
   const cashBalance = user?.balance || 0;
   const fxValue = openTrades.filter(t => t.market_type === 'fx').reduce((sum, t) => sum + (t.amount || 0), 0);
-  const stocksValue = openTrades.filter(t => t.market_type === 'stocks').reduce((sum, t) => sum + (t.amount || 0), 0);
-  const tradePnL = openTrades.reduce((sum, t) => sum + (t.profit_loss || 0), 0);
+  const legacyStocksValue = openTrades.filter(t => t.market_type === 'stocks').reduce((sum, t) => sum + (t.amount || 0), 0);
+  const stocksValue = legacyStocksValue + investValue;
+  const tradePnL = openTrades.reduce((sum, t) => sum + (t.profit_loss || 0), 0) + investPnl;
   const totalEquity = cashBalance + totalValue + fxValue + stocksValue;
   const shieldSummary = getShieldSummary();
 
@@ -341,7 +362,7 @@ export default function PortfolioPage() {
       amount: fxValue
     },
     { 
-      asset: 'Stocks', 
+      asset: 'Stocks & ETFs', 
       value: totalEquity > 0 ? (stocksValue / totalEquity) * 100 : 0, 
       color: '#8B5CF6',
       amount: stocksValue
@@ -489,6 +510,57 @@ export default function PortfolioPage() {
           </p>
         </motion.div>
       </div>
+
+      {investPositions.length > 0 && (
+        <div className="bg-white/5 rounded-2xl border border-white/5 overflow-hidden mb-6">
+          <div className="p-5 border-b border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-cream">Stocks &amp; ETFs</h2>
+              <span className="text-[10px] uppercase tracking-wider text-[#8B5CF6] bg-[#8B5CF6]/15 border border-[#8B5CF6]/25 rounded px-1.5 py-0.5">
+                {investPositions.length} holding{investPositions.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <Link
+              href="/dashboard/invest"
+              className="flex items-center gap-1 text-sm text-[#8B5CF6] hover:text-[#a78bfa] transition-colors"
+            >
+              Invest <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="divide-y divide-white/5">
+            {investPositions.map((p: any) => {
+              const gain = (p.pnl || 0) >= 0;
+              return (
+                <Link
+                  key={p.id}
+                  href={`/dashboard/invest/asset/${p.symbol}`}
+                  className="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.03] transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B5CF6]/20 to-[#3B82F6]/10 border border-white/5 flex items-center justify-center shrink-0">
+                      <span className="text-[12px] font-bold text-white">{String(p.symbol).slice(0, 3)}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[14px] font-semibold text-cream">{p.symbol}</div>
+                      <div className="text-[11px] text-slate-500 truncate">
+                        {Number(p.quantity).toFixed(4)} @ ${Number(p.avgPrice).toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-[14px] font-semibold text-cream tabular-nums">
+                      ${Number(p.value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                    <div className={`text-[12px] tabular-nums ${gain ? 'text-profit' : 'text-loss'}`}>
+                      {gain ? '+' : ''}{Number(p.pnl).toFixed(2)} ({gain ? '+' : ''}{Number(p.pnlPct).toFixed(2)}%)
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Portfolio Allocation */}

@@ -32,6 +32,8 @@ export default function EtfDetail() {
   const [amount, setAmount] = useState<string>('');
   const [freq, setFreq] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   if (!etf) {
     return (
@@ -57,9 +59,55 @@ export default function EtfDetail() {
     return mode === 'dollars' ? a : a * etf.seedPrice;
   }, [amount, mode, etf.seedPrice]);
 
-  const submit = () => {
-    setDone(true);
-    setTimeout(() => { setSheet(null); setDone(false); setAmount(''); }, 1800);
+  const submit = async () => {
+    setSubmitError(null);
+
+    // Recurring is a Phase-2 scheduling feature — confirm the plan
+    // visually without placing a live order.
+    if (sheet === 'recurring') {
+      setDone(true);
+      setTimeout(() => { setSheet(null); setDone(false); setAmount(''); }, 1800);
+      return;
+    }
+
+    const uid = (user as any)?.id;
+    if (!uid) {
+      setSubmitError('Please sign in again to place this order.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/invest/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: uid,
+          symbol: etf.symbol,
+          assetType: 'etf',
+          side: 'buy',
+          amountType: mode === 'dollars' ? 'notional' : 'qty',
+          amount: parseFloat(amount) || 0,
+          price: etf.seedPrice,
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j?.ok) {
+        if (j?.error === 'insufficient_balance') {
+          setSubmitError(`Not enough balance. Need $${Number(j.need).toFixed(2)}, have $${Number(j.have).toFixed(2)}.`);
+        } else {
+          setSubmitError(j?.error || 'Order could not be placed. Please try again.');
+        }
+        setSubmitting(false);
+        return;
+      }
+      setSubmitting(false);
+      setDone(true);
+      setTimeout(() => { setSheet(null); setDone(false); setAmount(''); }, 1900);
+    } catch (e: any) {
+      setSubmitting(false);
+      setSubmitError('Network error. Please try again.');
+    }
   };
 
   return (
@@ -269,12 +317,20 @@ export default function EtfDetail() {
                   Past performance does not guarantee future results.
                 </p>
 
+                {submitError && (
+                  <div className="mb-3 px-3 py-2.5 rounded-xl bg-[#FF4D4F]/10 border border-[#FF4D4F]/25 text-[#FF6B6E] text-[12px]">
+                    {submitError}
+                  </div>
+                )}
+
                 <button
                   onClick={submit}
-                  disabled={!amount || parseFloat(amount) <= 0}
+                  disabled={!amount || parseFloat(amount) <= 0 || submitting}
                   className="w-full h-13 py-3.5 rounded-2xl text-[#04150d] text-[15px] font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ background: accent }}>
-                  {sheet === 'buy' ? `Buy ${etf.symbol}` : 'Start recurring plan'}
+                  {submitting
+                    ? 'Placing order…'
+                    : sheet === 'buy' ? `Buy ${etf.symbol}` : 'Start recurring plan'}
                 </button>
               </>
             )}

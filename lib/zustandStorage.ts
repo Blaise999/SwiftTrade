@@ -8,7 +8,6 @@ const noopStorage: StateStorage = {
   removeItem: (_key: string) => {},
 };
 
-
 export function safeSessionStorage() {
   const storage: StateStorage =
     typeof window !== 'undefined' ? window.sessionStorage : noopStorage;

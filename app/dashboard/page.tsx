@@ -190,6 +190,19 @@ export default function DashboardOverview() {
     n((user as any)?.balance) ||
     0;
 
+  // Stock/ETF holdings from the invest flow count toward total assets.
+  const [investValue, setInvestValue] = useState(0);
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      try {
+        const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
+        const j = await r.json().catch(() => ({}));
+        if (j?.ok) setInvestValue(Number(j.totalValue) || 0);
+      } catch {/* silent */}
+    })();
+  }, [user?.id]);
+
   const activeBots = bots.filter((b) => b.status === 'running').length;
   const totalBotPnl = bots.reduce((s, b) => s + (b.total_pnl ?? 0), 0);
 
@@ -260,11 +273,16 @@ export default function DashboardOverview() {
             <p className="font-serif font-light text-5xl lg:text-6xl text-pearl-50 tracking-tight leading-none">
               {formatBal(cashBalance)}
             </p>
-            <div className="mt-3 flex items-center gap-3 text-[13px]">
-              <span className="text-profit font-mono">+$24,108.20</span>
-              <span className="text-pearl-300/45">today</span>
-              <span className="w-px h-3 bg-pearl-100/15" />
-              <span className="text-pearl-300/55 font-mono">≈ {hideBalance ? '••••••' : `${(cashBalance / 7.81).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} HKD`}</span>
+            <div className="mt-3 flex items-center gap-3 text-[13px] flex-wrap">
+              {investValue > 0 && (
+                <>
+                  <span className="text-pearl-200 font-mono">
+                    {hideBalance ? '••••••' : `Total assets ${formatBal(cashBalance + investValue)}`}
+                  </span>
+                  <span className="w-px h-3 bg-pearl-100/15" />
+                </>
+              )}
+              <span className="text-pearl-300/55 font-mono">≈ {hideBalance ? '••••••' : `${((cashBalance + investValue) / 7.81).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} HKD`}</span>
             </div>
 
             <div className="mt-9 flex flex-wrap gap-2.5">

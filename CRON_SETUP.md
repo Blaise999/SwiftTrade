@@ -1,5 +1,24 @@
 # External Cron Setup (Vercel Hobby workaround)
 
+## 🚨 If your deploy fails with "Hobby accounts are limited to daily cron jobs"
+
+That error means a **`vercel.json` with a `crons` array** exists in the
+copy you're deploying (an old one from an earlier build). Swift Trade
+does **not** use Vercel cron — fix it in 10 seconds:
+
+1. Open `vercel.json` in your project root.
+2. Make sure it has **NO `"crons"` key**. The shipped one is already
+   clean — just make sure your local copy matches it (overwrite your
+   local `vercel.json` with the one in this zip).
+3. If you also added a cron under Vercel Dashboard → Project →
+   Settings → Cron Jobs, delete it there too.
+4. Redeploy. The error is gone.
+
+Scheduling is done **entirely outside Vercel** (see below), so there is
+deliberately no cron expression anywhere in this project.
+
+---
+
 ## Why this exists
 
 Vercel's **Hobby plan cron limits** (verified from Vercel docs):
