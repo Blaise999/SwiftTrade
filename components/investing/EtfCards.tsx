@@ -67,8 +67,12 @@ export const EtfCard = memo(function EtfCard({ etf }: { etf: Etf }) {
           <div className="text-[15px] font-semibold text-white tracking-tight">{etf.symbol}</div>
           <div className="text-[11px] text-[#71717A] truncate max-w-[140px] mt-0.5">{etf.name}</div>
         </div>
-        <span className="shrink-0 text-[9px] uppercase tracking-wider text-[#F5C542] bg-[#F5C542]/10 border border-[#F5C542]/20 rounded px-1.5 py-0.5">
-          ETF
+        <span className={`shrink-0 text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 ${
+          (etf as any).assetType === 'stock'
+            ? 'text-[#3B82F6] bg-[#3B82F6]/10 border border-[#3B82F6]/20'
+            : 'text-[#F5C542] bg-[#F5C542]/10 border border-[#F5C542]/20'
+        }`}>
+          {(etf as any).assetType === 'stock' ? 'STOCK' : 'ETF'}
         </span>
       </div>
       <div className="mb-3"><Sparkline seed={etf.seedPrice} up={up} w={188} h={40} /></div>

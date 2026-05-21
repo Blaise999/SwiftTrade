@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { avgCostAfterBuy, estimatedShares, estimatedCost, n } from '@/lib/calc';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,8 +52,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const qty = amountType === 'notional' ? amount / price : amount;
-    const cost = amountType === 'notional' ? amount : amount * price;
+    const qty = amountType === 'notional' ? estimatedShares(amount, price) : amount;
+    const cost = amountType === 'notional' ? amount : estimatedCost(amount, price);
 
     // ── Load user balance ──
     const { data: u, error: uErr } = await sb
@@ -107,11 +108,9 @@ export async function POST(req: NextRequest) {
 
     if (side === 'buy') {
       if (existing) {
-        const prevQty = Number(existing.quantity) || 0;
-        const prevAvg = Number(existing.avg_entry_price) || 0;
-        const newQty = prevQty + qty;
-        const newAvg =
-          newQty > 0 ? (prevQty * prevAvg + qty * price) / newQty : price;
+        const { qty: newQty, avg: newAvg } = avgCostAfterBuy(
+          n(existing.quantity), n(existing.avg_entry_price), qty, price
+        );
         await sb
           .from('positions')
           .update({

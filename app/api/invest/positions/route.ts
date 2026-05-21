@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getEtf } from '@/lib/etf-data';
+import { getAsset } from '@/lib/asset-catalog';
+import { positionMath, todaysGainForPosition, n } from '@/lib/calc';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,30 +46,36 @@ export async function GET(req: NextRequest) {
 
     let totalValue = 0;
     let totalCost = 0;
+    let totalDayGain = 0;
 
     const positions = (data || []).map(p => {
-      const qty = Number(p.quantity) || 0;
-      const avg = Number(p.avg_entry_price) || 0;
-      // Current price: use seed price from the ETF catalog if available,
-      // else fall back to avg entry. (Phase-2: live quote feed.)
-      const etf = getEtf(p.symbol);
-      const price = etf?.seedPrice ?? avg;
-      const value = qty * price;
-      const cost = qty * avg;
-      const pnl = value - cost;
-      totalValue += value;
-      totalCost += cost;
+      const qty = n(p.quantity);
+      const avg = n(p.avg_entry_price);
+      const asset = getAsset(p.symbol);
+      const price = asset?.seedPrice ?? avg;
+      const dayPct = asset?.seedChangePct ?? 0;
+
+      const m = positionMath({ quantity: qty, avgPrice: avg, currentPrice: price });
+      const dg = todaysGainForPosition(qty, price, dayPct);
+
+      totalValue += m.marketValue;
+      totalCost  += m.costBasis;
+      totalDayGain += dg.gain;
+
       return {
         id: p.id,
         symbol: p.symbol,
         assetType: p.asset_type,
-        name: etf?.name || p.symbol,
+        name: asset?.name || p.symbol,
         quantity: qty,
         avgPrice: avg,
         price,
-        value,
-        pnl,
-        pnlPct: cost > 0 ? (pnl / cost) * 100 : 0,
+        value: m.marketValue,
+        costBasis: m.costBasis,
+        pnl: m.pnl,
+        pnlPct: m.pnlPct,
+        dayGain: dg.gain,
+        dayGainPct: dg.gainPct,
       };
     });
 
@@ -78,6 +85,9 @@ export async function GET(req: NextRequest) {
       totalValue,
       totalCost,
       totalPnl: totalValue - totalCost,
+      totalPnlPct: totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0,
+      totalDayGain,
+      totalDayGainPct: totalValue > 0 ? (totalDayGain / totalValue) * 100 : 0,
       count: positions.length,
     });
   } catch (err: any) {

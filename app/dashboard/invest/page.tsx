@@ -1,24 +1,26 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   Search, ArrowDownToLine, ArrowUpFromLine, TrendingUp, TrendingDown,
-  ChevronRight, Sparkles, Eye, EyeOff, LineChart, Wallet,
+  ChevronRight, Sparkles, Eye, EyeOff, LineChart,
 } from 'lucide-react';
 import { useStore } from '@/lib/supabase/store-supabase';
 import {
-  ETFS, getSP500Etfs, getEtfsByCategory, getBeginnerEtfs,
-  CATEGORY_LABELS, type EtfCategory,
-} from '@/lib/etf-data';
+  getSP500Etfs, getEtfsByCategory, getBeginnerEtfs, getMegaCapStocks,
+  getTopMovers, getStocksByCategory, CATEGORY_LABELS, type AssetCategory,
+} from '@/lib/asset-catalog';
 import { EtfCard, SP500Card, Sparkline } from '@/components/investing/EtfCards';
-
-const n = (v: any) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
+import { n, fmtUSD, fmtPct } from '@/lib/calc';
 
 export default function InvestHome() {
   const { user, refreshUser } = useStore();
   const [hide, setHide] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Live invest holdings for total-asset display
+  const [invest, setInvest] = useState<{ totalValue: number; totalDayGain: number; totalDayGainPct: number } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -26,21 +28,42 @@ export default function InvestHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const balance = useMemo(
-    () => n((user as any)?.balance_available) || n((user as any)?.balanceAvailable) || n((user as any)?.balance) || 0,
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      try {
+        const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
+        const j = await r.json().catch(() => ({}));
+        if (j?.ok) {
+          setInvest({
+            totalValue: n(j.totalValue),
+            totalDayGain: n(j.totalDayGain),
+            totalDayGainPct: n(j.totalDayGainPct),
+          });
+        }
+      } catch {}
+    })();
+  }, [user?.id]);
+
+  const cashBalance = useMemo(
+    () => n((user as any)?.balance_available) || n((user as any)?.balanceAvailable) || n((user as any)?.balance),
     [user]
   );
-  const dayPnl = useMemo(() => n((user as any)?.pnl) || 0, [user]);
-  const dayPct = balance > 0 ? (dayPnl / balance) * 100 : 0;
+  const totalAssets = cashBalance + (invest?.totalValue || 0);
+  const dayPnl = invest?.totalDayGain || 0;
+  const dayPct = invest?.totalDayGainPct || 0;
   const up = dayPnl >= 0;
 
   const sp500 = getSP500Etfs();
-  const beginners = getBeginnerEtfs();
+  const beginnerEtfs = getBeginnerEtfs();
+  const megaCaps = getMegaCapStocks().slice(0, 10);
+  const topMovers = getTopMovers(10);
   const greeting =
     new Date().getHours() < 12 ? 'Good morning' :
     new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
 
-  const rows: EtfCategory[] = ['sp500', 'nasdaq_100', 'total_market', 'dividend', 'sector', 'bond'];
+  const stockRows: AssetCategory[] = ['technology', 'semiconductor', 'consumer', 'healthcare', 'financial', 'fintech', 'crypto_stock', 'energy'];
+  const etfRows: AssetCategory[] = ['sp500', 'nasdaq_100', 'total_market', 'dividend', 'sector', 'bond'];
 
   return (
     <div className="min-h-screen bg-[#080A0D] pb-28">
@@ -60,31 +83,37 @@ export default function InvestHome() {
         {/* ── Portfolio hero ── */}
         <div className="mt-3">
           <div className="flex items-center gap-2">
-            <span className="text-[12px] uppercase tracking-[0.2em] text-[#71717A]">Portfolio value</span>
+            <span className="text-[12px] uppercase tracking-[0.2em] text-[#71717A]">Total assets</span>
             <button onClick={() => setHide(!hide)} className="text-[#71717A] hover:text-[#A1A1AA]">
               {hide ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
           </div>
-          <div className="mt-1 text-[44px] leading-none font-bold text-white tracking-tight tabular-nums">
-            {hide ? '••••••' : `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          <div className="mt-1 text-[40px] sm:text-[44px] leading-none font-bold text-white tracking-tight tabular-nums">
+            {hide ? '••••••' : fmtUSD(totalAssets)}
           </div>
-          <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-medium tabular-nums ${up ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
-            {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-            {hide ? '••••' : <>{up ? '+' : ''}${Math.abs(dayPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>}
-            <span className="text-[#71717A]">({up ? '+' : ''}{dayPct.toFixed(2)}%) today</span>
-          </div>
+          {invest && invest.totalValue > 0 ? (
+            <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-medium tabular-nums ${up ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
+              {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+              {hide ? '••••' : <>{up ? '+' : '−'}{fmtUSD(Math.abs(dayPnl))}</>}
+              <span className="text-[#71717A]">({fmtPct(dayPct)}) today</span>
+            </div>
+          ) : (
+            <div className="mt-2 text-[13px] text-[#71717A]">
+              Cash {fmtUSD(cashBalance)} · invest to grow your portfolio
+            </div>
+          )}
           <div className="mt-4 -mx-1">
-            {mounted && <Sparkline seed={balance || 1234} up={up} w={620} h={90} />}
+            {mounted && <Sparkline seed={totalAssets || 1234} up={up} w={620} h={90} />}
           </div>
         </div>
 
         {/* ── Quick actions ── */}
         <div className="mt-5 grid grid-cols-4 gap-2.5">
           {[
-            { l: 'Deposit', i: ArrowDownToLine, href: '/dashboard/wallet', tone: 'text-[#16C784]' },
-            { l: 'Withdraw', i: ArrowUpFromLine, href: '/dashboard/wallet?tab=withdraw', tone: 'text-[#A1A1AA]' },
-            { l: 'Invest', i: LineChart, href: '/dashboard/invest/etfs', tone: 'text-[#3B82F6]' },
-            { l: 'Search', i: Search, href: '/dashboard/invest/search', tone: 'text-[#F5C542]' },
+            { l: 'Deposit',  i: ArrowDownToLine,  href: '/dashboard/wallet',                tone: 'text-[#16C784]' },
+            { l: 'Withdraw', i: ArrowUpFromLine,  href: '/dashboard/wallet?tab=withdraw',   tone: 'text-[#A1A1AA]' },
+            { l: 'Invest',   i: LineChart,        href: '/dashboard/invest/etfs',           tone: 'text-[#3B82F6]' },
+            { l: 'Search',   i: Search,           href: '/dashboard/invest/search',         tone: 'text-[#F5C542]' },
           ].map(a => (
             <Link key={a.l} href={a.href} prefetch={false}
               className="flex flex-col items-center gap-2 py-3.5 rounded-2xl bg-[#101216] border border-white/[0.06] hover:bg-[#14171D] transition-all active:scale-[0.97]">
@@ -94,6 +123,32 @@ export default function InvestHome() {
           ))}
         </div>
 
+        {/* ── Top movers (stocks + ETFs) ── */}
+        <section className="mt-8">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[16px] font-semibold text-white">Top movers</h2>
+            <Link href="/dashboard/invest/search" prefetch={false} className="text-[12px] text-[#3B82F6] flex items-center gap-0.5">
+              Search <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
+            {topMovers.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
+          </div>
+        </section>
+
+        {/* ── Mega-cap stocks ── */}
+        <section className="mt-8">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[16px] font-semibold text-white">Popular stocks</h2>
+            <Link href="/dashboard/invest/etfs" prefetch={false} className="text-[12px] text-[#3B82F6] flex items-center gap-0.5">
+              See all <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
+            {megaCaps.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
+          </div>
+        </section>
+
         {/* ── Invest in the S&P 500 ── */}
         <section className="mt-8">
           <div className="rounded-2xl border border-[#F5C542]/15 bg-gradient-to-br from-[#F5C542]/[0.06] to-transparent p-4 mb-3">
@@ -102,16 +157,16 @@ export default function InvestHome() {
               <h2 className="text-[16px] font-semibold text-white">Invest in the S&P 500</h2>
             </div>
             <p className="text-[12.5px] text-[#A1A1AA] leading-relaxed">
-              The S&P 500 tracks around 500 of the largest publicly traded companies in the United States.
-              You cannot buy the index directly, but you can invest through ETFs that track it.
+              The S&P 500 tracks around 500 of the largest publicly traded companies in the United
+              States. You cannot buy the index directly, but you can invest through ETFs that track it.
             </p>
           </div>
           <div className="space-y-2.5">
-            {sp500.map(etf => <SP500Card key={etf.symbol} etf={etf} />)}
+            {sp500.map(etf => <SP500Card key={etf.symbol} etf={etf as any} />)}
           </div>
         </section>
 
-        {/* ── Beginner-friendly ── */}
+        {/* ── Beginner-friendly ETFs ── */}
         <section className="mt-8">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[16px] font-semibold text-white">Beginner-friendly</h2>
@@ -120,12 +175,28 @@ export default function InvestHome() {
             </Link>
           </div>
           <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
-            {beginners.map(etf => <EtfCard key={etf.symbol} etf={etf} />)}
+            {beginnerEtfs.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
           </div>
         </section>
 
-        {/* ── Category rows ── */}
-        {rows.map(cat => {
+        {/* ── Stock category rows ── */}
+        {stockRows.map(cat => {
+          const list = getStocksByCategory(cat);
+          if (!list.length) return null;
+          return (
+            <section key={cat} className="mt-8">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[16px] font-semibold text-white">{CATEGORY_LABELS[cat]}</h2>
+              </div>
+              <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
+                {list.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
+              </div>
+            </section>
+          );
+        })}
+
+        {/* ── ETF category rows ── */}
+        {etfRows.map(cat => {
           const list = getEtfsByCategory(cat);
           if (!list.length) return null;
           return (
@@ -137,16 +208,15 @@ export default function InvestHome() {
                 </Link>
               </div>
               <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
-                {list.map(etf => <EtfCard key={etf.symbol} etf={etf} />)}
+                {list.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
               </div>
             </section>
           );
         })}
 
-        {/* Risk disclaimer */}
         <p className="mt-10 text-[11px] text-[#52525B] leading-relaxed text-center px-4">
           Investing involves risk, including possible loss of principal. Past performance does not
-          guarantee future results. ETF data shown for information only — learn before investing.
+          guarantee future results. Prices shown are seed values for demonstration.
         </p>
       </div>
     </div>

@@ -134,7 +134,11 @@ export default function EtfDetail() {
         <div className="mt-5">
           <div className="flex items-center gap-2">
             <h1 className="text-[22px] font-bold text-white tracking-tight">{etf.symbol}</h1>
-            <span className="text-[9px] uppercase tracking-wider text-[#F5C542] bg-[#F5C542]/10 border border-[#F5C542]/20 rounded px-1.5 py-0.5">ETF</span>
+            <span className={`text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 ${
+              etf.assetType === 'stock'
+                ? 'text-[#3B82F6] bg-[#3B82F6]/10 border border-[#3B82F6]/20'
+                : 'text-[#F5C542] bg-[#F5C542]/10 border border-[#F5C542]/20'
+            }`}>{etf.assetType === 'stock' ? 'STOCK' : 'ETF'}</span>
           </div>
           <p className="text-[13px] text-[#A1A1AA] mt-0.5">{etf.name}</p>
           <div className="mt-3 flex items-end gap-3">
@@ -166,14 +170,22 @@ export default function EtfDetail() {
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats — adapt to stock vs ETF */}
         <div className="mt-5 grid grid-cols-2 gap-2.5">
-          {[
-            { k: 'Tracks', v: etf.tracks },
-            { k: 'Expense ratio', v: `${etf.expenseRatio}%` },
-            { k: 'Dividend yield', v: etf.dividendYield ? `${etf.dividendYield}%` : '—' },
-            { k: 'Category', v: etf.category.replace('_', ' ') },
-          ].map(s => (
+          {(etf.assetType === 'stock'
+            ? [
+                { k: 'Sector', v: etf.sector || '—' },
+                { k: 'Market cap', v: etf.marketCapBillions ? `$${etf.marketCapBillions}B` : '—' },
+                { k: 'Fractional', v: etf.fractionable ? 'Yes' : 'No' },
+                { k: 'Category', v: String(etf.category).replace(/_/g, ' ') },
+              ]
+            : [
+                { k: 'Tracks', v: etf.tracks || '—' },
+                { k: 'Expense ratio', v: etf.expenseRatio != null ? `${etf.expenseRatio}%` : '—' },
+                { k: 'Dividend yield', v: etf.dividendYield != null ? `${etf.dividendYield}%` : '—' },
+                { k: 'Category', v: String(etf.category).replace(/_/g, ' ') },
+              ]
+          ).map(s => (
             <div key={s.k} className="rounded-xl border border-white/[0.06] bg-[#101216] p-3.5">
               <div className="text-[10.5px] uppercase tracking-wider text-[#71717A]">{s.k}</div>
               <div className="text-[14px] text-white font-medium mt-1 capitalize">{s.v}</div>
@@ -185,12 +197,18 @@ export default function EtfDetail() {
         <div className="mt-5 rounded-2xl border border-white/[0.06] bg-[#101216] p-4">
           <div className="flex items-center gap-2 mb-2">
             <Info className="w-4 h-4 text-[#3B82F6]" />
-            <h3 className="text-[14px] font-semibold text-white">About this ETF</h3>
+            <h3 className="text-[14px] font-semibold text-white">
+              About {etf.assetType === 'stock' ? etf.symbol : 'this ETF'}
+            </h3>
           </div>
           <p className="text-[12.5px] text-[#A1A1AA] leading-relaxed">{etf.description}</p>
           <div className="mt-3 pt-3 border-t border-white/[0.05]">
-            <div className="text-[10.5px] uppercase tracking-wider text-[#71717A] mb-1">Top holdings</div>
-            <div className="text-[12px] text-[#52525B]">Holdings data coming soon.</div>
+            <div className="text-[10.5px] uppercase tracking-wider text-[#71717A] mb-1">
+              {etf.assetType === 'stock' ? 'Recent news' : 'Top holdings'}
+            </div>
+            <div className="text-[12px] text-[#52525B]">
+              {etf.assetType === 'stock' ? 'News feed coming soon.' : 'Holdings data coming soon.'}
+            </div>
           </div>
           <p className="mt-3 text-[11px] text-[#52525B] leading-relaxed">
             Investing involves risk. This is a long-term investing option, not financial advice.

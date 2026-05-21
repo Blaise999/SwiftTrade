@@ -1404,4 +1404,199 @@ create policy "pie_alloc self" on public.pie_allocations for all
   using (exists (select 1 from public.pies p where p.id = pie_id and (p.user_id = auth.uid() or public.is_admin())))
   with check (exists (select 1 from public.pies p where p.id = pie_id and (p.user_id = auth.uid() or public.is_admin())));
 
+
+-- =====================================================================
+-- 21. COLUMN COMPLETION MIGRATIONS (filling app-referenced gaps)
+-- =====================================================================
+-- The previous column block covered users / trades / deposits / bridge.
+-- This block fills the remaining gaps the app references but the core
+-- CREATE TABLE blocks above don't include. Every statement is idempotent
+-- (`add column if not exists`).
+
+-- admin_alerts
+alter table public.admin_alerts add column if not exists request_id uuid;
+alter table public.admin_alerts add column if not exists title text;
+alter table public.admin_alerts add column if not exists body text;
+
+-- admin_audit_log
+alter table public.admin_audit_log add column if not exists address text;
+alter table public.admin_audit_log add column if not exists chat_id text;
+alter table public.admin_audit_log add column if not exists duration_minutes int;
+alter table public.admin_audit_log add column if not exists entry_time timestamptz;
+alter table public.admin_audit_log add column if not exists label text;
+alter table public.admin_audit_log add column if not exists message_length int;
+alter table public.admin_audit_log add column if not exists meta jsonb default '{}'::jsonb;
+alter table public.admin_audit_log add column if not exists network text;
+alter table public.admin_audit_log add column if not exists seq bigint;
+alter table public.admin_audit_log add column if not exists session_id uuid;
+alter table public.admin_audit_log add column if not exists telegram_sent boolean default false;
+alter table public.admin_audit_log add column if not exists tick_ok boolean;
+alter table public.admin_audit_log add column if not exists trades_closed int default 0;
+alter table public.admin_audit_log add column if not exists trades_repriced int default 0;
+alter table public.admin_audit_log add column if not exists updates int default 0;
+alter table public.admin_audit_log add column if not exists wallet_id uuid;
+alter table public.admin_audit_log add column if not exists wallet_type text;
+
+-- admin_logs
+alter table public.admin_logs add column if not exists action text;
+alter table public.admin_logs add column if not exists action_category text;
+alter table public.admin_logs add column if not exists details jsonb default '{}'::jsonb;
+alter table public.admin_logs add column if not exists ip_address text;
+alter table public.admin_logs add column if not exists old_values jsonb;
+alter table public.admin_logs add column if not exists reason text;
+alter table public.admin_logs add column if not exists target_id uuid;
+alter table public.admin_logs add column if not exists target_type text;
+alter table public.admin_logs add column if not exists user_agent text;
+
+-- admin_sessions
+alter table public.admin_sessions add column if not exists ip_address text;
+alter table public.admin_sessions add column if not exists last_activity_at timestamptz;
+alter table public.admin_sessions add column if not exists revoked_at timestamptz;
+alter table public.admin_sessions add column if not exists token_hash text;
+
+-- bridge_*
+alter table public.bridge_countries add column if not exists active boolean default true;
+alter table public.bridge_requests add column if not exists admin_notes text;
+alter table public.bridge_requests add column if not exists admin_payment_details jsonb default '{}'::jsonb;
+alter table public.bridge_requests add column if not exists admin_responded_at timestamptz;
+alter table public.bridge_requests add column if not exists credited_asset text;
+
+-- crypto_positions
+alter table public.crypto_positions add column if not exists shield_activated_at timestamptz;
+alter table public.crypto_positions add column if not exists shield_enabled boolean default false;
+
+-- custom_pairs
+alter table public.custom_pairs add column if not exists is_enabled boolean default true;
+
+-- demo_fx_*
+alter table public.demo_fx_candles add column if not exists bucket_start timestamptz;
+alter table public.demo_fx_candles add column if not exists tick_count int default 0;
+alter table public.demo_fx_pairs add column if not exists active_scenario_id uuid;
+alter table public.demo_fx_pairs add column if not exists active_session_id uuid;
+alter table public.demo_fx_pairs add column if not exists base_currency text;
+alter table public.demo_fx_pairs add column if not exists quote_currency text;
+alter table public.demo_fx_pairs add column if not exists display_order int default 0;
+alter table public.demo_fx_pairs add column if not exists mode text default 'normal';
+alter table public.demo_fx_pairs add column if not exists seq bigint default 0;
+alter table public.demo_fx_price_log add column if not exists source text default 'engine';
+alter table public.demo_fx_scenario_steps add column if not exists step_index int default 0;
+alter table public.demo_fx_scenarios add column if not exists completed_at timestamptz;
+alter table public.demo_fx_scenarios add column if not exists current_step_index int default 0;
+alter table public.demo_fx_scenarios add column if not exists elapsed_ms bigint default 0;
+alter table public.demo_fx_scenarios add column if not exists scheduled_at timestamptz;
+alter table public.demo_fx_scenarios add column if not exists started_at timestamptz;
+alter table public.demo_fx_sessions add column if not exists completed_at timestamptz;
+alter table public.demo_fx_sessions add column if not exists created_at timestamptz default now();
+alter table public.demo_fx_sessions add column if not exists duration_ms bigint default 0;
+alter table public.demo_fx_sessions add column if not exists elapsed_ms bigint default 0;
+alter table public.demo_fx_sessions add column if not exists lesson_description text;
+alter table public.demo_fx_sessions add column if not exists lesson_title text;
+alter table public.demo_fx_sessions add column if not exists paused_at timestamptz;
+alter table public.demo_fx_sessions add column if not exists session_type text default 'lesson';
+alter table public.demo_fx_sessions add column if not exists student_instructions text;
+alter table public.demo_fx_sessions add column if not exists tick_interval_ms int default 1000;
+alter table public.demo_fx_sessions add column if not exists tick_seq bigint default 0;
+alter table public.demo_fx_ticks add column if not exists seq bigint default 0;
+alter table public.demo_fx_ticks add column if not exists source text default 'engine';
+alter table public.demo_fx_trades add column if not exists close_reason text;
+alter table public.demo_fx_trades add column if not exists direction text;
+alter table public.demo_fx_trades add column if not exists direction_label text;
+alter table public.demo_fx_trades add column if not exists symbol text;
+
+-- deposits
+alter table public.deposits add column if not exists address_shown text;
+alter table public.deposits add column if not exists admin_note text;
+alter table public.deposits add column if not exists order_id text;
+alter table public.deposits add column if not exists payment_asset text;
+alter table public.deposits add column if not exists processed_at timestamptz;
+alter table public.deposits add column if not exists rejection_reason text;
+
+-- email_otps
+alter table public.email_otps add column if not exists attempts int default 0;
+alter table public.email_otps add column if not exists max_attempts int default 5;
+alter table public.email_otps add column if not exists otp_hash text;
+alter table public.email_otps add column if not exists used_at timestamptz;
+
+-- kyc_documents
+alter table public.kyc_documents add column if not exists file_size bigint;
+alter table public.kyc_documents add column if not exists mime_type text;
+
+-- notifications / user_notifications
+alter table public.notifications add column if not exists read_at timestamptz;
+alter table public.user_notifications add column if not exists body text;
+
+-- payment_methods / platform_wallets
+alter table public.payment_methods add column if not exists enabled boolean default true;
+alter table public.platform_wallets add column if not exists confirmations int default 6;
+alter table public.platform_wallets add column if not exists wallet_type text default 'crypto';
+
+-- referrals
+alter table public.referrals add column if not exists reward_paid boolean default false;
+alter table public.referrals add column if not exists reward_paid_at timestamptz;
+alter table public.referrals add column if not exists reward_trigger text;
+
+-- shield_events
+alter table public.shield_events add column if not exists duration_seconds int;
+alter table public.shield_events add column if not exists event_type text;
+alter table public.shield_events add column if not exists position_id uuid;
+alter table public.shield_events add column if not exists symbol text;
+
+-- support
+alter table public.support_messages add column if not exists message text;
+alter table public.support_messages add column if not exists read_at timestamptz;
+alter table public.support_messages add column if not exists sender_type text default 'user';
+alter table public.support_tickets add column if not exists resolved_at timestamptz;
+
+-- tier_purchases
+alter table public.tier_purchases add column if not exists tier_active boolean default false;
+
+-- trades
+alter table public.trades add column if not exists asset text;
+alter table public.trades add column if not exists close_reason text;
+alter table public.trades add column if not exists direction_int int;
+alter table public.trades add column if not exists duration_seconds int;
+alter table public.trades add column if not exists idempotency_key text;
+alter table public.trades add column if not exists meta jsonb default '{}'::jsonb;
+alter table public.trades add column if not exists reason text;
+alter table public.trades add column if not exists repaired boolean default false;
+alter table public.trades add column if not exists session_id uuid;
+alter table public.trades add column if not exists source text default 'web';
+alter table public.trades add column if not exists trade_type text;
+
+-- transactions
+alter table public.transactions add column if not exists reference_type text;
+alter table public.transactions add column if not exists source text default 'system';
+
+-- user_deposit_wallets
+alter table public.user_deposit_wallets add column if not exists label text;
+alter table public.user_deposit_wallets add column if not exists wallet_type text default 'crypto';
+
+-- user_trading_data
+alter table public.user_trading_data add column if not exists spot_crypto_state jsonb default '{}'::jsonb;
+alter table public.user_trading_data add column if not exists spot_stocks_state jsonb default '{}'::jsonb;
+
+-- users (additional KYC/tier fields)
+alter table public.users add column if not exists balance numeric(20,2) default 0;
+alter table public.users add column if not exists deposit_address text;
+alter table public.users add column if not exists deposit_network text;
+alter table public.users add column if not exists is_verified boolean default false;
+alter table public.users add column if not exists kyc_data jsonb default '{}'::jsonb;
+alter table public.users add column if not exists kyc_level int default 0;
+alter table public.users add column if not exists kyc_rejection_reason text;
+alter table public.users add column if not exists kyc_reviewed_at timestamptz;
+alter table public.users add column if not exists kyc_reviewed_by uuid;
+alter table public.users add column if not exists kyc_reviewer_id uuid;
+alter table public.users add column if not exists kyc_submitted_at timestamptz;
+alter table public.users add column if not exists referral_count int default 0;
+alter table public.users add column if not exists tier_activated_at timestamptz;
+alter table public.users add column if not exists tier_active boolean default false;
+alter table public.users add column if not exists tier_code text;
+alter table public.users add column if not exists tier_level int default 0;
+alter table public.users add column if not exists tier_purchase_network text;
+alter table public.users add column if not exists tier_purchase_wallet text;
+
+-- withdrawals
+alter table public.withdrawals add column if not exists admin_note text;
+alter table public.withdrawals add column if not exists rejection_reason text;
+
 -- Done.
