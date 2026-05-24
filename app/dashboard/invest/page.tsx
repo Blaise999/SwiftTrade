@@ -67,7 +67,7 @@ export default function InvestHome() {
 
   return (
     <div className="min-h-screen bg-[#080A0D] pb-28">
-      <div className="max-w-2xl mx-auto px-4 pt-6">
+      <div className="max-w-2xl mx-auto pt-6">
 
         {/* ── Header ── */}
         <div className="flex items-center justify-between mb-1">

@@ -12,7 +12,7 @@ const ORDER: EtfCategory[] = ['sp500', 'nasdaq_100', 'total_market', 'dividend',
 export default function ExploreEtfs() {
   return (
     <div className="min-h-screen bg-[#080A0D] pb-28">
-      <div className="max-w-2xl mx-auto px-4 pt-5">
+      <div className="max-w-2xl mx-auto pt-5">
         <div className="flex items-center gap-3 mb-1">
           <Link href="/dashboard/invest" prefetch={false}
             className="w-9 h-9 rounded-full bg-[#101216] border border-white/[0.06] flex items-center justify-center hover:bg-[#14171D]">

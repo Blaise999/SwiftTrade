@@ -35,10 +35,10 @@ import { useTradingAccountStore } from '@/lib/trading-store';
 import SupportWidget from '@/components/SupportWidget';
 import NotificationPanel from '@/components/NotificationPanel';
 import StockPriceSync from '@/components/StockPriceSync';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Tiers & Plans', href: '/dashboard/tier', icon: Shield },
   {
     name: 'Trade',
     icon: LineChart,
@@ -148,6 +148,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mobileMenuOpen]);
+
+  // ✅ Mobile bottom-nav menu trigger
+  useEffect(() => {
+    const handler = () => { if (!mobileMenuOpen) toggleMobileMenu(); };
+    window.addEventListener('swift:openMobileMenu', handler);
+    return () => window.removeEventListener('swift:openMobileMenu', handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mobileMenuOpen]);
 
@@ -522,10 +530,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8">{children}</main>
+        <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8 pb-28 lg:pb-8">{children}</main>
       </div>
 
       <SupportWidget />
+      <MobileBottomNav />
     </div>
   );
 }

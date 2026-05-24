@@ -111,8 +111,8 @@ export default function EtfDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080A0D] pb-28">
-      <div className="max-w-2xl mx-auto px-4 pt-5">
+    <div className="min-h-screen bg-[#080A0D] pb-44 lg:pb-28">
+      <div className="max-w-2xl mx-auto pt-5">
 
         {/* Top bar */}
         <div className="flex items-center justify-between">
@@ -217,15 +217,15 @@ export default function EtfDetail() {
         </div>
       </div>
 
-      {/* Sticky action bar */}
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-[#080A0D]/95 backdrop-blur-xl border-t border-white/[0.06] px-4 py-3">
+      {/* Sticky action bar — sits above the mobile bottom nav */}
+      <div className="fixed inset-x-0 z-40 bg-[#080A0D]/95 backdrop-blur-xl border-t border-white/[0.06] px-4 py-3 bottom-[88px] lg:bottom-0">
         <div className="max-w-2xl mx-auto flex items-center gap-2.5">
           <button onClick={() => setSheet('recurring')}
-            className="h-12 px-4 rounded-2xl border border-white/[0.08] hover:bg-white/[0.04] text-[#A1A1AA] text-[13px] font-medium flex items-center gap-1.5 transition-colors">
+            className="h-12 px-4 rounded-2xl border border-white/[0.08] hover:bg-white/[0.04] text-[#A1A1AA] text-[13px] font-medium flex items-center gap-1.5 transition-colors shrink-0">
             <Repeat className="w-4 h-4" /> Recurring
           </button>
           <button onClick={() => setSheet('buy')}
-            className="flex-1 h-12 rounded-2xl text-[#04150d] text-[15px] font-bold flex items-center justify-center transition-all active:scale-[0.98]"
+            className="flex-1 min-w-0 h-12 rounded-2xl text-[#04150d] text-[15px] font-bold flex items-center justify-center transition-all active:scale-[0.98]"
             style={{ background: accent }}>
             Buy {etf.symbol}
           </button>
