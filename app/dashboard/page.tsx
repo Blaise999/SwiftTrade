@@ -171,18 +171,52 @@ export default function DashboardOverview() {
     n((user as any)?.balance) ||
     0;
 
-  // Stock/ETF holdings from the invest flow count toward total assets.
-  const [investValue, setInvestValue] = useState(0);
+  // Stock/ETF + crypto holdings — full breakdown for dashboard chips
+  const [invest, setInvest] = useState({ value: 0, dayPnl: 0, dayPct: 0 });
+  const [crypto, setCrypto] = useState({ value: 0, dayPnl: 0, dayPct: 0 });
+
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
       try {
         const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
-        if (j?.ok) setInvestValue(Number(j.totalValue) || 0);
+        if (j?.ok) {
+          setInvest({
+            value: Number(j.totalValue) || 0,
+            dayPnl: Number(j.totalDayGain) || 0,
+            dayPct: Number(j.totalDayGainPct) || 0,
+          });
+        }
+      } catch {/* silent */}
+    })();
+    // Crypto positions — use the existing crypto store if available
+    (async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase/client');
+        const { data } = await supabase
+          .from('crypto_positions')
+          .select('symbol, quantity, average_price, last_price, pnl, pnl_percent')
+          .eq('user_id', user.id);
+        if (Array.isArray(data) && data.length) {
+          let v = 0, p = 0, costBasis = 0;
+          for (const row of data) {
+            const qty = Number(row.quantity) || 0;
+            const lp = Number(row.last_price) || Number(row.average_price) || 0;
+            const avg = Number(row.average_price) || 0;
+            v += qty * lp;
+            costBasis += qty * avg;
+            p += Number(row.pnl) || 0;
+          }
+          const pct = costBasis > 0 ? (p / costBasis) * 100 : 0;
+          setCrypto({ value: v, dayPnl: p, dayPct: pct });
+        }
       } catch {/* silent */}
     })();
   }, [user?.id]);
+
+  const investValue = invest.value;
+  const cryptoValue = crypto.value;
 
   const activeBots = bots.filter((b) => b.status === 'running').length;
   const totalBotPnl = bots.reduce((s, b) => s + (b.total_pnl ?? 0), 0);
@@ -235,12 +269,62 @@ export default function DashboardOverview() {
         transition={{ duration: 0.5 }}
       >
         <PortfolioCommandCard
-          totalAssets={cashBalance + investValue}
+          totalAssets={cashBalance + investValue + cryptoValue}
           cashBalance={cashBalance}
           investValue={investValue}
-          dayPnl={0}
-          dayPct={0}
+          cryptoValue={cryptoValue}
+          dayPnl={invest.dayPnl + crypto.dayPnl}
+          dayPct={
+            (cashBalance + investValue + cryptoValue) > 0
+              ? ((invest.dayPnl + crypto.dayPnl) / (cashBalance + investValue + cryptoValue)) * 100
+              : 0
+          }
         />
+      </motion.div>
+
+      {/* ─── ASSET BREAKDOWN (Stocks + Crypto with day %) ─── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="grid grid-cols-2 gap-2.5"
+      >
+        <Link
+          prefetch={false}
+          href="/dashboard/invest"
+          className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors"
+        >
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
+            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#71717A]">Stocks &amp; ETFs</span>
+          </div>
+          <div className="text-[18px] font-semibold text-white tabular-nums">{formatBal(investValue)}</div>
+          {investValue > 0 ? (
+            <div className={`text-[11px] mt-0.5 tabular-nums ${invest.dayPnl >= 0 ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
+              {invest.dayPnl >= 0 ? '+' : ''}{invest.dayPnl.toFixed(2)} ({invest.dayPnl >= 0 ? '+' : ''}{invest.dayPct.toFixed(2)}%) today
+            </div>
+          ) : (
+            <div className="text-[11px] text-[#52525B] mt-0.5">No holdings yet</div>
+          )}
+        </Link>
+        <Link
+          prefetch={false}
+          href="/dashboard/portfolio"
+          className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors"
+        >
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#71717A]">Crypto</span>
+          </div>
+          <div className="text-[18px] font-semibold text-white tabular-nums">{formatBal(cryptoValue)}</div>
+          {cryptoValue > 0 ? (
+            <div className={`text-[11px] mt-0.5 tabular-nums ${crypto.dayPnl >= 0 ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
+              {crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPnl.toFixed(2)} ({crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPct.toFixed(2)}%) total
+            </div>
+          ) : (
+            <div className="text-[11px] text-[#52525B] mt-0.5">No holdings yet</div>
+          )}
+        </Link>
       </motion.div>
 
       {/* ─── QUICK ACTIONS (app-like, not corporate) ─── */}

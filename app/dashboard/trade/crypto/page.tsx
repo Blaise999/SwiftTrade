@@ -937,24 +937,25 @@ useEffect(() => {
               )}
             </div>
 
-            {/* Stats Row */}
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="p-3 bg-white/5 rounded-xl">
-                <p className="text-xs text-[#71717A] mb-1">Total Value</p>
-                <p className="text-lg font-semibold text-white">
-                  ${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {/* Stats Row — stack on mobile so long numbers don't overlap */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-4">
+              <div className="p-3 bg-white/5 rounded-xl min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-[#71717A] mb-1">Total Value</p>
+                <p className="text-[16px] sm:text-lg font-semibold text-white tabular-nums break-words">
+                  ${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="p-3 bg-white/5 rounded-xl">
-                <p className="text-xs text-[#71717A] mb-1">Unrealized P&L</p>
-                <p className={`text-lg font-semibold ${totalPnL >= 0 ? 'text-profit' : 'text-loss'}`}>
-                  {totalPnL >= 0 ? '+' : ''}
-                  {totalPnL.toFixed(2)}
+              <div className="p-3 bg-white/5 rounded-xl min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-[#71717A] mb-1">Unrealized P&amp;L</p>
+                <p className={`text-[16px] sm:text-lg font-semibold tabular-nums break-words ${totalPnL >= 0 ? 'text-profit' : 'text-loss'}`}>
+                  {totalPnL >= 0 ? '+' : ''}${Math.abs(totalPnL).toFixed(2)}
                 </p>
               </div>
-              <div className="p-3 bg-white/5 rounded-xl">
-                <p className="text-xs text-[#71717A] mb-1">Cash Balance</p>
-                <p className="text-lg font-semibold text-white">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              <div className="p-3 bg-white/5 rounded-xl min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-[#71717A] mb-1">Cash Balance</p>
+                <p className="text-[16px] sm:text-lg font-semibold text-white tabular-nums break-words">
+                  ${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
             </div>
 

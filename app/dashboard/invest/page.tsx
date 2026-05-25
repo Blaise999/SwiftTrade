@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
-  Search, ArrowDownToLine, ArrowUpFromLine, TrendingUp, TrendingDown,
+  Search, TrendingUp, TrendingDown,
   ChevronRight, Sparkles, Eye, EyeOff, LineChart,
 } from 'lucide-react';
 import { useStore } from '@/lib/supabase/store-supabase';
@@ -49,10 +49,23 @@ export default function InvestHome() {
     () => n((user as any)?.balance_available) || n((user as any)?.balanceAvailable) || n((user as any)?.balance),
     [user]
   );
-  const totalAssets = cashBalance + (invest?.totalValue || 0);
+  const stockBalance = invest?.totalValue || 0;  // ← stocks only, not total assets
   const dayPnl = invest?.totalDayGain || 0;
   const dayPct = invest?.totalDayGainPct || 0;
   const up = dayPnl >= 0;
+
+  // Held stocks list (with current 24h %)
+  const [holdings, setHoldings] = useState<any[]>([]);
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      try {
+        const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
+        const j = await r.json().catch(() => ({}));
+        if (j?.ok && Array.isArray(j.positions)) setHoldings(j.positions);
+      } catch {}
+    })();
+  }, [user?.id]);
 
   const sp500 = getSP500Etfs();
   const beginnerEtfs = getBeginnerEtfs();
@@ -80,18 +93,18 @@ export default function InvestHome() {
           </Link>
         </div>
 
-        {/* ── Portfolio hero ── */}
+        {/* ── STOCK BALANCE (just stocks, not total) ── */}
         <div className="mt-3">
           <div className="flex items-center gap-2">
-            <span className="text-[12px] uppercase tracking-[0.2em] text-[#71717A]">Total assets</span>
+            <span className="text-[12px] uppercase tracking-[0.2em] text-[#71717A]">Stock balance</span>
             <button onClick={() => setHide(!hide)} className="text-[#71717A] hover:text-[#A1A1AA]">
               {hide ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
           </div>
           <div className="mt-1 text-[40px] sm:text-[44px] leading-none font-bold text-white tracking-tight tabular-nums">
-            {hide ? '••••••' : fmtUSD(totalAssets)}
+            {hide ? '••••••' : fmtUSD(stockBalance)}
           </div>
-          {invest && invest.totalValue > 0 ? (
+          {stockBalance > 0 ? (
             <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-medium tabular-nums ${up ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
               {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
               {hide ? '••••' : <>{up ? '+' : '−'}{fmtUSD(Math.abs(dayPnl))}</>}
@@ -99,29 +112,70 @@ export default function InvestHome() {
             </div>
           ) : (
             <div className="mt-2 text-[13px] text-[#71717A]">
-              Cash {fmtUSD(cashBalance)} · invest to grow your portfolio
+              No stock holdings yet — pick one below to start
             </div>
           )}
           <div className="mt-4 -mx-1">
-            {mounted && <Sparkline seed={totalAssets || 1234} up={up} w={620} h={90} />}
+            {mounted && <Sparkline seed={stockBalance || 1234} up={up} w={620} h={90} />}
           </div>
         </div>
 
-        {/* ── Quick actions ── */}
-        <div className="mt-5 grid grid-cols-4 gap-2.5">
-          {[
-            { l: 'Deposit',  i: ArrowDownToLine,  href: '/dashboard/wallet',                tone: 'text-[#16C784]' },
-            { l: 'Withdraw', i: ArrowUpFromLine,  href: '/dashboard/wallet?tab=withdraw',   tone: 'text-[#A1A1AA]' },
-            { l: 'Invest',   i: LineChart,        href: '/dashboard/invest/etfs',           tone: 'text-[#3B82F6]' },
-            { l: 'Search',   i: Search,           href: '/dashboard/invest/search',         tone: 'text-[#F5C542]' },
-          ].map(a => (
-            <Link key={a.l} href={a.href} prefetch={false}
-              className="flex flex-col items-center gap-2 py-3.5 rounded-2xl bg-[#101216] border border-white/[0.06] hover:bg-[#14171D] transition-all active:scale-[0.97]">
-              <a.i className={`w-5 h-5 ${a.tone}`} />
-              <span className="text-[11px] text-[#A1A1AA] font-medium">{a.l}</span>
-            </Link>
-          ))}
+        {/* ── Invest / Search quick actions (no deposit/withdraw here) ── */}
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          <Link href="/dashboard/invest/etfs" prefetch={false}
+            className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#3B82F6]/10 border border-[#3B82F6]/20 hover:bg-[#3B82F6]/15 transition-all active:scale-[0.97]">
+            <LineChart className="w-4 h-4 text-[#3B82F6]" />
+            <span className="text-[13px] text-white font-medium">Explore ETFs</span>
+          </Link>
+          <Link href="/dashboard/invest/search" prefetch={false}
+            className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#101216] border border-white/[0.06] hover:bg-[#14171D] transition-all active:scale-[0.97]">
+            <Search className="w-4 h-4 text-[#A1A1AA]" />
+            <span className="text-[13px] text-white font-medium">Search</span>
+          </Link>
         </div>
+
+        {/* ── YOUR HOLDINGS (each stock with 24h %) ── */}
+        {holdings.length > 0 && (
+          <section className="mt-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[16px] font-semibold text-white">Your holdings</h2>
+              <span className="text-[11px] text-[#71717A]">{holdings.length} position{holdings.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="rounded-2xl border border-white/[0.06] bg-[#101216] overflow-hidden divide-y divide-white/[0.05]">
+              {holdings.map((p: any) => {
+                const gain = (p.dayGain ?? p.pnl ?? 0) >= 0;
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/dashboard/invest/asset/${p.symbol}`}
+                    prefetch={false}
+                    className="flex items-center justify-between px-4 py-3.5 hover:bg-white/[0.03] transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3B82F6]/20 to-[#8B5CF6]/10 border border-white/[0.06] flex items-center justify-center shrink-0">
+                        <span className="text-[11.5px] font-bold text-white">{String(p.symbol).slice(0, 4)}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[14px] font-semibold text-white truncate">{p.symbol}</div>
+                        <div className="text-[11px] text-[#71717A] truncate">
+                          {Number(p.quantity).toFixed(4)} @ ${Number(p.avgPrice).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-[14px] font-semibold text-white tabular-nums">
+                        ${Number(p.value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                      <div className={`text-[12px] tabular-nums ${gain ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
+                        {gain ? '+' : ''}{Number(p.dayGainPct ?? p.pnlPct ?? 0).toFixed(2)}% 24h
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* ── Top movers (stocks + ETFs) ── */}
         <section className="mt-8">

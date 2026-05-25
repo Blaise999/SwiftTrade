@@ -53,8 +53,8 @@ export default function MobileBottomNav() {
       }`}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="mx-3 mb-3 rounded-2xl border border-white/[0.08] bg-[#101216]/95 backdrop-blur-xl shadow-2xl shadow-black/60">
-        <div className="grid grid-cols-5 px-2 py-2">
+      <div className="mx-3 mb-2 rounded-2xl border border-white/[0.08] bg-[#101216]/95 backdrop-blur-xl shadow-2xl shadow-black/60">
+        <div className="grid grid-cols-4 px-2 py-1.5">
           {ITEMS.map(item => {
             const Icon = item.icon;
             const active = item.match(pathname);
@@ -63,7 +63,7 @@ export default function MobileBottomNav() {
                 key={item.href}
                 href={item.href}
                 prefetch={false}
-                className={`flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-colors ${
                   active ? 'text-white' : 'text-[#71717A] hover:text-[#A1A1AA]'
                 }`}
               >
@@ -77,15 +77,6 @@ export default function MobileBottomNav() {
               </Link>
             );
           })}
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('swift:openMobileMenu'))}
-            className="flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl text-[#71717A] hover:text-[#A1A1AA] transition-colors"
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Menu</span>
-          </button>
         </div>
       </div>
     </nav>
