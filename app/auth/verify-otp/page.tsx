@@ -90,7 +90,7 @@ function VerifyOTPInner() {
   }, [searchParams]);
 
   const { otpEmail, otpName, otpPassword, redirectUrl, setOtpPassword } = useOtpStore();
-  const { signup, login } = useStore();
+  const { signup } = useStore();
 
   // ✅ FIX: useEmail may be typed loosely in your project, so we type-cast results safely
   const emailApi = useEmail() as any;
@@ -290,74 +290,14 @@ function VerifyOTPInner() {
 
       pushLog('signup start', { email: otpEmail, firstName, lastName });
 
-      // Create the account SERVER-SIDE via the admin endpoint. This:
-      //   1. Bypasses Supabase's strict per-IP signup rate limit (the
-      //      cause of the 500 at /auth/v1/signup during testing).
-      //   2. Auto-confirms the email (the user already proved ownership
-      //      via our OTP), so login works immediately afterwards.
-      let adminOk = false;
-      try {
-        const resp = await withTimeout(
-          fetch('/api/auth/admin-signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: otpEmail,
-              password: otpPassword,
-              firstName,
-              lastName,
-            }),
-          }).then(r => r.json()),
-          25000,
-          'admin-signup'
-        );
-        pushLog('admin-signup result', resp);
-        adminOk = !!resp?.ok;
-        if (!adminOk && resp?.error) {
-          pushLog('admin-signup error', resp.error);
-        }
-      } catch (e: any) {
-        pushLog('admin-signup threw (will fall back)', e?.message || e);
-      }
+      const signupResult = await withTimeout(signup(otpEmail, otpPassword, firstName, lastName), 25000, 'signup');
+      pushLog('signup result', { signupResult });
 
-      // Fallback: if the admin path failed (e.g. service role key not set
-      // in this environment), use the normal client signup so we still
-      // create the account.
-      if (!adminOk) {
-        const signupResult = await withTimeout(
-          signup(otpEmail, otpPassword, firstName, lastName),
-          25000,
-          'signup'
-        );
-        pushLog('client signup result', { signupResult });
-
-        if (!signupResult?.success) {
-          setError(signupResult?.error || 'Account creation failed. If this email already exists, go to Login.');
-          pushLog('signup failed -> redirect login in 2s');
-          setTimeout(() => router.push('/auth/login'), 2000);
-          return;
-        }
-
-        // Best-effort confirm so login isn't blocked by email verification
-        try {
-          await fetch('/api/auth/confirm-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: otpEmail }),
-          });
-        } catch {}
-      }
-
-      // Now sign the user in client-side so we have a live session.
-      try {
-        const signInRes = await withTimeout(
-          login(otpEmail, otpPassword),
-          25000,
-          'post-signup-login'
-        );
-        pushLog('post-signup login', signInRes);
-      } catch (e: any) {
-        pushLog('post-signup login failed (non-fatal)', e?.message || e);
+      if (!signupResult?.success) {
+        setError(signupResult?.error || 'Account creation failed. If this email already exists, go to Login.');
+        pushLog('signup failed -> redirect login in 2s');
+        setTimeout(() => router.push('/auth/login'), 2000);
+        return;
       }
 
       // ✅ get userId from current session

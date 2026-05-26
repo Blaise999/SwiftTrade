@@ -59,36 +59,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ───────────────────────────────────────────────────────────────
-    // DEV / DEMO MODE
-    //
-    // Any time we don't have a working email provider (no RESEND_API_KEY
-    // or no EMAIL_FROM, or we're in NODE_ENV=development without explicit
-    // production-OTP opt-in), the OTP code is FROZEN to "000000".
-    //
-    // This unblocks local development: no real email is sent, and the user
-    // can just type 000000 in the verify-otp page. It also matches what
-    // verify-otp/route.ts now accepts.
-    // ───────────────────────────────────────────────────────────────
-    const isDev = process.env.NODE_ENV !== "production";
-    const forceDevOtp = process.env.DEV_OTP === "1" || isDev;
-    const emailMissing =
-      !process.env.RESEND_API_KEY ||
-      !process.env.EMAIL_FROM ||
-      !isEmailConfigured();
-
-    if (forceDevOtp || emailMissing) {
-      console.log(
-        `[API] send-otp dev/demo mode → ${email} (code is 000000)`,
-        { requestId, isDev, emailMissing }
-      );
+    // Demo mode fallback
+    if (!isEmailConfigured() || !isSupabaseConfigured()) {
+      console.log(`[API] Demo mode: OTP "sent" to ${email}`, { requestId });
       return NextResponse.json({
         success: true,
-        message: "OTP sent (dev mode — use 000000)",
+        message: "OTP sent (demo mode)",
         demo: true,
         expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
         requestId,
       });
+    }
+
+    // Hard fail early if prod env is missing (prevents silent crashes)
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json(
+        { success: false, error: "missing_RESEND_API_KEY", requestId },
+        { status: 500 }
+      );
+    }
+    if (!process.env.EMAIL_FROM) {
+      return NextResponse.json(
+        { success: false, error: "missing_EMAIL_FROM", requestId },
+        { status: 500 }
+      );
     }
 
     let result: any;

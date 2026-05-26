@@ -40,32 +40,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ───────────────────────────────────────────────────────────────
-    // DEV / DEMO MODE
-    //
-    // In development (or when the email service isn't configured), the
-    // canonical dev OTP is "000000". Accept it unconditionally so signups
-    // don't get stuck waiting for a real email.
-    // ───────────────────────────────────────────────────────────────
-    const isDev = process.env.NODE_ENV !== "production";
-    const forceDevOtp = process.env.DEV_OTP === "1" || isDev;
-    const emailMissing = !isEmailConfigured() || !isSupabaseConfigured();
-
-    if (forceDevOtp || emailMissing) {
-      if (otp === "000000") {
-        console.log(`[verify-otp] dev/demo OK for ${email}`);
-        return NextResponse.json({
-          success: true,
-          message: "Verification successful (dev mode)",
-          demo: true,
-        });
-      }
-      // In dev mode, ALSO accept any other 6-digit code so the legacy
-      // demo behavior keeps working for screen recordings etc.
-      console.log(`[verify-otp] dev/demo accept any 6-digit code for ${email}: ${otp}`);
+    // ✅ DEMO MODE: If email service or Supabase not configured, accept any 6-digit code
+    if (!isEmailConfigured() || !isSupabaseConfigured()) {
+      console.log(`[verify-otp] Demo mode: accepting code ${otp} for ${email}`);
       return NextResponse.json({
         success: true,
-        message: "Verification successful (dev mode)",
+        message: "Verification successful (demo mode)",
         demo: true,
       });
     }

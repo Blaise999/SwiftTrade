@@ -161,7 +161,6 @@ export async function POST(req: NextRequest) {
     }
 
     // ────────────────── REJECT ──────────────────
-    // ────────────────── REJECT ──────────────────
     if (action === 'reject') {
       const { data: updated, error } = await supabaseAdmin
         .from('bridge_requests')
@@ -185,119 +184,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, request: updated });
     }
 
-    // ────────────────── SEND_ACCOUNT (admin gives deposit account to user) ──────────────────
-    if (action === 'send_account') {
-      const { account, instructions } = body;
-      if (!account) {
-        return NextResponse.json({ error: 'account required' }, { status: 400 });
-      }
-      const { data: updated, error } = await supabaseAdmin
-        .from('bridge_requests')
-        .update({
-          admin_id: adminId,
-          admin_deposit_account: String(account),
-          admin_deposit_instructions: String(instructions || ''),
-          admin_responded_at: new Date().toISOString(),
-          status: 'awaiting_payment',
-          workflow_step: 'awaiting_user_payment',
-        })
-        .eq('id', request_id)
-        .select('*')
-        .single();
-
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-      await supabaseAdmin.from('user_notifications').insert({
-        user_id: request.user_id,
-        type: 'bridge.account_sent',
-        title: 'SwiftBridge — Deposit account ready',
-        body: 'Admin has sent the account to pay into. Open your request to view and upload your receipt + wallet address.',
-        data: { request_id, account, instructions },
-      });
-
-      return NextResponse.json({ success: true, request: updated });
-    }
-
-    // ────────────────── SEND_COINS (admin paid the user's wallet) ──────────────────
-    if (action === 'send_coins') {
-      const { payout_tx } = body;
-      if (!payout_tx) {
-        return NextResponse.json({ error: 'payout_tx (transaction hash) required' }, { status: 400 });
-      }
-      if (!request.user_wallet_address) {
-        return NextResponse.json(
-          { error: 'User has not submitted their wallet address yet' },
-          { status: 400 },
-        );
-      }
-
-      const { data: updated, error } = await supabaseAdmin
-        .from('bridge_requests')
-        .update({
-          admin_id: adminId,
-          admin_payout_tx: String(payout_tx),
-          admin_payout_at: new Date().toISOString(),
-          status: 'completed',
-          workflow_step: 'completed',
-        })
-        .eq('id', request_id)
-        .select('*')
-        .single();
-
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-      await supabaseAdmin.from('user_notifications').insert({
-        user_id: request.user_id,
-        type: 'bridge.completed',
-        title: 'SwiftBridge — Coins sent',
-        body: `Your ${request.target_asset || 'crypto'} has been sent. Tx: ${String(payout_tx).slice(0, 16)}…`,
-        data: { request_id, payout_tx },
-      });
-
-      return NextResponse.json({ success: true, request: updated });
-    }
-
     return NextResponse.json({ error: `Unknown action '${action}'` }, { status: 400 });
   } catch (err: any) {
     console.error('[bridge/admin]', err);
     return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
-}
-
-// ────────────────── GET — list all bridge requests for admin ──────────────────
-export async function GET(req: NextRequest) {
-  const auth = await isAdmin(req);
-  if (!auth.ok) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const url = new URL(req.url);
-  const status = url.searchParams.get('status');
-
-  let query = supabaseAdmin
-    .from('bridge_requests')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(200);
-
-  if (status && status !== 'all') {
-    query = query.eq('status', status);
-  }
-
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // Hydrate user emails (separate query to avoid FK-name issues)
-  const userIds = Array.from(new Set((data || []).map((r: any) => r.user_id).filter(Boolean)));
-  let emailMap: Record<string, string> = {};
-  if (userIds.length) {
-    const { data: users } = await supabaseAdmin
-      .from('users')
-      .select('id, email')
-      .in('id', userIds);
-    for (const u of users || []) emailMap[(u as any).id] = (u as any).email;
-  }
-
-  const rows = (data || []).map((r: any) => ({ ...r, user_email: emailMap[r.user_id] || null }));
-  return NextResponse.json({ ok: true, requests: rows });
 }

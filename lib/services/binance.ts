@@ -337,7 +337,7 @@ class BinanceService {
           this.ensureConnection(streamName, type);
           this.reconnectTimeouts.delete(streamName);
         }, 3000);
-        this.reconnectTimeouts.set(streamName, timeout);
+        this.reconnectTimeouts.set(streamName, timeout as unknown as NodeJS.Timeout);
       }
     };
 

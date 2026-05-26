@@ -94,25 +94,3 @@ insert into public.platform_settings (key, value, description) values
   ('support_email',        '"support@swifttrade.io"',    'Support inbox'),
   ('admin_notification_email','"ops@swifttrade.io"',     'Inbox for ops alerts')
 on conflict (key) do update set value = excluded.value, updated_at = now();
-
--- =====================================================================
--- ETF SEED DATA (curated investing universe)
--- =====================================================================
-insert into public.assets (symbol, name, asset_type, category, tracks, expense_ratio, dividend_yield, fractionable, seed_price, description)
-values
-  ('VOO','Vanguard S&P 500 ETF','etf','sp500','S&P 500 Index',0.03,1.31,true,512.34,'Holds the 500 large-cap U.S. companies in the S&P 500.'),
-  ('SPY','SPDR S&P 500 ETF Trust','etf','sp500','S&P 500 Index',0.0945,1.27,true,557.81,'The oldest and most heavily traded S&P 500 ETF.'),
-  ('IVV','iShares Core S&P 500 ETF','etf','sp500','S&P 500 Index',0.03,1.29,true,559.12,'BlackRock low-cost S&P 500 fund.'),
-  ('SPLG','SPDR Portfolio S&P 500 ETF','etf','sp500','S&P 500 Index',0.02,1.30,true,65.47,'Lowest-expense S&P 500 ETF here.'),
-  ('QQQ','Invesco QQQ Trust','etf','nasdaq_100','Nasdaq-100 Index',0.20,0.57,true,478.92,'Tracks the 100 largest non-financial Nasdaq companies.'),
-  ('VTI','Vanguard Total Stock Market ETF','etf','total_market','CRSP US Total Market',0.03,1.32,true,273.55,'Owns essentially the entire U.S. stock market.'),
-  ('SCHD','Schwab US Dividend Equity ETF','etf','dividend','DJ U.S. Dividend 100',0.06,3.48,true,27.84,'Quality U.S. dividend-paying companies.'),
-  ('VYM','Vanguard High Dividend Yield ETF','etf','dividend','FTSE High Dividend Yield',0.06,2.78,true,128.41,'U.S. companies with above-average dividend yields.'),
-  ('XLK','Technology Select Sector SPDR Fund','etf','sector','Technology Select Sector',0.09,0.61,true,232.07,'Technology companies within the S&P 500.'),
-  ('VGT','Vanguard Information Technology ETF','etf','sector','MSCI US IMI IT',0.10,0.60,true,601.88,'Broad U.S. information-technology sector.'),
-  ('BND','Vanguard Total Bond Market ETF','etf','bond','Bloomberg U.S. Aggregate Bond',0.03,3.92,true,73.22,'Broad U.S. investment-grade bond exposure.')
-on conflict (symbol) do update set
-  name = excluded.name, category = excluded.category, tracks = excluded.tracks,
-  expense_ratio = excluded.expense_ratio, dividend_yield = excluded.dividend_yield,
-  seed_price = excluded.seed_price, description = excluded.description,
-  updated_at = now();

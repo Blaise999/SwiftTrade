@@ -92,7 +92,7 @@ export function useNotifications() {
   useEffect(() => {
     if (!user?.id) return;
     refreshUnreadCount();
-    intervalRef.current = setInterval(refreshUnreadCount, 30000);
+    intervalRef.current = setInterval(refreshUnreadCount, 30000) as unknown as NodeJS.Timeout;
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };

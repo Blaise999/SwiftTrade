@@ -3,54 +3,41 @@
 /**
  * APP PROVIDERS
  *
- * PERFORMANCE FIX:
- * The Web3 stack (wagmi + RainbowKit + MetaMask SDK) is ~hundreds of KB
- * and was previously bundled into every page (landing, dashboard,
- * everything). That is the main reason first load + Fast Refresh were
- * extremely slow.
+ * ✅ HYDRATION FIX:
+ * - Server renders: AuthProvider → children (page content IS in server HTML)
+ * - Client 1st render: same (mounted=false, so Web3 wrapper is skipped)
+ * - Client after useEffect: AuthProvider → Web3Provider → children
  *
- * It is now a `next/dynamic` (ssr:false) chunk that loads AFTER first
- * paint. `children` always render immediately, so there's no hydration
- * mismatch and no blocked content.
+ * This ensures server HTML matches client first render (no hydration mismatch).
+ * Web3/RainbowKit wrapping is added AFTER hydration completes.
+ *
+ * The old approach used `next/dynamic({ ssr: false })` which SWALLOWED {children}
+ * on the server (loading:()=>null ate the page content) → empty server HTML →
+ * massive #418 hydration mismatch → #423 recovery → appendChild DOM errors.
  */
 
 import { ReactNode, useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { AuthProvider } from '@/lib/supabase/auth-provider';
-import { TranslatorProvider } from '@/lib/i18n';
-
-const Web3Provider = dynamic(
-  () => import('@/lib/wagmi/provider').then(m => m.Web3Provider),
-  { ssr: false, loading: () => null }
-);
+import { Web3Provider } from '@/lib/wagmi/provider';
 
 interface ProvidersProps {
   children: ReactNode;
 }
 
 export function Providers({ children }: ProvidersProps) {
-  return (
-    <TranslatorProvider>
-      <AuthProvider>
-        <DeferredWeb3>{children}</DeferredWeb3>
-      </AuthProvider>
-    </TranslatorProvider>
-  );
-}
-
-/**
- * Renders children right away. Mounts the Web3 context around them only
- * after first paint (idle tick), so wallet libraries never block the
- * initial render of any page.
- */
-function DeferredWeb3({ children }: { children: ReactNode }) {
-  const [ready, setReady] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const id = setTimeout(() => setReady(true), 0);
-    return () => clearTimeout(id);
+    setMounted(true);
   }, []);
 
-  if (!ready) return <>{children}</>;
-  return <Web3Provider>{children}</Web3Provider>;
+  return (
+    <AuthProvider>
+      {mounted ? (
+        <Web3Provider>{children}</Web3Provider>
+      ) : (
+        children
+      )}
+    </AuthProvider>
+  );
 }

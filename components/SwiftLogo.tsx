@@ -1,93 +1,133 @@
 'use client';
 
-import Link from 'next/link';
+import React from 'react';
 
 /**
- * Swift Trade logo: a sapphire shield containing a stylized "S" formed by
- * two opposing speed lines — implies motion (Swift) and protection (custody).
- * Wordmark uses Fraunces serif for editorial feel; tagline locks the brand
- * to its origin city.
+ * SwiftLogo — the official Swift Trade brand mark.
+ *
+ * The mark: a stylised letter "S" sliced into two stacked ribbons that
+ * also read as an upward chart line — three flat plateaus stepping up
+ * from bottom-left to top-right. Wordmark uses a clean tracked sans
+ * with a gold accent on the "·" separator dot.
+ *
+ * Use `mark` (icon only) for favicons and small spaces. Use `lockup`
+ * (mark + wordmark) for navigation and headers.
  */
-export default function SwiftLogo({
-  size = 'md',
-  withTagline = true,
-  href = '/',
+export function SwiftMark({
+  size = 32,
+  className = '',
+  gradient = true,
 }: {
-  size?: 'sm' | 'md' | 'lg';
-  withTagline?: boolean;
-  href?: string | null;
+  size?: number;
+  className?: string;
+  gradient?: boolean;
 }) {
-  const dim = size === 'sm' ? 32 : size === 'lg' ? 48 : 38;
-  const wordSize = size === 'sm' ? 'text-base' : size === 'lg' ? 'text-2xl' : 'text-lg';
+  const gradId = React.useId();
+  const ribbon1 = gradient ? `url(#${gradId}-r1)` : '#22D3EE';
+  const ribbon2 = gradient ? `url(#${gradId}-r2)` : '#5B7CFF';
 
-  const mark = (
-    <div className="flex items-center gap-2.5">
-      <div className="relative" style={{ width: dim, height: dim }}>
-        {/* Glow halo */}
-        <div className="absolute inset-0 rounded-[10px] bg-sapphire-500/30 blur-md scale-90 opacity-70" />
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-label="Swift Trade"
+      role="img"
+    >
+      <defs>
+        <linearGradient id={`${gradId}-r1`} x1="6" y1="10" x2="34" y2="20" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#00E88F" />
+          <stop offset="100%" stopColor="#22D3EE" />
+        </linearGradient>
+        <linearGradient id={`${gradId}-r2`} x1="6" y1="22" x2="34" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#22D3EE" />
+          <stop offset="100%" stopColor="#5B7CFF" />
+        </linearGradient>
+        <linearGradient id={`${gradId}-bg`} x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#0D1324" />
+          <stop offset="100%" stopColor="#050713" />
+        </linearGradient>
+      </defs>
 
-        {/* The mark itself */}
-        <svg
-          viewBox="0 0 48 48"
-          width={dim}
-          height={dim}
-          className="relative drop-shadow-[0_2px_8px_rgba(91,109,255,0.35)]"
-          aria-label="Swift Trade"
+      {/* Rounded square background with subtle border */}
+      <rect x="0.5" y="0.5" width="39" height="39" rx="10" fill={`url(#${gradId}-bg)`} stroke="rgba(255,255,255,0.08)" />
+
+      {/* Upper ribbon — top half of the "S", reads as an up-step */}
+      <path
+        d="M9 14 L18 9 L24 13 L31 9.5"
+        stroke={ribbon1}
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      {/* Middle accent — the kerf that suggests the S waist */}
+      <circle cx="20" cy="20" r="1.4" fill="#E7C66A" />
+      {/* Lower ribbon — bottom half of the "S", a second up-step */}
+      <path
+        d="M9 30.5 L16 26.5 L22 30.5 L31 25"
+        stroke={ribbon2}
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
+export function SwiftLogo({
+  size = 32,
+  className = '',
+  wordmark = true,
+  wordmarkColor = '#F8FAFC',
+}: {
+  size?: number;
+  className?: string;
+  wordmark?: boolean;
+  wordmarkColor?: string;
+}) {
+  if (!wordmark) {
+    return <SwiftMark size={size} className={className} />;
+  }
+  return (
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      <SwiftMark size={size} />
+      <div className="flex items-baseline gap-1.5 leading-none">
+        <span
+          className="font-semibold tracking-tight"
+          style={{
+            fontSize: size * 0.55,
+            color: wordmarkColor,
+            letterSpacing: '-0.01em',
+          }}
         >
-          <defs>
-            <linearGradient id="stMarkBg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%"  stopColor="#7d8aff" />
-              <stop offset="55%" stopColor="#5b6dff" />
-              <stop offset="100%" stopColor="#2e3bb8" />
-            </linearGradient>
-            <linearGradient id="stMarkAccent" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#fdfcf8" />
-              <stop offset="100%" stopColor="#dde2ff" />
-            </linearGradient>
-            <linearGradient id="stMarkBolt" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#fdfcf8" stopOpacity="1" />
-              <stop offset="100%" stopColor="#dde2ff" stopOpacity="0.85" />
-            </linearGradient>
-          </defs>
-
-          {/* Rounded square shield */}
-          <rect x="2" y="2" width="44" height="44" rx="11" fill="url(#stMarkBg)" />
-
-          {/* Inner border highlight */}
-          <rect x="2.5" y="2.5" width="43" height="43" rx="10.5"
-                fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.75" />
-
-          {/* "S" formed by two opposing speed-lines / chevrons.
-              Top-right hook + bottom-left hook = an "S" silhouette,
-              also reads as a lightning bolt = "Swift". */}
-          <path
-            d="M14 18 L26 18 Q34 18 30 24 L18 24 Q14 24 18 30 L34 30"
-            fill="none"
-            stroke="url(#stMarkBolt)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Up-tick accent (echoes a chart) — bottom-right corner */}
-          <circle cx="34" cy="30" r="2" fill="url(#stMarkAccent)" />
-          <circle cx="34" cy="30" r="3.5" fill="none" stroke="url(#stMarkAccent)" strokeWidth="0.5" opacity="0.4" />
-        </svg>
-      </div>
-
-      <div className="leading-none">
-        <div className={`font-serif font-medium text-pearl-50 ${wordSize} tracking-tight`}>
-          Swift <span className="italic text-champagne-300/90 font-light">Trade</span>
-        </div>
-        {withTagline && (
-          <div className="text-[9px] text-pearl-300/55 tracking-[0.28em] uppercase mt-1">
-            Hong Kong · Est. 2018
-          </div>
-        )}
+          Swift
+        </span>
+        <span
+          style={{
+            color: '#E7C66A',
+            fontSize: size * 0.5,
+            lineHeight: 1,
+          }}
+        >·</span>
+        <span
+          className="font-light tracking-tight"
+          style={{
+            fontSize: size * 0.55,
+            color: wordmarkColor,
+            letterSpacing: '-0.01em',
+            opacity: 0.92,
+          }}
+        >
+          Trade
+        </span>
       </div>
     </div>
   );
-
-  if (!href) return mark;
-  return <Link href={href} className="group inline-block">{mark}</Link>;
 }
+
+export default SwiftLogo;

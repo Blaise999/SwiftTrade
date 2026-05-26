@@ -4,7 +4,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { PortfolioCommandCard } from '@/components/dashboard/PortfolioCommandCard';
 import {
   Wallet,
   Eye,
@@ -47,7 +46,7 @@ function CardLink({
   className?: string;
 }) {
   return (
-    <Link prefetch={false}
+    <Link
       href={href}
       className={`block select-none rounded-xl border border-white/10 bg-white/5 transition-all
         hover:border-white/20 hover:bg-white/[0.07]
@@ -73,11 +72,12 @@ export default function DashboardOverview() {
     if (!user?.id || !isSupabaseConfigured()) return;
 
     try {
-      const [{ data: trades }, { data: deposits }, { data: bonuses }, { data: withdrawals }, { data: referrals }] =
+      const [{ data: trades }, { data: deposits }, { data: tierPurchases }, { data: bonuses }, { data: withdrawals }, { data: referrals }] =
         await Promise.all([
           supabase.from('trades').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
           supabase.from('deposits').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-          supabase.from('transactions').select('*').eq('user_id', user.id).in('type', ['bonus', 'deposit']).order('created_at', { ascending: false }).limit(3),
+          supabase.from('tier_purchases').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
+          supabase.from('transactions').select('*').eq('user_id', user.id).in('type', ['tier_bonus', 'bonus', 'deposit']).order('created_at', { ascending: false }).limit(3),
           supabase.from('withdrawals').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
           supabase.from('referrals').select('*').eq('referrer_id', user.id).order('created_at', { ascending: false }).limit(3),
         ]);
@@ -110,11 +110,30 @@ export default function DashboardOverview() {
         });
       });
 
+      (tierPurchases || []).forEach((tp: any) => {
+        const tierNames: Record<number, string> = {
+          1: 'Starter',
+          2: 'Trader',
+          3: 'Professional',
+          4: 'Elite',
+        };
+        items.push({
+          id: `tier-${tp.id}`,
+          kind: 'tier',
+          label: `${tierNames[tp.tier_level] || 'Tier'} Purchase`,
+          sublabel: `Tier ${tp.tier_level} • ${tp.status}`,
+          amount: Number(tp.price_amount ?? 0),
+          pnl: tp.status === 'approved' ? Number(tp.bonus_amount ?? 0) : 0,
+          status: tp.status,
+          created_at: tp.created_at,
+        });
+      });
+
       (bonuses || []).forEach((b: any) => {
         items.push({
           id: `tx-${b.id}`,
           kind: 'bonus',
-          label: b.type === 'deposit' ? 'Deposit Credit' : 'Bonus',
+          label: b.type === 'tier_bonus' ? 'Tier Bonus' : b.type === 'deposit' ? 'Deposit Credit' : 'Bonus',
           sublabel: b.description || b.reference_type || 'Credit',
           amount: Math.abs(Number(b.amount ?? 0)),
           pnl: Number(b.amount ?? 0),
@@ -171,53 +190,6 @@ export default function DashboardOverview() {
     n((user as any)?.balance) ||
     0;
 
-  // Stock/ETF + crypto holdings — full breakdown for dashboard chips
-  const [invest, setInvest] = useState({ value: 0, dayPnl: 0, dayPct: 0 });
-  const [crypto, setCrypto] = useState({ value: 0, dayPnl: 0, dayPct: 0 });
-
-  useEffect(() => {
-    if (!user?.id) return;
-    (async () => {
-      try {
-        const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
-        const j = await r.json().catch(() => ({}));
-        if (j?.ok) {
-          setInvest({
-            value: Number(j.totalValue) || 0,
-            dayPnl: Number(j.totalDayGain) || 0,
-            dayPct: Number(j.totalDayGainPct) || 0,
-          });
-        }
-      } catch {/* silent */}
-    })();
-    // Crypto positions — use the existing crypto store if available
-    (async () => {
-      try {
-        const { supabase } = await import('@/lib/supabase/client');
-        const { data } = await supabase
-          .from('crypto_positions')
-          .select('symbol, quantity, average_price, last_price, pnl, pnl_percent')
-          .eq('user_id', user.id);
-        if (Array.isArray(data) && data.length) {
-          let v = 0, p = 0, costBasis = 0;
-          for (const row of data) {
-            const qty = Number(row.quantity) || 0;
-            const lp = Number(row.last_price) || Number(row.average_price) || 0;
-            const avg = Number(row.average_price) || 0;
-            v += qty * lp;
-            costBasis += qty * avg;
-            p += Number(row.pnl) || 0;
-          }
-          const pct = costBasis > 0 ? (p / costBasis) * 100 : 0;
-          setCrypto({ value: v, dayPnl: p, dayPct: pct });
-        }
-      } catch {/* silent */}
-    })();
-  }, [user?.id]);
-
-  const investValue = invest.value;
-  const cryptoValue = crypto.value;
-
   const activeBots = bots.filter((b) => b.status === 'running').length;
   const totalBotPnl = bots.reduce((s, b) => s + (b.total_pnl ?? 0), 0);
 
@@ -252,7 +224,7 @@ export default function DashboardOverview() {
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} · Markets open · Hong Kong
           </p>
         </div>
-        <Link prefetch={false}
+        <Link
           href="/dashboard/bridge"
           className="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-pearl-50/[0.04] border border-pearl-100/[0.08] hover:border-champagne-400/30 text-pearl-100 hover:text-pearl-50 text-[13px] font-medium transition-all group"
         >
@@ -262,123 +234,99 @@ export default function DashboardOverview() {
         </Link>
       </div>
 
-      {/* ─── PORTFOLIO COMMAND CARD (mobile-first, animated chart) ─── */}
+      {/* ─── BALANCE HERO ─── */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        className="grid lg:grid-cols-12 gap-6 items-stretch"
       >
-        <PortfolioCommandCard
-          totalAssets={cashBalance + investValue + cryptoValue}
-          cashBalance={cashBalance}
-          investValue={investValue}
-          cryptoValue={cryptoValue}
-          dayPnl={invest.dayPnl + crypto.dayPnl}
-          dayPct={
-            (cashBalance + investValue + cryptoValue) > 0
-              ? ((invest.dayPnl + crypto.dayPnl) / (cashBalance + investValue + cryptoValue)) * 100
-              : 0
-          }
-        />
-      </motion.div>
+        <div className="lg:col-span-7 relative overflow-hidden rounded-[20px] border border-pearl-100/[0.07] bg-gradient-to-br from-charcoal/70 via-obsidian/80 to-void p-7 lg:p-9 shadow-card">
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-sapphire-500/15 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-champagne-500/8 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3 pointer-events-none" />
 
-      {/* ─── ASSET BREAKDOWN (Stocks + Crypto with day %) ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08 }}
-        className="grid grid-cols-2 gap-2.5"
-      >
-        <Link
-          prefetch={false}
-          href="/dashboard/invest"
-          className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors"
-        >
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
-            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#71717A]">Stocks &amp; ETFs</span>
-          </div>
-          <div className="text-[18px] font-semibold text-white tabular-nums">{formatBal(investValue)}</div>
-          {investValue > 0 ? (
-            <div className={`text-[11px] mt-0.5 tabular-nums ${invest.dayPnl >= 0 ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
-              {invest.dayPnl >= 0 ? '+' : ''}{invest.dayPnl.toFixed(2)} ({invest.dayPnl >= 0 ? '+' : ''}{invest.dayPct.toFixed(2)}%) today
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-[10px] uppercase tracking-[0.3em] text-pearl-300/55 font-medium">
+                Net assets · USD
+              </div>
+              <button
+                onClick={() => setHideBalance(!hideBalance)}
+                className="p-1.5 hover:bg-pearl-50/[0.04] rounded-lg transition-colors"
+              >
+                {hideBalance ? <EyeOff className="w-4 h-4 text-pearl-300/55" /> : <Eye className="w-4 h-4 text-pearl-300/55" />}
+              </button>
             </div>
-          ) : (
-            <div className="text-[11px] text-[#52525B] mt-0.5">No holdings yet</div>
-          )}
-        </Link>
-        <Link
-          prefetch={false}
-          href="/dashboard/portfolio"
-          className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors"
-        >
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
-            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#71717A]">Crypto</span>
-          </div>
-          <div className="text-[18px] font-semibold text-white tabular-nums">{formatBal(cryptoValue)}</div>
-          {cryptoValue > 0 ? (
-            <div className={`text-[11px] mt-0.5 tabular-nums ${crypto.dayPnl >= 0 ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
-              {crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPnl.toFixed(2)} ({crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPct.toFixed(2)}%) total
+
+            <p className="font-serif font-light text-5xl lg:text-6xl text-pearl-50 tracking-tight leading-none">
+              {formatBal(cashBalance)}
+            </p>
+            <div className="mt-3 flex items-center gap-3 text-[13px]">
+              <span className="text-profit font-mono">+$24,108.20</span>
+              <span className="text-pearl-300/45">today</span>
+              <span className="w-px h-3 bg-pearl-100/15" />
+              <span className="text-pearl-300/55 font-mono">≈ {hideBalance ? '••••••' : `${(cashBalance / 7.81).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} HKD`}</span>
             </div>
-          ) : (
-            <div className="text-[11px] text-[#52525B] mt-0.5">No holdings yet</div>
-          )}
-        </Link>
-      </motion.div>
 
-      {/* ─── QUICK ACTIONS (app-like, not corporate) ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
-      >
-        {[
-          { l: 'Deposit',    h: '/dashboard/wallet',                i: CreditCard, c: 'text-[#16C784]', bg: 'from-[#16C784]/15 to-transparent' },
-          { l: 'Withdraw',   h: '/dashboard/wallet?tab=withdraw',   i: Send,       c: 'text-[#A1A1AA]', bg: 'from-white/[0.05] to-transparent' },
-          { l: 'Trade',      h: '/dashboard/trade/crypto',          i: TrendingUp, c: 'text-[#3B82F6]', bg: 'from-[#3B82F6]/15 to-transparent' },
-          { l: 'Bridge',     h: '/dashboard/bridge',                i: Globe,      c: 'text-[#F5C542]', bg: 'from-[#F5C542]/15 to-transparent' },
-        ].map(a => (
-          <Link key={a.l} prefetch={false} href={a.h}
-            className={`group relative overflow-hidden flex flex-col items-center justify-center gap-2 py-5 rounded-2xl border border-white/[0.06] bg-gradient-to-br ${a.bg} bg-[#101216] hover:border-white/[0.12] active:scale-[0.98] transition-all`}>
-            <a.i className={`w-5 h-5 ${a.c}`} />
-            <span className="text-[12.5px] text-white font-medium">{a.l}</span>
-          </Link>
-        ))}
-      </motion.div>
+            <div className="mt-9 flex flex-wrap gap-2.5">
+              <Link
+                href="/dashboard/wallet"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-pearl-50 hover:bg-pearl-100 text-void font-medium text-sm rounded-full transition-all"
+              >
+                <CreditCard className="w-3.5 h-3.5" /> Deposit
+              </Link>
+              <Link
+                href="/dashboard/wallet?tab=withdraw"
+                className="inline-flex items-center gap-2 px-5 py-2.5 border border-pearl-100/[0.12] hover:border-pearl-100/[0.25] text-pearl-100 font-medium text-sm rounded-full transition-all"
+              >
+                <Send className="w-3.5 h-3.5" /> Withdraw
+              </Link>
+              <Link
+                href="/dashboard/trade/crypto"
+                className="inline-flex items-center gap-2 px-5 py-2.5 border border-pearl-100/[0.12] hover:border-pearl-100/[0.25] text-pearl-100 font-medium text-sm rounded-full transition-all"
+              >
+                <TrendingUp className="w-3.5 h-3.5" /> Trade
+              </Link>
+              <Link
+                href="/dashboard/bridge"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-champagne-400/[0.10] border border-champagne-400/30 hover:bg-champagne-400/15 text-champagne-200 font-medium text-sm rounded-full transition-all"
+              >
+                <Globe className="w-3.5 h-3.5" /> SwiftBridge
+              </Link>
+            </div>
+          </div>
+        </div>
 
-      {/* ─── Side stats row ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="grid grid-cols-2 lg:grid-cols-3 gap-3"
-      >
-        <CardLink href="/dashboard/portfolio" className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#71717A] mb-1.5">Portfolio</div>
-          <div className="text-[18px] text-white font-semibold tabular-nums">{formatBal(cashBalance + investValue)}</div>
-          <div className="text-[11px] text-[#16C784] mt-0.5 tabular-nums">+0.42% today</div>
-        </CardLink>
-        <CardLink href="/dashboard/referrals" className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#71717A] mb-1.5">Referrals</div>
-          <div className="text-[18px] text-white font-semibold tabular-nums">{(user as any)?.referral_count || 0}</div>
-          <div className="text-[11px] text-[#F5C542] mt-0.5">Invite, earn →</div>
-        </CardLink>
-        <CardLink href="/dashboard/connect-wallet" className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors col-span-2 lg:col-span-1">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#71717A] mb-1.5">Self-custody wallet</div>
-          {walletConnected ? (
-            <>
-              <div className="text-[14px] font-mono text-[#16C784] tabular-nums">{walletAddress?.slice(0, 6)}…{walletAddress?.slice(-4)}</div>
-              <div className="text-[11px] text-[#71717A] mt-0.5">Connected</div>
-            </>
-          ) : (
-            <>
-              <div className="text-[16px] text-white font-medium">Not connected</div>
-              <div className="text-[11px] text-[#3B82F6] mt-0.5">Connect wallet →</div>
-            </>
-          )}
-        </CardLink>
+        {/* RIGHT: Quick stats stack */}
+        <div className="lg:col-span-5 grid grid-cols-2 lg:grid-cols-1 gap-px bg-pearl-100/[0.07] rounded-[20px] overflow-hidden border border-pearl-100/[0.07]">
+          <CardLink href="/dashboard/portfolio" className="bg-gradient-to-br from-charcoal/40 to-obsidian/60 p-5 lg:p-6 hover:from-charcoal/60 transition-colors">
+            <div className="text-[10px] uppercase tracking-[0.25em] text-pearl-300/55 mb-2">Portfolio value</div>
+            <div className="font-serif text-2xl text-pearl-50 font-light tracking-tight">{formatBal(cashBalance)}</div>
+            <div className="text-[11px] text-profit/85 font-mono mt-1">+1.91% today</div>
+          </CardLink>
+          <CardLink href="/dashboard/tier" className="bg-gradient-to-br from-charcoal/40 to-obsidian/60 p-5 lg:p-6 hover:from-charcoal/60 transition-colors">
+            <div className="text-[10px] uppercase tracking-[0.25em] text-pearl-300/55 mb-2">Current tier</div>
+            <div className="font-serif text-2xl text-pearl-50 font-light tracking-tight capitalize">
+              {(user as any)?.tier || 'Starter'}
+            </div>
+            <div className="text-[11px] text-champagne-300/75 mt-1">Upgrade for higher limits →</div>
+          </CardLink>
+          <CardLink href="/dashboard/connect-wallet" className="bg-gradient-to-br from-charcoal/40 to-obsidian/60 p-5 lg:p-6 hover:from-charcoal/60 transition-colors col-span-2 lg:col-span-1">
+            <div className="text-[10px] uppercase tracking-[0.25em] text-pearl-300/55 mb-2">Self-custody wallet</div>
+            {walletConnected ? (
+              <>
+                <div className="text-[15px] font-mono text-profit">
+                  {walletAddress?.slice(0, 6)}…{walletAddress?.slice(-4)}
+                </div>
+                <div className="text-[11px] text-pearl-300/55 mt-1">Connected · keys are yours</div>
+              </>
+            ) : (
+              <>
+                <div className="font-serif text-xl text-pearl-50 font-light tracking-tight">Not connected</div>
+                <div className="text-[11px] text-champagne-300/75 mt-1">Bring your own keys →</div>
+              </>
+            )}
+          </CardLink>
+        </div>
       </motion.div>
 
       {/* ─── ASSET CLASSES ─── */}
@@ -397,7 +345,7 @@ export default function DashboardOverview() {
             { name: 'Foreign exchange', sub: 'EUR/USD · GBP/USD · 60+ pairs', href: '/dashboard/trade/fx', icon: DollarSign },
             { name: 'Equities',          sub: 'AAPL · TSLA · NVDA · 5,000+ symbols', href: '/dashboard/trade/stocks', icon: BarChart3 },
           ].map((m) => (
-            <Link prefetch={false} key={m.name} href={m.href} className="group bg-gradient-to-br from-charcoal/40 to-obsidian/60 p-7 hover:from-charcoal/70 transition-colors flex items-start gap-5">
+            <Link key={m.name} href={m.href} className="group bg-gradient-to-br from-charcoal/40 to-obsidian/60 p-7 hover:from-charcoal/70 transition-colors flex items-start gap-5">
               <div className="w-11 h-11 rounded-[10px] border border-pearl-100/[0.10] flex items-center justify-center flex-shrink-0 group-hover:border-champagne-400/30 transition-colors">
                 <m.icon className="w-[18px] h-[18px] text-pearl-100" strokeWidth={1.75} />
               </div>
@@ -427,7 +375,7 @@ export default function DashboardOverview() {
                 ? 'Your account is fully verified. All limits are unlocked.'
                 : 'Verify your identity to unlock higher limits and lower fees.'}
             </p>
-            <Link prefetch={false}
+            <Link
               href="/kyc"
               className="inline-flex items-center gap-1.5 text-[13px] text-champagne-300 hover:text-champagne-200 font-medium"
             >
@@ -447,7 +395,7 @@ export default function DashboardOverview() {
                 </p>
                 <div className="font-serif text-xl text-pearl-50 font-light tracking-tight">Recent</div>
               </div>
-              <Link prefetch={false} href="/dashboard/history" className="text-[12px] text-pearl-300/60 hover:text-pearl-50 transition-colors flex items-center gap-1">
+              <Link href="/dashboard/history" className="text-[12px] text-pearl-300/60 hover:text-pearl-50 transition-colors flex items-center gap-1">
                 View all <ChevronRight className="w-3 h-3" />
               </Link>
             </div>
@@ -455,7 +403,7 @@ export default function DashboardOverview() {
             {recentActivity.length === 0 ? (
               <div className="px-7 py-14 text-center">
                 <div className="text-pearl-300/45 text-sm">No recent activity</div>
-                <Link prefetch={false} href="/dashboard/wallet" className="inline-flex items-center gap-1.5 mt-4 text-[13px] text-champagne-300 hover:text-champagne-200 font-medium">
+                <Link href="/dashboard/wallet" className="inline-flex items-center gap-1.5 mt-4 text-[13px] text-champagne-300 hover:text-champagne-200 font-medium">
                   Make your first deposit <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
@@ -493,7 +441,7 @@ export default function DashboardOverview() {
             { label: 'Trade history',  href: '/dashboard/history',        icon: History     },
             { label: 'Settings',       href: '/dashboard/settings',       icon: Settings    },
           ].map((link) => (
-            <Link prefetch={false}
+            <Link
               key={link.label}
               href={link.href}
               className="bg-gradient-to-br from-charcoal/40 to-obsidian/60 p-5 hover:from-charcoal/70 transition-colors flex items-center justify-between group"

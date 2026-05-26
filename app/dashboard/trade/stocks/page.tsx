@@ -1,12 +1,1885 @@
-import { redirect } from 'next/navigation';
+// app/dashboard/trade/stocks/page.tsx
+'use client';
 
-/**
- * The standalone stocks trading terminal has been consolidated into the
- * single modern investing experience at /dashboard/invest (Robinhood /
- * Trading-212 style: ETFs, S&P 500, fractional buy, watchlist).
- *
- * One stock interface — not two. This redirect keeps old links working.
- */
-export default function StocksRedirect() {
-  redirect('/dashboard/invest');
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import {
+  ChevronDown,
+  Plus,
+  Minus,
+  Search,
+  Star,
+  StarOff,
+  CheckCircle,
+  AlertCircle,
+  CandlestickChart,
+  LineChart as LineChartIcon,
+  X,
+  Activity,
+  Wallet,
+} from 'lucide-react';
+
+import { useStore } from '@/lib/supabase/store-supabase';
+import { useTradingAccountStore } from '@/lib/trading-store';
+import { marketAssets } from '@/lib/data';
+import { StockPosition } from '@/lib/trading-types';
+import KYCGate from '@/components/KYCGate';
+import { saveTradeToHistory, closeTradeInHistory } from '@/lib/services/trade-history';
+
+type Timeframe = '1m' | '5m' | '15m' | '1h' | '4h' | '1D';
+const timeframes: Timeframe[] = ['1m', '5m', '15m', '1h', '4h', '1D'];
+
+type MobileTab = 'chart' | 'trade' | 'portfolio';
+
+type StockAsset = {
+  symbol: string;
+  name: string;
+  price: number;
+  changePercent24h: number;
+  type: 'stock';
+};
+
+type LiveQuote = {
+  symbol: string;
+  price: number;
+  bid: number;
+  ask: number;
+  changePercent24h: number;
+  prevClose?: number;
+  ts?: number;
+};
+
+type Candle = { t: number; o: number; h: number; l: number; c: number; v?: number };
+
+const stockInfo: Record<string, { emoji: string; sector: string }> = {
+  // Technology
+  AAPL: { emoji: '🍎', sector: 'Technology' },
+  NVDA: { emoji: '🟢', sector: 'Technology' },
+  TSLA: { emoji: '⚡', sector: 'Automotive' },
+  MSFT: { emoji: '🪟', sector: 'Technology' },
+  GOOGL: { emoji: '🔍', sector: 'Technology' },
+  AMZN: { emoji: '📦', sector: 'Consumer' },
+  META: { emoji: '👤', sector: 'Technology' },
+  NFLX: { emoji: '🎬', sector: 'Entertainment' },
+  AMD: { emoji: '🔴', sector: 'Semiconductors' },
+  INTC: { emoji: '🔷', sector: 'Semiconductors' },
+  COIN: { emoji: '🪙', sector: 'Fintech' },
+  JPM: { emoji: '🏦', sector: 'Finance' },
+  DIS: { emoji: '🏰', sector: 'Entertainment' },
+  SPOT: { emoji: '🎵', sector: 'Entertainment' },
+  // Additional Technology
+  CRM: { emoji: '☁️', sector: 'Technology' },
+  ORCL: { emoji: '🔶', sector: 'Technology' },
+  ADBE: { emoji: '🎨', sector: 'Technology' },
+  CSCO: { emoji: '🌐', sector: 'Technology' },
+  IBM: { emoji: '💻', sector: 'Technology' },
+  UBER: { emoji: '🚗', sector: 'Technology' },
+  SHOP: { emoji: '🛒', sector: 'E-Commerce' },
+  SQ: { emoji: '💳', sector: 'Fintech' },
+  PYPL: { emoji: '💰', sector: 'Fintech' },
+  PLTR: { emoji: '📊', sector: 'Technology' },
+  SNOW: { emoji: '❄️', sector: 'Technology' },
+  NET: { emoji: '🌩️', sector: 'Technology' },
+  DDOG: { emoji: '🐶', sector: 'Technology' },
+  ZS: { emoji: '🔒', sector: 'Cybersecurity' },
+  CRWD: { emoji: '🛡️', sector: 'Cybersecurity' },
+  PANW: { emoji: '🔐', sector: 'Cybersecurity' },
+  // Semiconductors
+  AVGO: { emoji: '📡', sector: 'Semiconductors' },
+  QCOM: { emoji: '📱', sector: 'Semiconductors' },
+  TSM: { emoji: '🏭', sector: 'Semiconductors' },
+  MU: { emoji: '💾', sector: 'Semiconductors' },
+  MRVL: { emoji: '⚙️', sector: 'Semiconductors' },
+  ARM: { emoji: '💪', sector: 'Semiconductors' },
+  // Finance
+  BAC: { emoji: '🏛️', sector: 'Finance' },
+  GS: { emoji: '📈', sector: 'Finance' },
+  MS: { emoji: '🏦', sector: 'Finance' },
+  WFC: { emoji: '🏧', sector: 'Finance' },
+  V: { emoji: '💳', sector: 'Finance' },
+  MA: { emoji: '💎', sector: 'Finance' },
+  AXP: { emoji: '🔵', sector: 'Finance' },
+  BLK: { emoji: '⬛', sector: 'Finance' },
+  // Healthcare
+  JNJ: { emoji: '💊', sector: 'Healthcare' },
+  UNH: { emoji: '🏥', sector: 'Healthcare' },
+  PFE: { emoji: '💉', sector: 'Healthcare' },
+  ABBV: { emoji: '🧬', sector: 'Healthcare' },
+  MRK: { emoji: '🔬', sector: 'Healthcare' },
+  LLY: { emoji: '⚕️', sector: 'Healthcare' },
+  // Consumer / Retail
+  WMT: { emoji: '🛒', sector: 'Retail' },
+  COST: { emoji: '📦', sector: 'Retail' },
+  NKE: { emoji: '👟', sector: 'Consumer' },
+  SBUX: { emoji: '☕', sector: 'Consumer' },
+  MCD: { emoji: '🍔', sector: 'Consumer' },
+  KO: { emoji: '🥤', sector: 'Consumer' },
+  PEP: { emoji: '🥤', sector: 'Consumer' },
+  PG: { emoji: '🧴', sector: 'Consumer' },
+  // Energy
+  XOM: { emoji: '⛽', sector: 'Energy' },
+  CVX: { emoji: '🛢️', sector: 'Energy' },
+  COP: { emoji: '🔥', sector: 'Energy' },
+  // Industrial / Transport
+  BA: { emoji: '✈️', sector: 'Aerospace' },
+  CAT: { emoji: '🚜', sector: 'Industrial' },
+  DE: { emoji: '🌾', sector: 'Industrial' },
+  UPS: { emoji: '📬', sector: 'Logistics' },
+  FDX: { emoji: '📦', sector: 'Logistics' },
+  // Telecom / Media
+  T: { emoji: '📞', sector: 'Telecom' },
+  VZ: { emoji: '📶', sector: 'Telecom' },
+  CMCSA: { emoji: '📺', sector: 'Media' },
+  // EV / Clean Energy
+  RIVN: { emoji: '🚙', sector: 'EV' },
+  LCID: { emoji: '🔋', sector: 'EV' },
+  ENPH: { emoji: '☀️', sector: 'Clean Energy' },
+  // Gaming
+  RBLX: { emoji: '🎮', sector: 'Gaming' },
+  EA: { emoji: '🎯', sector: 'Gaming' },
+  TTWO: { emoji: '🕹️', sector: 'Gaming' },
+};
+
+function n(v: any, fallback = 0) {
+  const x = Number(v);
+  return Number.isFinite(x) ? x : fallback;
+}
+
+function fmtMoney(x: number) {
+  if (!Number.isFinite(x)) return '$0.00';
+  return `$${x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+// Unified USD price formatter — always commas, always 2 decimals
+function fmtUsd(x: any) {
+  const n = Number(x);
+  if (!Number.isFinite(n)) return '$0.00';
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function fmtNum(x: any, dp = 2) {
+  const n = Number(x);
+  if (!Number.isFinite(n)) return '0.00';
+  return n.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+}
+
+function clampInt(x: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, Math.floor(x)));
+}
+
+function normalizeStockAsset(a: any): StockAsset {
+  return {
+    symbol: String(a?.symbol || '').toUpperCase(),
+    name: String(a?.name || a?.symbol || 'Stock'),
+    price: n(a?.price, 0),
+    changePercent24h: n(a?.changePercent24h ?? a?.change24h ?? a?.changePct24h, 0),
+    type: 'stock',
+  };
+}
+
+function deriveChangePercent(price: number, prevClose?: number) {
+  if (!prevClose || !Number.isFinite(prevClose) || prevClose <= 0) return 0;
+  return ((price - prevClose) / prevClose) * 100;
+}
+
+function tfToInterval(tf: Timeframe) {
+  // API accepts these (it converts to Alpaca timeframe)
+  switch (tf) {
+    case '1m':
+      return '1min';
+    case '5m':
+      return '5min';
+    case '15m':
+      return '15min';
+    case '1h':
+      return '1h';
+    case '4h':
+      return '4h';
+    case '1D':
+      return '1day';
+    default:
+      return '15min';
+  }
+}
+
+function tfToMs(tf: Timeframe) {
+  switch (tf) {
+    case '1m':
+      return 60_000;
+    case '5m':
+      return 5 * 60_000;
+    case '15m':
+      return 15 * 60_000;
+    case '1h':
+      return 60 * 60_000;
+    case '4h':
+      return 4 * 60 * 60_000;
+    case '1D':
+      return 24 * 60 * 60_000;
+    default:
+      return 15 * 60_000;
+  }
+}
+
+function tfPollMs(tf: Timeframe) {
+  // poll slightly slower than bucket duration
+  switch (tf) {
+    case '1m':
+      return 65_000;
+    case '5m':
+      return 305_000;
+    case '15m':
+      return 905_000;
+    case '1h':
+      return 3_605_000;
+    case '4h':
+      return 14_405_000;
+    case '1D':
+      return 86_405_000;
+    default:
+      return 905_000;
+  }
+}
+
+function parseMarketTimeToMs(dt: string) {
+  const s = String(dt || '').trim();
+  if (!s) return Date.now();
+
+  const hasTZ = s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s) || /[+-]\d{4}$/.test(s);
+  const isoLike = s.includes(' ') ? s.replace(' ', 'T') : s;
+
+  const try1 = Date.parse(isoLike);
+  if (Number.isFinite(try1)) return try1;
+
+  if (!hasTZ) {
+    const try2 = Date.parse(`${isoLike}Z`);
+    if (Number.isFinite(try2)) return try2;
+  }
+  return Date.now();
+}
+
+// ===============================
+// ✅ Session cache helpers
+// ===============================
+const SS_PREFIX = 'swifttrade:stocks';
+
+function ssGet<T>(key: string): T | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    const raw = window.sessionStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+function ssSet(key: string, value: any) {
+  try {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+// ===============================
+// ✅ Always-chart fallback helpers
+// ===============================
+type Tick = { t: number; p: number };
+
+function hashStr(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function mulberry32(seed: number) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function buildCandlesFromTicks(ticks: Tick[], intervalMs: number, count: number): Candle[] {
+  if (!ticks?.length) return [];
+
+  const now = Date.now();
+  const end = Math.floor(now / intervalMs) * intervalMs;
+  const start = end - count * intervalMs;
+
+  const sliced = ticks
+    .filter((x) => x.t >= start - intervalMs && x.t <= end + intervalMs)
+    .sort((a, b) => a.t - b.t);
+
+  if (!sliced.length) return [];
+
+  let idx = 0;
+  let lastClose = sliced[0].p;
+
+  const out: Candle[] = [];
+  for (let i = 0; i < count; i++) {
+    const b0 = start + i * intervalMs;
+    const b1 = b0 + intervalMs;
+
+    const bucket: Tick[] = [];
+    while (idx < sliced.length && sliced[idx].t < b0) {
+      lastClose = sliced[idx].p;
+      idx++;
+    }
+    while (idx < sliced.length && sliced[idx].t >= b0 && sliced[idx].t < b1) {
+      bucket.push(sliced[idx]);
+      idx++;
+    }
+
+    if (!bucket.length) {
+      const p = lastClose;
+      out.push({ t: b0, o: p, h: p, l: p, c: p, v: undefined });
+      continue;
+    }
+
+    const o = bucket[0].p;
+    const c = bucket[bucket.length - 1].p;
+    let h = o,
+      l = o;
+    for (const x of bucket) {
+      if (x.p > h) h = x.p;
+      if (x.p < l) l = x.p;
+    }
+
+    lastClose = c;
+    out.push({ t: b0, o, h, l, c, v: undefined });
+  }
+
+  return out.filter((x) => x.o > 0 && x.h > 0 && x.l > 0 && x.c > 0);
+}
+
+function generateSyntheticCandles(seedPrice: number, intervalMs: number, count: number, seedKey: string): Candle[] {
+  const p0 = Number.isFinite(seedPrice) && seedPrice > 0 ? seedPrice : 100;
+  const rng = mulberry32(hashStr(seedKey));
+
+  const now = Date.now();
+  const end = Math.floor(now / intervalMs) * intervalMs;
+  const start = end - count * intervalMs;
+
+  const baseVol = Math.max(0.02, p0 * 0.002);
+  let last = p0;
+
+  const out: Candle[] = [];
+  for (let i = 0; i < count; i++) {
+    const t = start + i * intervalMs;
+
+    const drift = (rng() - 0.5) * baseVol;
+    const o = last;
+    const c = Math.max(0.01, o + drift);
+
+    const wick = baseVol * (0.4 + rng());
+    const h = Math.max(o, c) + wick * rng();
+    const l = Math.max(0.01, Math.min(o, c) - wick * rng());
+
+    out.push({ t, o, h, l, c, v: undefined });
+    last = c;
+  }
+
+  return out;
+}
+
+// Apply a single tick to the last candle so the chart “moves” even between fetches
+function applyTickToCandles(prev: Candle[], tick: Tick, intervalMs: number, maxKeep: number): Candle[] {
+  if (!prev?.length) return prev;
+  if (!tick?.p || tick.p <= 0) return prev;
+
+  const bucketT = Math.floor(tick.t / intervalMs) * intervalMs;
+  const last = prev[prev.length - 1];
+  const prevClose = last?.c ?? tick.p;
+
+  // older tick
+  if (bucketT < last.t) return prev;
+
+  // same bucket: update OHLC
+  if (bucketT === last.t) {
+    const nextLast: Candle = {
+      ...last,
+      h: Math.max(last.h, tick.p),
+      l: Math.min(last.l, tick.p),
+      c: tick.p,
+    };
+    const next = prev.slice(0, -1).concat(nextLast);
+    return next;
+  }
+
+  // new bucket(s): add candle (simple)
+  const newCandle: Candle = { t: bucketT, o: prevClose, h: Math.max(prevClose, tick.p), l: Math.min(prevClose, tick.p), c: tick.p };
+  const next = prev.concat(newCandle);
+  return next.length > maxKeep ? next.slice(-maxKeep) : next;
+}
+
+// ===============================
+// ✅ Seed + Tail strategy
+// ===============================
+const SEED_CANDLE_LIMIT = 220;
+const TAIL_CANDLE_LIMIT = 3;
+const RESEED_EVERY_MS = 10 * 60 * 1000;
+
+function mergeCandles(prev: Candle[], incoming: Candle[], maxKeep = SEED_CANDLE_LIMIT): Candle[] {
+  if (!incoming?.length) return prev;
+
+  const map = new Map<number, Candle>();
+  for (const c of prev) map.set(c.t, c);
+  for (const c of incoming) map.set(c.t, c);
+
+  const merged = Array.from(map.values()).sort((a, b) => a.t - b.t);
+  return merged.length > maxKeep ? merged.slice(-maxKeep) : merged;
+}
+
+function jitter(ms = 1200) {
+  return Math.floor(Math.random() * ms);
+}
+
+// ===============================
+// ✅ Quota/rate-limit handling
+// ===============================
+function looksLikeQuota(msg: string) {
+  const m = (msg || '').toLowerCase();
+  return m.includes('rate') || m.includes('limit') || m.includes('429') || m.includes('too many');
+}
+function userFacingMarketMessage(_msg: string) {
+  return 'Network error.';
+}
+
+// ===============================
+// ✅ Client -> Server (API) fetch helpers
+// ===============================
+async function apiFetchJson(url: string, timeoutMs = 10_000) {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: ac.signal, cache: 'no-store' });
+    const text = await res.text();
+    if (!res.ok) {
+      const err: any = new Error(text || `HTTP ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    return text ? JSON.parse(text) : {};
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function apiFetchCandles(symbol: string, tf: string, limit: number) {
+  const u = `/api/market/stocks/candles?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(tf)}&limit=${encodeURIComponent(
+    String(limit)
+  )}`;
+  return apiFetchJson(u, 12_000);
+}
+
+async function apiFetchQuotesBatch(symbols: string[]) {
+  const u = `/api/market/stocks/quotes?symbols=${encodeURIComponent(symbols.join(','))}`;
+  return apiFetchJson(u, 8_000);
+}
+
+export default function StockTradingPage() {
+  // ✅ HYDRATION FIX
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => setHasMounted(true), []);
+
+  const { user, refreshUser } = useStore();
+
+  const spotAccount = useTradingAccountStore((s) => s.spotAccount);
+  const stockPositions = useTradingAccountStore((s) => s.stockPositions);
+  const executeStockBuy = useTradingAccountStore((s) => s.executeStockBuy);
+  const executeStockSell = useTradingAccountStore((s) => s.executeStockSell);
+  const updateStockPositionPrice = useTradingAccountStore((s) => s.updateStockPositionPrice);
+
+  const stockAssets = useMemo(() => {
+    const list = (marketAssets as any[])
+      .filter((a) => a?.type === 'stock')
+      .map(normalizeStockAsset)
+      .filter((a) => a.symbol);
+
+    return list.length
+      ? list
+      : ([{ symbol: 'AAPL', name: 'Apple', price: 190, changePercent24h: 0, type: 'stock' }] as StockAsset[]);
+  }, []);
+
+  const [selectedSymbol, setSelectedSymbol] = useState<string>(stockAssets[0]?.symbol ?? 'AAPL');
+  const selectedAsset = useMemo(
+    () => stockAssets.find((a) => a.symbol === selectedSymbol) ?? stockAssets[0],
+    [stockAssets, selectedSymbol]
+  );
+
+  const [showAssetSelector, setShowAssetSelector] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>(['AAPL', 'NVDA', 'TSLA', 'MSFT', 'AMZN', 'GOOGL']);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [chartTimeframe, setChartTimeframe] = useState<Timeframe>('15m');
+  const [chartType, setChartType] = useState<'candle' | 'line'>('candle');
+  const [mobileTab, setMobileTab] = useState<MobileTab>('chart');
+
+  const [orderMode, setOrderMode] = useState<'shares' | 'dollars'>('shares');
+  const [shareQty, setShareQty] = useState(1);
+  const [dollarAmount, setDollarAmount] = useState(100);
+
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const notifTimerRef = useRef<number | null>(null);
+
+  const pushNotif = (nfy: { type: 'success' | 'error'; message: string }, ms = 3000) => {
+    setNotification(nfy);
+    if (notifTimerRef.current) window.clearTimeout(notifTimerRef.current);
+    notifTimerRef.current = window.setTimeout(() => setNotification(null), ms);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (notifTimerRef.current) window.clearTimeout(notifTimerRef.current);
+    };
+  }, []);
+
+  const [showSellModal, setShowSellModal] = useState(false);
+  const [positionToSell, setPositionToSell] = useState<StockPosition | null>(null);
+  const [sellQty, setSellQty] = useState(0);
+
+  // ---- Live quotes (poll /api/market/stocks/quotes)
+  const [priceState, setPriceState] = useState<'connecting' | 'live' | 'down'>('connecting');
+  const [quotes, setQuotes] = useState<Record<string, LiveQuote>>({});
+  const prevCloseRef = useRef<Record<string, number>>({});
+  const pauseUntilRef = useRef<number>(0);
+  const lastQuoteAtRef = useRef<number>(0);
+
+  const toggleFavorite = (symbol: string) => {
+    setFavorites((prev) => (prev.includes(symbol) ? prev.filter((s) => s !== symbol) : [...prev, symbol]));
+  };
+
+  const filteredAssets = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return stockAssets;
+    return stockAssets.filter((a) => a.symbol.toLowerCase().includes(q) || a.name.toLowerCase().includes(q));
+  }, [stockAssets, searchQuery]);
+
+  const quoteSymbols = useMemo(() => {
+    const set = new Set<string>();
+
+    set.add(String(selectedSymbol || '').toUpperCase());
+    for (const s of favorites) set.add(String(s || '').toUpperCase());
+    for (const p of stockPositions) set.add(String(p.symbol || '').toUpperCase());
+
+    return Array.from(set).filter(Boolean).slice(0, 12);
+  }, [selectedSymbol, favorites, stockPositions]);
+
+  const pollingKey = useMemo(() => quoteSymbols.join(','), [quoteSymbols]);
+
+  // ---- Candles state + refs (fix stale closure)
+  const [candles, setCandles] = useState<Candle[]>([]);
+  const candlesRef = useRef<Candle[]>([]);
+  useEffect(() => {
+    candlesRef.current = candles;
+  }, [candles]);
+
+  const [loadingChart, setLoadingChart] = useState(false);
+  const [candlesUpdatedAt, setCandlesUpdatedAt] = useState<number>(0);
+  const [candlesStale, setCandlesStale] = useState<boolean>(false);
+
+  const live = quotes[selectedSymbol];
+
+  // ---- Poll quotes (works even if SSE route doesn't exist)
+  useEffect(() => {
+    if (!quoteSymbols.length) return;
+
+    let alive = true;
+    setPriceState('connecting');
+
+    const intervalMs = tfToMs(chartTimeframe);
+
+    const upsertTicks = (sym: string, price: number) => {
+      try {
+        if (price <= 0) return;
+        const tickKey = `${SS_PREFIX}:ticks:${sym}`;
+        const prevTicks = ssGet<Tick[]>(tickKey) || [];
+        ssSet(tickKey, [...prevTicks, { t: Date.now(), p: price }].slice(-900));
+      } catch {}
+    };
+
+    const pollOnce = async () => {
+      if (!alive) return;
+      if (!quoteSymbols.length) return;
+      if (Date.now() < pauseUntilRef.current) return;
+      if (typeof document !== 'undefined' && document.hidden) return;
+
+      try {
+        const dataMap = (await apiFetchQuotesBatch(quoteSymbols)) as Record<string, any>;
+        if (!alive) return;
+
+        const now = Date.now();
+        lastQuoteAtRef.current = now;
+
+        const nextQuotes: Record<string, LiveQuote> = {};
+
+        for (const symRaw of quoteSymbols) {
+          const sym = String(symRaw || '').toUpperCase();
+          const q = dataMap?.[sym];
+          if (!q) continue;
+
+          const price = n(q?.price, 0);
+          if (!price) continue;
+
+          const prevClose =
+            n(q?.prevClose, 0) ||
+            n(q?.prev_close, 0) ||
+            prevCloseRef.current[sym] ||
+            undefined;
+
+          if (prevClose && !prevCloseRef.current[sym]) prevCloseRef.current[sym] = prevClose;
+
+          const bid = n(q?.bid, 0) || price * 0.9999;
+          const ask = n(q?.ask, 0) || price * 1.0001;
+
+          const pct = Number.isFinite(n(q?.changePercent24h, NaN))
+            ? n(q?.changePercent24h, 0)
+            : deriveChangePercent(price, prevClose);
+
+          nextQuotes[sym] = {
+            symbol: sym,
+            price,
+            bid,
+            ask,
+            prevClose,
+            changePercent24h: pct,
+            ts: now,
+          };
+
+          // update holdings prices
+          try {
+            updateStockPositionPrice(sym, price);
+          } catch {}
+
+          // tick cache
+          upsertTicks(sym, price);
+
+          // make chart “move” for selected symbol
+          if (sym === selectedSymbol) {
+            setCandles((prev) => {
+              const next = applyTickToCandles(prev, { t: now, p: price }, intervalMs, SEED_CANDLE_LIMIT);
+              candlesRef.current = next;
+              return next;
+            });
+          }
+        }
+
+        if (Object.keys(nextQuotes).length) {
+          setQuotes((prev) => ({ ...prev, ...nextQuotes }));
+          setPriceState('live');
+        } else {
+          setPriceState((s) => (s === 'connecting' ? 'connecting' : 'down'));
+        }
+      } catch (e: any) {
+        const msg = String(e?.message || e || '');
+        if (looksLikeQuota(msg) || Number(e?.status) === 429) {
+          pauseUntilRef.current = Date.now() + 60_000;
+          pushNotif({ type: 'error', message: userFacingMarketMessage(msg) }, 4500);
+        }
+        setPriceState('down');
+      }
+    };
+
+    // watchdog: if no successful poll for 12s => down
+    const watchdog = window.setInterval(() => {
+      if (!alive) return;
+      const last = lastQuoteAtRef.current || 0;
+      if (last && Date.now() - last > 12_000) setPriceState('down');
+    }, 3000);
+
+    // start
+    void pollOnce();
+    const iv = window.setInterval(pollOnce, 2500 + jitter(600));
+
+    const onVis = () => {
+      if (!alive) return;
+      if (!document.hidden) void pollOnce();
+    };
+    try {
+      document.addEventListener('visibilitychange', onVis);
+    } catch {}
+
+    return () => {
+      alive = false;
+      window.clearInterval(iv);
+      window.clearInterval(watchdog);
+      try {
+        document.removeEventListener('visibilitychange', onVis);
+      } catch {}
+    };
+  }, [pollingKey, quoteSymbols, selectedSymbol, chartTimeframe, updateStockPositionPrice]);
+
+  // ---- Candles with seed + tail + ALWAYS-CHART fallback
+  const candleTimerRef = useRef<number | null>(null);
+  const candleSeedKeyRef = useRef<string>('');
+  const candleLastSeedAtRef = useRef<number>(0);
+  const candleInFlightRef = useRef(false);
+  const candleReqIdRef = useRef(0);
+
+  useEffect(() => {
+    let alive = true;
+
+    const intervalStr = tfToInterval(chartTimeframe);
+    const intervalMs = tfToMs(chartTimeframe);
+    const pollMs = tfPollMs(chartTimeframe);
+
+    const cacheKey = `${SS_PREFIX}:candles:${selectedSymbol}:${intervalStr}`;
+    const seedKey = `${selectedSymbol}:${intervalStr}`;
+
+    const clearTimer = () => {
+      try {
+        if (candleTimerRef.current) window.clearTimeout(candleTimerRef.current);
+      } catch {}
+      candleTimerRef.current = null;
+    };
+
+    // 1) instant render: cached OR ticks OR synthetic
+    const cached = ssGet<{ ts: number; candles: Candle[] }>(cacheKey);
+    if (cached?.candles?.length) {
+      setCandles(cached.candles);
+      candlesRef.current = cached.candles;
+      setCandlesUpdatedAt(cached.ts || Date.now());
+      setCandlesStale(true);
+    } else {
+      const ticks = ssGet<Tick[]>(`${SS_PREFIX}:ticks:${selectedSymbol}`) || [];
+      const built = buildCandlesFromTicks(ticks, intervalMs, SEED_CANDLE_LIMIT);
+      if (built.length) {
+        setCandles(built);
+        candlesRef.current = built;
+        setCandlesUpdatedAt(Date.now());
+        setCandlesStale(true);
+      } else {
+        const seedPrice = quotes[selectedSymbol]?.price ?? selectedAsset?.price ?? 100;
+        const synth = generateSyntheticCandles(seedPrice, intervalMs, SEED_CANDLE_LIMIT, seedKey);
+        setCandles(synth);
+        candlesRef.current = synth;
+        setCandlesUpdatedAt(Date.now());
+        setCandlesStale(true);
+      }
+    }
+
+    const loadCandles = async (opts?: { forceSeed?: boolean }) => {
+      if (!alive) return;
+      if (Date.now() < pauseUntilRef.current) return;
+      if (typeof document !== 'undefined' && document.hidden) return;
+
+      if (candleInFlightRef.current) return;
+      candleInFlightRef.current = true;
+
+      const reqId = ++candleReqIdRef.current;
+
+      try {
+        const now = Date.now();
+        const needsSeed =
+          opts?.forceSeed === true ||
+          candleSeedKeyRef.current !== seedKey ||
+          now - candleLastSeedAtRef.current > RESEED_EVERY_MS;
+
+        const limit = needsSeed ? SEED_CANDLE_LIMIT : TAIL_CANDLE_LIMIT;
+        setLoadingChart(needsSeed);
+
+        const raw: any = await apiFetchCandles(selectedSymbol, intervalStr, limit);
+
+        if (!alive) return;
+        if (reqId !== candleReqIdRef.current) return;
+
+        const arr: any[] = Array.isArray(raw) ? raw : Array.isArray(raw?.candles) ? raw.candles : [];
+
+        const out: Candle[] = arr
+          .map((c: any, i: number) => ({
+            t: parseMarketTimeToMs(String(c?.time || c?.datetime || c?.date || '')) || Date.now() + i,
+            o: n(c?.open ?? c?.o, 0),
+            h: n(c?.high ?? c?.h, 0),
+            l: n(c?.low ?? c?.l, 0),
+            c: n(c?.close ?? c?.c, 0),
+            v: c?.volume != null ? n(c?.volume, undefined as any) : undefined,
+          }))
+          .filter((x) => x.o > 0 && x.h > 0 && x.l > 0 && x.c > 0)
+          .sort((a, b) => a.t - b.t);
+
+        if (!out.length) {
+          setCandlesStale(true);
+          return;
+        }
+
+        // ✅ FIX: use candlesRef to avoid stale closure
+        const merged = needsSeed ? out : mergeCandles(candlesRef.current, out, SEED_CANDLE_LIMIT);
+
+        setCandles(merged);
+        candlesRef.current = merged;
+
+        const ts = Date.now();
+        ssSet(cacheKey, { ts, candles: merged });
+
+        setCandlesUpdatedAt(ts);
+        setCandlesStale(false);
+
+        if (needsSeed) {
+          candleSeedKeyRef.current = seedKey;
+          candleLastSeedAtRef.current = now;
+        }
+      } catch (e: any) {
+        const msg = String(e?.message || e || '');
+        console.error('[Stocks] Candles error:', msg);
+
+        setCandlesStale(true);
+
+        if (looksLikeQuota(msg) || Number(e?.status) === 429) {
+          pauseUntilRef.current = Date.now() + 90_000;
+          pushNotif({ type: 'error', message: userFacingMarketMessage(msg) }, 4500);
+        }
+      } finally {
+        candleInFlightRef.current = false;
+        if (alive) setLoadingChart(false);
+      }
+    };
+
+    const loop = async () => {
+      if (!alive) return;
+      await loadCandles();
+      if (!alive) return;
+      clearTimer();
+      candleTimerRef.current = window.setTimeout(loop, pollMs + jitter());
+    };
+
+    void loadCandles({ forceSeed: true });
+    clearTimer();
+    candleTimerRef.current = window.setTimeout(loop, pollMs + jitter());
+
+    const onVis = () => {
+      if (!alive) return;
+      if (!document.hidden) void loadCandles();
+    };
+
+    try {
+      document.addEventListener('visibilitychange', onVis);
+    } catch {}
+
+    return () => {
+      alive = false;
+      clearTimer();
+      try {
+        document.removeEventListener('visibilitychange', onVis);
+      } catch {}
+    };
+    // ✅ IMPORTANT: do NOT include live?.price here (it resets everything)
+  }, [selectedSymbol, chartTimeframe]); // ✅ FIXED deps
+
+  // ---- Chart sizing
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [chartDimensions, setChartDimensions] = useState({ width: 320, height: 260 });
+
+  useEffect(() => {
+    const el = chartRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const r = el.getBoundingClientRect();
+      setChartDimensions({
+        width: Math.max(280, Math.floor(r.width || 320)),
+        height: Math.max(220, Math.floor(r.height || 260)),
+      });
+    };
+
+    update();
+    const t1 = window.setTimeout(update, 50);
+    const t2 = window.setTimeout(update, 200);
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => update());
+      ro.observe(el);
+    }
+
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+      ro?.disconnect();
+    };
+  }, [mobileTab]);
+
+  const price = live?.price ?? selectedAsset?.price ?? 0;
+  const bidPrice = live?.bid ?? price * 0.9999;
+  const askPrice = live?.ask ?? price * 1.0001;
+  const changePercent24h = live?.changePercent24h ?? selectedAsset?.changePercent24h ?? 0;
+  const up = changePercent24h >= 0;
+
+  const safeAsk = Number.isFinite(askPrice) && askPrice > 0 ? askPrice : 0;
+
+  const effectiveShares =
+    orderMode === 'shares'
+      ? clampInt(shareQty, 1, 1_000_000)
+      : safeAsk > 0
+        ? Math.floor(dollarAmount / safeAsk)
+        : 0;
+
+  const orderValue = effectiveShares * safeAsk;
+  const commission = effectiveShares > 0 ? Math.max(0.99, orderValue * 0.001) : 0;
+  const totalCost = orderValue + commission;
+
+  const userBalance = Number((user as any)?.balance_available ?? (user as any)?.balance ?? 0);
+  const cashBalance =
+    (spotAccount as any)?.cash ?? (spotAccount as any)?.availableToTrade ?? (spotAccount as any)?.balance ?? userBalance;
+
+  const portfolioValue = stockPositions.reduce((sum, pos) => sum + Number((pos as any)?.marketValue ?? 0), 0);
+  const totalEquity = cashBalance + portfolioValue;
+  const unrealizedPnL = stockPositions.reduce((sum, pos) => {
+    const posVal = Number((pos as any)?.unrealizedPnL ?? 0);
+    return sum + (Number.isFinite(posVal) ? posVal : 0);
+  }, 0);
+
+  const canBuy = effectiveShares >= 1 && safeAsk > 0 && totalCost <= cashBalance;
+
+  const handleBuy = async () => {
+    if (safeAsk <= 0) {
+      pushNotif({ type: 'error', message: 'No live price yet. Try again in a second.' }, 2500);
+      return;
+    }
+
+    if (effectiveShares < 1) {
+      pushNotif({ type: 'error', message: 'Amount too small — shares becomes 0.' }, 2500);
+      return;
+    }
+
+    if (totalCost > cashBalance) {
+      pushNotif({ type: 'error', message: 'Insufficient funds' }, 2500);
+      return;
+    }
+
+    const result = executeStockBuy(
+      selectedSymbol,
+      selectedAsset?.name ?? selectedSymbol,
+      effectiveShares,
+      safeAsk,
+      commission
+    );
+
+    if ((result as any)?.success) {
+      await refreshUser?.();
+
+      try {
+        if ((user as any)?.id) {
+          const state = useTradingAccountStore.getState();
+          const pos = state.stockPositions.find((p: any) => String(p.symbol).toUpperCase() === selectedSymbol);
+          if (pos) {
+            saveTradeToHistory(
+              {
+                id: pos.id,
+                userId: (user as any).id,
+                marketType: 'stocks',
+                assetType: 'stock',
+                pair: selectedSymbol,
+                symbol: selectedSymbol,
+                type: 'buy',
+                side: 'buy',
+                quantity: pos.qty,
+                amount: pos.qty * safeAsk,
+                entryPrice: pos.avgEntry ?? safeAsk,
+                leverage: 1,
+                openedAt: new Date().toISOString(),
+                notes: JSON.stringify({ model: 'spot_hold', name: pos.name }),
+              } as any
+            ).catch(() => {});
+          }
+        }
+      } catch {}
+
+      pushNotif({ type: 'success', message: `Bought ${effectiveShares} ${selectedSymbol} @ ${fmtUsd(safeAsk)}` });
+    } else {
+      pushNotif({ type: 'error', message: (result as any)?.error || 'Trade failed' });
+    }
+  };
+
+  const handleSell = async () => {
+    if (!positionToSell || sellQty <= 0) return;
+
+    const safeBid = Number.isFinite(bidPrice) && bidPrice > 0 ? bidPrice : 0;
+    if (!safeBid) {
+      pushNotif({ type: 'error', message: 'No live bid yet. Try again in a second.' }, 2500);
+      return;
+    }
+
+    const sellCommission = Math.max(0.99, sellQty * safeBid * 0.001);
+    const result = executeStockSell((positionToSell as any).id, sellQty, safeBid, sellCommission);
+
+    if ((result as any)?.success) {
+      const pnl = Number((result as any)?.realizedPnL ?? 0);
+      await refreshUser?.();
+
+      try {
+        if ((user as any)?.id) {
+          const after = useTradingAccountStore.getState().stockPositions as any[];
+          const still = after.find((p) => p.id === (positionToSell as any).id);
+
+          if (still) {
+            saveTradeToHistory(
+              {
+                id: still.id,
+                userId: (user as any).id,
+                marketType: 'stocks',
+                assetType: 'stock',
+                pair: still.symbol,
+                symbol: still.symbol,
+                type: 'buy',
+                side: 'buy',
+                quantity: still.qty,
+                entryPrice: still.avgEntry ?? 0,
+                notes: JSON.stringify({ model: 'spot_hold', partial: true }),
+              } as any
+            ).catch(() => {});
+          } else {
+            closeTradeInHistory(
+              {
+                tradeId: (positionToSell as any).id,
+                userId: (user as any).id,
+                exitPrice: safeBid,
+                pnl,
+                closedAt: new Date().toISOString(),
+              } as any
+            ).catch(() => {});
+          }
+        }
+      } catch {}
+
+      pushNotif({
+        type: 'success',
+        message: `Sold ${sellQty} ${(positionToSell as any).symbol} for ${pnl >= 0 ? '+' : ''}${fmtUsd(pnl)}`,
+      });
+    } else {
+      pushNotif({ type: 'error', message: (result as any)?.error || 'Sell failed' });
+    }
+
+    setShowSellModal(false);
+    setPositionToSell(null);
+    setSellQty(0);
+  };
+
+  // ---- Chart geometry
+  const chart = useMemo(() => {
+    const w = chartDimensions.width;
+    const h = chartDimensions.height;
+    const pad = { l: 12, r: 72, t: 20, b: 24 };
+    const cw = w - pad.l - pad.r;
+    const ch = h - pad.t - pad.b;
+
+    if (!candles.length) {
+      return { w, h, pad, items: [] as any[], min: 0, max: 0, linePath: '' };
+    }
+
+    const rawMin = Math.min(...candles.map((c) => c.l));
+    const rawMax = Math.max(...candles.map((c) => c.h));
+    const rawRange = rawMax - rawMin;
+    // Add 5% padding top/bottom so candles don't touch edges; min range prevents flat line
+    const rangePad = Math.max(rawRange * 0.05, rawMax * 0.002, 0.01);
+    const min = rawMin - rangePad;
+    const max = rawMax + rangePad;
+    const range = max - min;
+
+    const nC = candles.length;
+    const gap = cw / nC;
+    const bodyW = Math.max(3, Math.min(gap * 0.6, 14));
+
+    const y = (p: number) => pad.t + ((max - p) / range) * ch;
+
+    const items = candles.map((c, i) => {
+      const x = pad.l + i * gap + gap / 2;
+      return {
+        x,
+        oY: y(c.o),
+        cY: y(c.c),
+        hY: y(c.h),
+        lY: y(c.l),
+        isUp: c.c >= c.o,
+        bodyW,
+      };
+    });
+
+    const pts = candles.map((c, i) => ({
+      x: pad.l + i * gap + gap / 2,
+      y: y(c.c),
+    }));
+
+    const linePath =
+      pts.length > 1 ? `M ${pts[0].x} ${pts[0].y} ` + pts.slice(1).map((p) => `L ${p.x} ${p.y}`).join(' ') : '';
+
+    return { w, h, pad, items, min, max, linePath };
+  }, [candles, chartDimensions]);
+
+  const info = stockInfo[selectedSymbol] || { emoji: '📈', sector: 'Other' };
+
+  if (!hasMounted) {
+    return (
+      <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] flex items-center justify-center bg-void">
+        <div className="animate-pulse text-slate-500 text-sm">Loading stocks trading…</div>
+      </div>
+    );
+  }
+
+  return (
+    <KYCGate action="trade stocks">
+      <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] flex flex-col bg-void overflow-hidden">
+        {/* Header */}
+        <div className="flex-shrink-0 px-3 py-2 sm:px-4 sm:py-3 border-b border-white/10 bg-obsidian">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            {/* Asset Selector */}
+            <button
+              onClick={() => setShowAssetSelector(true)}
+              className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors min-w-0"
+            >
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-lg sm:text-xl">{info.emoji}</span>
+                <div className="text-left">
+                  <p className="text-sm sm:text-base font-semibold text-cream truncate">{selectedSymbol}</p>
+                  <p className="text-xs text-cream/50 hidden sm:block">{selectedAsset?.name}</p>
+                </div>
+              </div>
+              <ChevronDown className="w-4 h-4 text-cream/50 flex-shrink-0" />
+            </button>
+
+            {/* Price */}
+            <div className="flex items-center gap-3 sm:gap-6">
+              <div className="text-center">
+                <p className="text-lg sm:text-2xl font-mono font-bold text-cream">
+                  {fmtUsd(price)}
+                </p>
+                <p className={`text-xs ${up ? 'text-profit' : 'text-loss'}`}>
+                  {up ? '+' : ''}
+                  {Number.isFinite(changePercent24h) ? changePercent24h.toFixed(2) : '0.00'}%
+                </p>
+              </div>
+            </div>
+
+            {/* Live status */}
+            <div
+              className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                priceState === 'live' ? 'bg-profit/10' : 'bg-white/5'
+              }`}
+              title={candlesStale ? 'Showing cached chart' : 'Live chart'}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  priceState === 'live'
+                    ? 'bg-profit animate-pulse'
+                    : priceState === 'connecting'
+                      ? 'bg-gold animate-pulse'
+                      : 'bg-slate-500'
+                }`}
+              />
+              <span className={`text-sm font-medium ${priceState === 'live' ? 'text-profit' : 'text-cream/70'}`}>
+                {priceState === 'live' ? 'Live' : priceState === 'connecting' ? 'Connecting' : 'Offline'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Tabs */}
+        <div className="lg:hidden flex-shrink-0 flex border-b border-white/10 bg-obsidian">
+          {(['chart', 'trade', 'portfolio'] as MobileTab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setMobileTab(tab)}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                mobileTab === tab ? 'text-gold border-b-2 border-gold bg-gold/5' : 'text-cream/50'
+              }`}
+            >
+              {tab === 'chart' && 'Chart'}
+              {tab === 'trade' && 'Trade'}
+              {tab === 'portfolio' && `Portfolio (${stockPositions.length})`}
+            </button>
+          ))}
+        </div>
+
+        {/* Main */}
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+          {/* Chart */}
+          <div className={`${mobileTab === 'chart' ? 'flex' : 'hidden'} lg:flex flex-col flex-1 min-h-0 h-full`}>
+            {/* Controls */}
+            <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-white/10 bg-charcoal/50">
+              <div className="flex items-center gap-1 overflow-x-auto">
+                {timeframes.map((tf) => (
+                  <button
+                    key={tf}
+                    onClick={() => setChartTimeframe(tf)}
+                    className={`px-2 sm:px-3 py-1 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+                      chartTimeframe === tf ? 'bg-gold text-void' : 'text-cream/50 hover:text-cream hover:bg-white/5'
+                    }`}
+                  >
+                    {tf}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:block text-xs text-cream/40">
+                  {candlesStale ? 'Cached' : 'Live'}{' '}
+                  {candlesUpdatedAt ? `· ${new Date(candlesUpdatedAt).toLocaleTimeString()}` : ''}
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setChartType('candle')}
+                    className={`p-1.5 rounded-lg ${chartType === 'candle' ? 'bg-white/10 text-cream' : 'text-cream/40'}`}
+                  >
+                    <CandlestickChart className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setChartType('line')}
+                    className={`p-1.5 rounded-lg ${chartType === 'line' ? 'bg-white/10 text-cream' : 'text-cream/40'}`}
+                  >
+                    <LineChartIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Chart area */}
+            <div
+              ref={chartRef}
+              className="flex-1 relative bg-charcoal/30 w-full overflow-hidden"
+              style={{ minHeight: '250px', height: 'calc(100% - 48px)' }}
+            >
+              {loadingChart && (
+                <div className="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
+                  <span className="text-xs text-cream/60">Syncing…</span>
+                </div>
+              )}
+
+              <svg className="w-full h-full block" viewBox={`0 0 ${chart.w} ${chart.h}`} preserveAspectRatio="xMidYMid meet">
+                {/* grid */}
+                {[...Array(8)].map((_, i) => (
+                  <line
+                    key={`h-${i}`}
+                    x1="0"
+                    y1={i * (chart.h / 8)}
+                    x2={chart.w}
+                    y2={i * (chart.h / 8)}
+                    stroke="rgba(255,255,255,0.05)"
+                  />
+                ))}
+                {[...Array(16)].map((_, i) => (
+                  <line
+                    key={`v-${i}`}
+                    x1={i * (chart.w / 16)}
+                    y1="0"
+                    x2={i * (chart.w / 16)}
+                    y2={chart.h}
+                    stroke="rgba(255,255,255,0.05)"
+                  />
+                ))}
+
+                {/* candles */}
+                {chartType === 'candle' &&
+                  chart.items.map((c, i) => (
+                    <g key={i}>
+                      <line x1={c.x} y1={c.hY} x2={c.x} y2={c.lY} stroke={c.isUp ? '#00d9a5' : '#ef4444'} strokeWidth="1" />
+                      <rect
+                        x={c.x - c.bodyW / 2}
+                        y={Math.min(c.oY, c.cY)}
+                        width={c.bodyW}
+                        height={Math.max(1, Math.abs(c.cY - c.oY))}
+                        fill={c.isUp ? '#00d9a5' : '#ef4444'}
+                        rx="1"
+                      />
+                    </g>
+                  ))}
+
+                {/* line */}
+                {chartType === 'line' && chart.linePath && (
+                  <>
+                    <path d={chart.linePath} fill="none" stroke={up ? '#00d9a5' : '#ef4444'} strokeWidth="2" />
+                    <path
+                      d={`${chart.linePath} L ${chart.w - chart.pad.r} ${chart.h - chart.pad.b} L ${chart.pad.l} ${chart.h - chart.pad.b} Z`}
+                      fill={up ? 'rgba(0,217,165,0.15)' : 'rgba(239,68,68,0.15)'}
+                    />
+                  </>
+                )}
+
+                {/* current price marker */}
+                {chart.max > 0 &&
+                  Number.isFinite(price) &&
+                  (() => {
+                    const range = chart.max - chart.min || 1;
+                    const priceY = chart.pad.t + ((chart.max - price) / range) * (chart.h - chart.pad.t - chart.pad.b);
+                    return (
+                      <>
+                        <line x1="0" y1={priceY} x2={chart.w} y2={priceY} stroke="#d4af37" strokeDasharray="4" />
+                        <rect x={chart.w - 65} y={priceY - 10} width="60" height="20" fill="#d4af37" rx="3" />
+                        <text x={chart.w - 35} y={priceY + 4} textAnchor="middle" fill="#0a0a0f" fontSize="10" fontFamily="monospace">
+                          {fmtUsd(price)}
+                        </text>
+                      </>
+                    );
+                  })()}
+
+                {chart.max > 0 && (
+                  <>
+                    <text x={chart.w - 6} y={16} textAnchor="end" fill="#666" fontSize="10" fontFamily="monospace">
+                      {fmtUsd(chart.max)}
+                    </text>
+                    <text x={chart.w - 6} y={chart.h - 8} textAnchor="end" fill="#666" fontSize="10" fontFamily="monospace">
+                      {fmtUsd(chart.min)}
+                    </text>
+                  </>
+                )}
+              </svg>
+            </div>
+          </div>
+
+          {/* Trade panel */}
+          <div
+            className={`${mobileTab === 'trade' ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-80 xl:w-96 border-l border-white/10 bg-obsidian overflow-y-auto`}
+          >
+            {/* Summary */}
+            <div className="p-3 border-b border-white/10">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2 bg-white/5 rounded-lg">
+                  <p className="text-xs text-cream/50">Cash</p>
+                  <p className="text-sm font-semibold text-cream">{fmtMoney(cashBalance)}</p>
+                </div>
+                <div className="p-2 bg-white/5 rounded-lg">
+                  <p className="text-xs text-cream/50">Portfolio</p>
+                  <p className="text-sm font-semibold text-profit">{fmtMoney(portfolioValue)}</p>
+                </div>
+                <div className="p-2 bg-white/5 rounded-lg">
+                  <p className="text-xs text-cream/50">Total</p>
+                  <p className="text-sm font-semibold text-cream">{fmtMoney(totalEquity)}</p>
+                </div>
+                <div className="p-2 bg-white/5 rounded-lg">
+                  <p className="text-xs text-cream/50">P&amp;L</p>
+                  <p className={`text-sm font-semibold ${unrealizedPnL >= 0 ? 'text-profit' : 'text-loss'}`}>
+                    {unrealizedPnL >= 0 ? '+' : ''}{fmtUsd(Math.abs(unrealizedPnL))}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Mode */}
+            <div className="p-3 border-b border-white/10">
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setOrderMode('shares')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    orderMode === 'shares' ? 'bg-gold text-void' : 'bg-white/5 text-cream/50 hover:bg-white/10'
+                  }`}
+                >
+                  Shares
+                </button>
+                <button
+                  onClick={() => setOrderMode('dollars')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    orderMode === 'dollars' ? 'bg-gold text-void' : 'bg-white/5 text-cream/50 hover:bg-white/10'
+                  }`}
+                >
+                  Dollars
+                </button>
+              </div>
+
+              {orderMode === 'shares' ? (
+                <div>
+                  <label className="text-xs text-cream/50 mb-2 block">Number of Shares</label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShareQty(Math.max(1, shareQty - 1))}
+                      className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg hover:bg-white/10"
+                    >
+                      <Minus className="w-4 h-4 text-cream" />
+                    </button>
+                    <input
+                      type="number"
+                      value={shareQty}
+                      onChange={(e) => setShareQty(Math.max(1, parseInt(e.target.value) || 1))}
+                      min={1}
+                      className="flex-1 h-10 px-3 bg-white/5 border border-white/10 rounded-lg text-center text-cream font-mono focus:outline-none focus:border-gold"
+                    />
+                    <button
+                      onClick={() => setShareQty(shareQty + 1)}
+                      className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg hover:bg-white/10"
+                    >
+                      <Plus className="w-4 h-4 text-cream" />
+                    </button>
+                  </div>
+                  <div className="flex gap-1 mt-2">
+                    {[1, 5, 10, 25, 50].map((qty) => (
+                      <button
+                        key={qty}
+                        onClick={() => setShareQty(qty)}
+                        className={`flex-1 py-1 text-xs rounded-lg ${
+                          shareQty === qty ? 'bg-gold text-void' : 'bg-white/5 text-cream/50'
+                        }`}
+                      >
+                        {qty}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="text-xs text-cream/50 mb-2 block">Dollar Amount</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cream/50">$</span>
+                    <input
+                      type="number"
+                      value={dollarAmount}
+                      onChange={(e) => setDollarAmount(Math.max(1, parseFloat(e.target.value) || 1))}
+                      min={1}
+                      className="w-full h-10 pl-7 pr-3 bg-white/5 border border-white/10 rounded-lg text-cream font-mono focus:outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div className="flex gap-1 mt-2">
+                    {[50, 100, 250, 500, 1000].map((amt) => (
+                      <button
+                        key={amt}
+                        onClick={() => setDollarAmount(amt)}
+                        className={`flex-1 py-1 text-xs rounded-lg ${
+                          dollarAmount === amt ? 'bg-gold text-void' : 'bg-white/5 text-cream/50'
+                        }`}
+                      >
+                        ${amt}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-cream/40 mt-2">
+                    ≈ {effectiveShares} shares {safeAsk > 0 ? `@ ${fmtUsd(safeAsk)}` : ''}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Summary + Buy */}
+            <div className="p-3 space-y-4">
+              <div className="p-3 bg-white/5 rounded-xl space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-cream/50">Shares</span>
+                  <span className="text-cream">{effectiveShares}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-cream/50">Ask</span>
+                  <span className="text-cream font-mono">{safeAsk > 0 ? fmtUsd(safeAsk) : '—'}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-cream/50">Order Value</span>
+                  <span className="text-cream">{fmtUsd(orderValue)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-cream/50">Commission</span>
+                  <span className="text-cream">{fmtUsd(commission)}</span>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t border-white/10">
+                  <span className="text-cream font-medium">Total</span>
+                  <span className="text-gold font-bold">{fmtUsd(totalCost)}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleBuy}
+                disabled={!canBuy}
+                className="w-full py-4 rounded-xl font-bold text-lg bg-profit text-void hover:bg-profit/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Buy {effectiveShares} {effectiveShares === 1 ? 'Share' : 'Shares'}
+              </button>
+
+              {!canBuy && (
+                <div className="p-2 bg-loss/10 rounded-lg border border-loss/20">
+                  {safeAsk <= 0 ? (
+                    <p className="text-xs text-loss text-center">Waiting for live price…</p>
+                  ) : effectiveShares < 1 ? (
+                    <p className="text-xs text-loss text-center">Amount too small — shares becomes 0.</p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-loss text-center mb-1">
+                        Insufficient funds. Need {fmtUsd(totalCost - cashBalance)} more.
+                      </p>
+                      <Link
+                        href="/dashboard/wallet"
+                        className="flex items-center justify-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"
+                      >
+                        <Wallet className="w-3 h-3" />
+                        Deposit Funds
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Portfolio panel (Mobile) */}
+          <div className={`${mobileTab === 'portfolio' ? 'flex' : 'hidden'} lg:hidden flex-col flex-1 overflow-y-auto bg-obsidian`}>
+            <div className="p-3">
+              <h3 className="text-sm font-semibold text-cream mb-3">Your Holdings ({stockPositions.length})</h3>
+
+              {stockPositions.length === 0 ? (
+                <div className="text-center py-8 text-cream/50">
+                  <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No holdings yet</p>
+                  <p className="text-xs mt-1">Buy stocks to start building your portfolio</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {stockPositions.map((pos: any) => {
+                    const pi = stockInfo[pos.symbol] || { emoji: '📈', sector: 'Other' };
+                    return (
+                      <div key={pos.id} className="p-3 bg-white/5 rounded-xl">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{pi.emoji}</span>
+                            <span className="font-semibold text-cream">{pos.symbol}</span>
+                          </div>
+                          <span className={`font-semibold ${pos.unrealizedPnL >= 0 ? 'text-profit' : 'text-loss'}`}>
+                            {pos.unrealizedPnL >= 0 ? '+' : ''}{fmtUsd(Number(pos.unrealizedPnL ?? 0))}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 text-xs mb-2">
+                          <div>
+                            <p className="text-cream/50">Shares</p>
+                            <p className="text-cream">{pos.qty}</p>
+                          </div>
+                          <div>
+                            <p className="text-cream/50">Avg Entry</p>
+                            <p className="text-cream font-mono">{fmtUsd(Number(pos.avgEntry ?? 0))}</p>
+                          </div>
+                          <div>
+                            <p className="text-cream/50">Value</p>
+                            <p className="text-cream">{fmtUsd(Number(pos.marketValue ?? 0))}</p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setPositionToSell(pos);
+                            setSellQty(pos.qty);
+                            setShowSellModal(true);
+                          }}
+                          className="w-full py-2 bg-loss/20 text-loss text-sm font-medium rounded-lg hover:bg-loss/30 transition-colors"
+                        >
+                          Sell
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Portfolio */}
+        <div className="hidden lg:block flex-shrink-0 h-48 border-t border-white/10 bg-obsidian overflow-y-auto">
+          <div className="p-3">
+            <h3 className="text-sm font-semibold text-cream mb-3">Holdings ({stockPositions.length})</h3>
+
+            {stockPositions.length === 0 ? (
+              <div className="text-center py-4 text-cream/50">
+                <p className="text-sm">No holdings yet</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-cream/50 text-xs">
+                      <th className="text-left pb-2">Symbol</th>
+                      <th className="text-right pb-2">Shares</th>
+                      <th className="text-right pb-2">Avg Entry</th>
+                      <th className="text-right pb-2">Current</th>
+                      <th className="text-right pb-2">Value</th>
+                      <th className="text-right pb-2">P&amp;L</th>
+                      <th className="text-right pb-2">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stockPositions.map((pos: any) => {
+                      const cur = quotes[String(pos.symbol || '').toUpperCase()]?.price ?? pos.currentPrice ?? 0;
+                      return (
+                        <tr key={pos.id} className="border-t border-white/5">
+                          <td className="py-2 text-cream font-medium">{pos.symbol}</td>
+                          <td className="py-2 text-right text-cream">{pos.qty}</td>
+                          <td className="py-2 text-right font-mono text-cream">{fmtUsd(Number(pos.avgEntry ?? 0))}</td>
+                          <td className="py-2 text-right font-mono text-cream">{fmtUsd(Number(cur))}</td>
+                          <td className="py-2 text-right text-cream">{fmtUsd(Number(pos.marketValue ?? 0))}</td>
+                          <td className={`py-2 text-right font-semibold ${pos.unrealizedPnL >= 0 ? 'text-profit' : 'text-loss'}`}>
+                            {pos.unrealizedPnL >= 0 ? '+' : ''}{fmtUsd(Number(pos.unrealizedPnL ?? 0))}
+                          </td>
+                          <td className="py-2 text-right">
+                            <button
+                              onClick={() => {
+                                setPositionToSell(pos);
+                                setSellQty(pos.qty);
+                                setShowSellModal(true);
+                              }}
+                              className="px-3 py-1 bg-loss/20 text-loss text-xs font-medium rounded hover:bg-loss/30"
+                            >
+                              Sell
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Asset Selector */}
+        <AnimatePresence>
+          {showAssetSelector && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowAssetSelector(false)}
+                className="fixed inset-0 bg-void/80 backdrop-blur-sm z-50"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md bg-obsidian rounded-2xl border border-white/10 z-50 flex flex-col max-h-[90vh]"
+              >
+                <div className="p-4 border-b border-white/10 flex-shrink-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-cream">Select Stock</h3>
+                    <button onClick={() => setShowAssetSelector(false)}>
+                      <X className="w-5 h-5 text-cream/50" />
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cream/30" />
+                    <input
+                      type="text"
+                      placeholder="Search stocks..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-cream placeholder:text-cream/30 focus:outline-none focus:border-gold"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-2">
+                  {favorites.length > 0 && (
+                    <div className="mb-4">
+                      <p className="px-2 py-1 text-xs text-gold font-medium">⭐ Watchlist</p>
+                      {filteredAssets
+                        .filter((a) => favorites.includes(a.symbol))
+                        .map((asset) => {
+                          const q = quotes[asset.symbol];
+                          const p = q?.price ?? asset.price;
+                          const dp = q?.changePercent24h ?? asset.changePercent24h;
+                          const ai = stockInfo[asset.symbol] || { emoji: '📈', sector: 'Other' };
+                          return (
+                            <button
+                              key={asset.symbol}
+                              onClick={() => {
+                                setSelectedSymbol(asset.symbol);
+                                setShowAssetSelector(false);
+                              }}
+                              className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-xl">{ai.emoji}</span>
+                                <div className="text-left">
+                                  <p className="font-medium text-cream">{asset.symbol}</p>
+                                  <p className="text-xs text-cream/50">{asset.name}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <div className="text-right">
+                                  <p className="font-mono text-cream">{fmtUsd(p)}</p>
+                                  <p className={`text-xs ${dp >= 0 ? 'text-profit' : 'text-loss'}`}>
+                                    {dp >= 0 ? '+' : ''}
+                                    {Number.isFinite(dp) ? dp.toFixed(2) : '0.00'}%
+                                  </p>
+                                </div>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleFavorite(asset.symbol);
+                                  }}
+                                  className="p-1"
+                                >
+                                  <Star className="w-4 h-4 text-gold fill-gold" />
+                                </button>
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  )}
+
+                  <p className="px-2 py-1 text-xs text-cream/50 font-medium">All Stocks</p>
+                  {filteredAssets
+                    .filter((a) => !favorites.includes(a.symbol))
+                    .map((asset) => {
+                      const q = quotes[asset.symbol];
+                      const p = q?.price ?? asset.price;
+                      const dp = q?.changePercent24h ?? asset.changePercent24h;
+                      const ai = stockInfo[asset.symbol] || { emoji: '📈', sector: 'Other' };
+                      return (
+                        <button
+                          key={asset.symbol}
+                          onClick={() => {
+                            setSelectedSymbol(asset.symbol);
+                            setShowAssetSelector(false);
+                          }}
+                          className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl">{ai.emoji}</span>
+                            <div className="text-left">
+                              <p className="font-medium text-cream">{asset.symbol}</p>
+                              <p className="text-xs text-cream/50">{asset.name}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <p className="font-mono text-cream">{fmtUsd(p)}</p>
+                              <p className={`text-xs ${dp >= 0 ? 'text-profit' : 'text-loss'}`}>
+                                {dp >= 0 ? '+' : ''}
+                                {Number.isFinite(dp) ? dp.toFixed(2) : '0.00'}%
+                              </p>
+                            </div>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(asset.symbol);
+                              }}
+                              className="p-1"
+                            >
+                              <StarOff className="w-4 h-4 text-cream/30 hover:text-gold" />
+                            </button>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Sell Modal */}
+        <AnimatePresence>
+          {showSellModal && positionToSell && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSellModal(false)}
+                className="fixed inset-0 bg-void/80 backdrop-blur-sm z-50"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm bg-obsidian rounded-2xl p-4 sm:p-6 border border-gold/20 z-50"
+              >
+                <h3 className="text-xl font-semibold text-cream mb-4">Sell {(positionToSell as any).symbol}</h3>
+
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="text-sm text-cream/50 mb-2 block">Shares to Sell</label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setSellQty(Math.max(1, sellQty - 1))}
+                        className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg"
+                      >
+                        <Minus className="w-4 h-4 text-cream" />
+                      </button>
+                      <input
+                        type="number"
+                        value={sellQty}
+                        onChange={(e) =>
+                          setSellQty(Math.min((positionToSell as any).qty, Math.max(1, parseInt(e.target.value) || 1)))
+                        }
+                        className="flex-1 h-10 bg-white/5 border border-white/10 rounded-lg text-center text-cream font-mono focus:outline-none focus:border-gold"
+                      />
+                      <button
+                        onClick={() => setSellQty(Math.min((positionToSell as any).qty, sellQty + 1))}
+                        className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg"
+                      >
+                        <Plus className="w-4 h-4 text-cream" />
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => setSellQty((positionToSell as any).qty)}
+                      className="w-full mt-2 py-1 text-xs text-gold bg-gold/10 rounded-lg"
+                    >
+                      Sell All ({(positionToSell as any).qty} shares)
+                    </button>
+                  </div>
+
+                  <div className="p-3 bg-white/5 rounded-xl space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-cream/50">Avg Entry</span>
+                      <span className="text-cream font-mono">{fmtUsd(Number((positionToSell as any).avgEntry ?? 0))}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-cream/50">Bid</span>
+                      <span className="text-cream font-mono">{Number.isFinite(bidPrice) ? fmtUsd(bidPrice) : '—'}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-white/10">
+                      <span className="text-cream/50">Est. P&amp;L</span>
+                      <span
+                        className={`font-semibold ${
+                          (bidPrice - Number((positionToSell as any).avgEntry ?? 0)) * sellQty >= 0 ? 'text-profit' : 'text-loss'
+                        }`}
+                      >
+                        {(bidPrice - Number((positionToSell as any).avgEntry ?? 0)) * sellQty >= 0 ? '+' : ''}
+                        {fmtUsd((bidPrice - Number((positionToSell as any).avgEntry ?? 0)) * sellQty)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowSellModal(false)}
+                    className="flex-1 py-3 bg-white/5 text-cream rounded-xl hover:bg-white/10"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSell}
+                    className="flex-1 py-3 bg-loss text-white font-semibold rounded-xl hover:bg-loss/90"
+                  >
+                    Sell {sellQty} Shares
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Notification */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className={`fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-auto px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 z-50 ${
+                notification.type === 'success' ? 'bg-profit text-void' : 'bg-loss text-white'
+              }`}
+            >
+              {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              <span className="font-medium text-sm sm:text-base">{notification.message}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </KYCGate>
+  );
 }

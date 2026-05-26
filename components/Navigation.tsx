@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import LanguageSwitcher from './LanguageSwitcher';
-import SwiftLogo from './SwiftLogo';
+import SwiftLogo from '@/components/SwiftLogo';
 
 const NAV = [
   { name: 'Markets',     href: '/#markets'      },
@@ -33,7 +32,14 @@ export default function Navigation() {
       <div className="max-w-[1280px] mx-auto px-5 sm:px-8">
         <div className="h-[68px] flex items-center justify-between">
           {/* Logo */}
-          <SwiftLogo size="md" />
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="group-hover:scale-105 transition-transform">
+              <SwiftLogo size={36} />
+            </div>
+            <div className="leading-none -ml-1 hidden sm:block">
+              <div className="text-[9px] text-pearl-300/60 tracking-[0.25em] uppercase mt-0.5">Hong Kong · Est. 2018</div>
+            </div>
+          </Link>
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
@@ -54,7 +60,6 @@ export default function Navigation() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
-            <LanguageSwitcher compact />
             <Link href="/auth/login" className="text-sm text-pearl-100/70 hover:text-pearl-50 transition-colors">
               Sign in
             </Link>

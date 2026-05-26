@@ -458,28 +458,35 @@ export default function SwiftBridgePage() {
         {openCountry && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-void/80 backdrop-blur flex items-end md:items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-void/80 backdrop-blur flex items-end md:items-center justify-center p-2 md:p-4"
             onClick={() => setOpenCountry(false)}
+            style={{ touchAction: 'none' }}
           >
             <motion.div
               initial={{ y: 30, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-charcoal border border-white/10 rounded-2xl overflow-hidden max-h-[80vh] flex flex-col"
+              className="w-full max-w-md bg-charcoal border border-white/10 rounded-2xl overflow-hidden flex flex-col"
+              style={{
+                maxHeight: 'min(80dvh, 640px)',
+                marginBottom: 'env(safe-area-inset-bottom)',
+              }}
             >
-              <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
                 <h3 className="font-display font-semibold text-cream">Select country</h3>
-                <button onClick={() => setOpenCountry(false)} className="text-cream/60 hover:text-cream"><X className="w-5 h-5" /></button>
+                <button onClick={() => setOpenCountry(false)} className="text-cream/60 hover:text-cream p-1"><X className="w-5 h-5" /></button>
               </div>
-              <div className="p-3">
+              <div className="p-3 shrink-0">
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search country or currency…"
                   className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg outline-none text-cream text-sm"
-                  autoFocus
                 />
               </div>
-              <div className="flex-1 overflow-y-auto px-2 pb-2">
+              <div
+                className="flex-1 overflow-y-auto overscroll-contain px-2 pb-3"
+                style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
+              >
                 {filteredCountries.map((c) => (
                   <button
                     key={c.code}
@@ -487,11 +494,11 @@ export default function SwiftBridgePage() {
                     className="w-full flex items-center gap-3 p-3 hover:bg-electric/10 rounded-lg transition-colors text-left"
                   >
                     <Image src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} alt={c.name} width={28} height={20} className="rounded" />
-                    <div className="flex-1">
-                      <div className="text-cream font-medium text-sm">{c.name}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-cream font-medium text-sm truncate">{c.name}</div>
                       <div className="text-cream/50 text-[11px]">{c.currency}</div>
                     </div>
-                    {country?.code === c.code && <CheckCircle2 className="w-4 h-4 text-electric" />}
+                    {country?.code === c.code && <CheckCircle2 className="w-4 h-4 text-electric shrink-0" />}
                   </button>
                 ))}
               </div>
@@ -505,30 +512,38 @@ export default function SwiftBridgePage() {
         {openAsset && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-void/80 backdrop-blur flex items-end md:items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-void/80 backdrop-blur flex items-end md:items-center justify-center p-2 md:p-4"
             onClick={() => setOpenAsset(false)}
+            style={{ touchAction: 'none' }}
           >
             <motion.div
               initial={{ y: 30, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-charcoal border border-white/10 rounded-2xl overflow-hidden"
+              className="w-full max-w-md bg-charcoal border border-white/10 rounded-2xl overflow-hidden flex flex-col"
+              style={{
+                maxHeight: 'min(80dvh, 580px)',
+                marginBottom: 'env(safe-area-inset-bottom)',
+              }}
             >
-              <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
                 <h3 className="font-display font-semibold text-cream">Select asset</h3>
-                <button onClick={() => setOpenAsset(false)} className="text-cream/60 hover:text-cream"><X className="w-5 h-5" /></button>
+                <button onClick={() => setOpenAsset(false)} className="text-cream/60 hover:text-cream p-1"><X className="w-5 h-5" /></button>
               </div>
-              <div className="p-2 max-h-[60vh] overflow-y-auto">
+              <div
+                className="flex-1 p-2 overflow-y-auto overscroll-contain"
+                style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
+              >
                 {ASSETS.map((a) => (
                   <button
                     key={a.code}
                     onClick={() => { setAsset(a); setNetwork(a.networks[0]); setOpenAsset(false); }}
                     className="w-full flex items-center justify-between gap-3 p-3 hover:bg-electric/10 rounded-lg transition-colors text-left"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <div className="text-cream font-medium text-sm">{a.code}</div>
-                      <div className="text-cream/50 text-[11px]">{a.name}</div>
+                      <div className="text-cream/50 text-[11px] truncate">{a.name}</div>
                     </div>
-                    {asset.code === a.code && <CheckCircle2 className="w-4 h-4 text-electric" />}
+                    {asset.code === a.code && <CheckCircle2 className="w-4 h-4 text-electric shrink-0" />}
                   </button>
                 ))}
               </div>
@@ -589,11 +604,18 @@ function BridgeDetail({
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-40 bg-void/80 backdrop-blur flex items-stretch justify-end"
       onClick={onClose}
+      style={{ touchAction: 'none' }}
     >
       <motion.div
         initial={{ x: 80, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 80, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-charcoal border-l border-white/10 overflow-y-auto"
+        className="w-full max-w-lg bg-charcoal border-l border-white/10 overflow-y-auto overscroll-contain pb-32 lg:pb-8"
+        style={{
+          height: '100dvh',
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem)',
+        }}
       >
         <div className="sticky top-0 z-10 bg-charcoal/95 backdrop-blur p-5 border-b border-white/10 flex items-center justify-between">
           <div>

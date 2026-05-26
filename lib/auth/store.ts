@@ -336,41 +336,6 @@ export const useStore = create<AuthStore>((set, get) => ({
       const authData = (authRes as any).data;
 
       if (authError) {
-        const raw = (authError.message || '').toLowerCase();
-
-        // Supabase changed behavior in 2024: when "Confirm email" is enabled
-        // on the project, unconfirmed users now get the generic
-        // "Invalid login credentials" instead of "Email not confirmed".
-        // Probe to detect that case and surface a clearer message.
-        if (raw.includes('invalid login credentials')) {
-          try {
-            const probe: any = await supabase.auth.resend({
-              type: 'signup',
-              email,
-            }).catch(() => ({ error: { message: 'probe-failed' } }));
-
-            const probeMsg = (probe?.error?.message || '').toLowerCase();
-            // If resend succeeds OR fails with a "for security" rate-limit,
-            // the email genuinely exists but is unconfirmed.
-            const looksUnconfirmed =
-              !probe?.error ||
-              probeMsg.includes('for security') ||
-              probeMsg.includes('rate limit');
-
-            const looksAlreadyOk =
-              probeMsg.includes('already confirmed') ||
-              probeMsg.includes('not found') ||
-              probeMsg.includes('user not found');
-
-            if (looksUnconfirmed && !looksAlreadyOk) {
-              const friendly =
-                'Your email is not verified yet. Check your inbox (and spam folder) for the confirmation link, then try again.';
-              set({ error: friendly });
-              return { success: false, error: friendly };
-            }
-          } catch {/* probe failed — fall through */}
-        }
-
         const msg = humanError(authError.message);
         set({ error: msg });
         return { success: false, error: msg };
@@ -522,19 +487,6 @@ export const useStore = create<AuthStore>((set, get) => ({
       if (!authData?.user) {
         set({ error: 'Could not create your account. Please try again.' });
         return { success: false, error: 'Could not create your account. Please try again.' };
-      }
-
-      // If Supabase returns a session, the project has email confirmation
-      // DISABLED — the user is logged in immediately and can go to dashboard.
-      // If there's no session, the project requires email confirmation;
-      // surface that clearly so the user knows to check their inbox.
-      const hasSession = !!(authData as any)?.session;
-      if (!hasSession) {
-        return {
-          success: true,
-          needsEmailConfirmation: true,
-          message: 'Account created. Check your inbox for a confirmation link before signing in.',
-        } as any;
       }
 
       return { success: true };

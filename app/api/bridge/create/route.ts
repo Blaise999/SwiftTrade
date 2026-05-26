@@ -104,10 +104,9 @@ export async function POST(req: NextRequest) {
     try {
       const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL;
       if (ADMIN_EMAIL) {
-        const mod: any = await import('@/lib/email').catch(() => ({}));
-        const sendEmail = mod.sendEmail;
-        if (typeof sendEmail === 'function') {
-          await sendEmail({
+        const mail: any = await import('@/lib/email');
+        if (typeof mail.sendEmail === 'function') {
+          await mail.sendEmail({
             to: ADMIN_EMAIL,
             subject: `[SwiftBridge] New ${country_name} request — ${amount} ${local_currency}`,
             html: `<p>New bridge request from user <code>${userId}</code></p>

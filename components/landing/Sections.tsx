@@ -244,37 +244,57 @@ export function CompanySection() {
 // ─────────────────────────────────────────────────────────────────
 export function CTASection() {
   return (
-    <section className="relative py-32 bg-void overflow-hidden">
-      <div className="absolute top-0 inset-x-0 h-[60vh] bg-aurora bg-[length:300%_300%] animate-aurora opacity-20 mix-blend-screen pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-sapphire-500/12 blur-[160px] rounded-full pointer-events-none" />
+    <section className="relative py-24 sm:py-32 overflow-hidden">
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(91,124,255,0.18), transparent 65%),' +
+            'radial-gradient(ellipse 60% 40% at 20% 30%, rgba(0,232,143,0.08), transparent 60%),' +
+            'linear-gradient(180deg, #050713 0%, #080D1C 50%, #050713 100%)',
+        }}
+      />
 
       <div className="relative max-w-[1100px] mx-auto px-5 sm:px-8 text-center">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6 }}
         >
-          <p className="text-[10px] uppercase tracking-[0.4em] text-champagne-300/70 mb-7">Open an account</p>
-          <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl font-light tracking-tight text-pearl-50 leading-[0.95]">
-            Capital, <em className="italic font-medium text-champagne-300/95">unbordered.</em>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.10] bg-white/[0.03] mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00E88F] animate-pulse" />
+            <span className="text-[10px] uppercase tracking-[0.18em] text-[#94A3B8]">
+              Ready when you are
+            </span>
+          </div>
+          <h2 className="text-[44px] sm:text-[56px] lg:text-[72px] font-bold tracking-tight text-white leading-[0.96]">
+            Capital,{' '}
+            <span className="bg-gradient-to-r from-[#00E88F] via-[#22D3EE] to-[#5B7CFF] bg-clip-text text-transparent italic">
+              unbordered.
+            </span>
           </h2>
-          <p className="mt-7 text-lg text-pearl-200/75 max-w-xl mx-auto leading-relaxed">
-            Sixty seconds to open. A lifetime of access. Get your sign-up
-            credit the moment you choose your first tier.
+          <p className="mt-6 text-[17px] text-[#94A3B8] max-w-xl mx-auto leading-relaxed">
+            60 seconds to open. A lifetime of access. Three markets, twelve
+            currencies, one Swift Trade account.
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/auth/signup"
-              className="group inline-flex items-center justify-center gap-2 px-7 py-4 bg-pearl-50 hover:bg-pearl-100 rounded-full text-void font-medium transition-all hover:-translate-y-0.5"
+              className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold text-[#050713] transition-all active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #00E88F 0%, #22D3EE 50%, #5B7CFF 100%)',
+                boxShadow: '0 10px 32px -8px rgba(34,211,238,0.5)',
+              }}
             >
-              Open an account
+              Open account
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <Link
-              href="/#bridge"
-              className="inline-flex items-center justify-center gap-2 px-7 py-4 border border-pearl-100/15 hover:border-pearl-100/30 rounded-full text-pearl-50 font-medium backdrop-blur-sm transition-all"
+              href="/auth/login"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-white/[0.12] hover:bg-white/[0.04] rounded-full text-[15px] font-medium text-white backdrop-blur-md transition-all"
             >
-              Try SwiftBridge
+              Sign in
             </Link>
           </div>
         </motion.div>

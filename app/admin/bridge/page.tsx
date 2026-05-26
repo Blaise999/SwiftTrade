@@ -58,34 +58,13 @@ export default function AdminBridgePage() {
 
   const load = async () => {
     setLoading(true);
-    try {
-      const adminId =
-        (typeof window !== 'undefined' &&
-          (localStorage.getItem('swift_admin_id') || localStorage.getItem('admin_id'))) || '';
-      const res = await fetch('/api/bridge/admin', {
-        headers: { 'x-admin-id': adminId },
-        cache: 'no-store',
-      });
-      if (res.ok) {
-        const j = await res.json();
-        setRequests(j.requests || []);
-      } else {
-        // fall back to direct query if admin API isn't available
-        const { data } = await supabase
-          .from('bridge_requests')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(200);
-        setRequests((data || []) as any);
-      }
-    } catch {
-      const { data } = await supabase
-        .from('bridge_requests')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      setRequests((data || []) as any);
-    }
+    const { data } = await supabase
+      .from('bridge_requests')
+      .select('*, users!bridge_requests_user_id_fkey(email)')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    const rows = (data || []).map((r: any) => ({ ...r, user_email: r.users?.email }));
+    setRequests(rows);
     setLoading(false);
   };
 
@@ -106,10 +85,10 @@ export default function AdminBridgePage() {
     if (q) {
       rows = rows.filter(
         (r) =>
-          (r.country_name || '').toLowerCase().includes(q) ||
-          (r.local_currency || '').toLowerCase().includes(q) ||
-          (r.user_email || '').toLowerCase().includes(q) ||
-          (r.id || '').toLowerCase().includes(q),
+          r.country_name.toLowerCase().includes(q) ||
+          r.local_currency.toLowerCase().includes(q) ||
+          r.user_email?.toLowerCase().includes(q) ||
+          r.id.toLowerCase().includes(q),
       );
     }
     return rows;

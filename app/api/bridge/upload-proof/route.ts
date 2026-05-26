@@ -9,6 +9,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -25,7 +28,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    const formData = await req.formData();
+    const formData: any = await req.formData();
     const file = formData.get('file') as File | null;
     const requestId = formData.get('request_id') as string | null;
 
@@ -103,8 +106,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
-
-// App Router: body parsing is handled automatically. Keep dynamic so
-// uploads bypass static generation.
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';

@@ -35,19 +35,19 @@ import { useTradingAccountStore } from '@/lib/trading-store';
 import SupportWidget from '@/components/SupportWidget';
 import NotificationPanel from '@/components/NotificationPanel';
 import StockPriceSync from '@/components/StockPriceSync';
-import MobileBottomNav from '@/components/MobileBottomNav';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Tiers & Plans', href: '/dashboard/tier', icon: Shield },
   {
     name: 'Trade',
     icon: LineChart,
     children: [
       { name: 'Cryptocurrency', href: '/dashboard/trade/crypto', icon: Bitcoin },
       { name: 'Forex', href: '/dashboard/trade/fx', icon: DollarSign },
+      { name: 'Stocks', href: '/dashboard/trade/stocks', icon: BarChart3 },
     ],
   },
-  { name: 'Stocks & ETFs', href: '/dashboard/invest', icon: TrendingUp, badge: 'NEW' },
   { name: 'SwiftBridge', href: '/dashboard/bridge', icon: Globe, badge: 'NEW' },
   { name: 'Portfolio', href: '/dashboard/portfolio', icon: BarChart3 },
   { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
@@ -151,14 +151,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mobileMenuOpen]);
 
-  // ✅ Mobile bottom-nav menu trigger
-  useEffect(() => {
-    const handler = () => { if (!mobileMenuOpen) toggleMobileMenu(); };
-    window.addEventListener('swift:openMobileMenu', handler);
-    return () => window.removeEventListener('swift:openMobileMenu', handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mobileMenuOpen]);
-
   // ✅ Outside click to close user menu (prevents invisible overlays)
   useEffect(() => {
     if (!showUserMenu) return;
@@ -216,7 +208,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       >
         {/* Brand */}
         <div className="h-[68px] flex items-center justify-between px-5 border-b border-pearl-100/[0.05]">
-          <Link prefetch={false} href="/dashboard" className="flex items-center gap-2.5 group">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-sapphire-400 to-sapphire-700 flex items-center justify-center flex-shrink-0">
               <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] text-pearl-50" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 17l6-6 4 4 8-8" />
@@ -266,7 +258,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         >
                           {item.children.map((child) => (
                             <li key={child.name}>
-                              <Link prefetch={false}
+                              <Link
                                 href={child.href}
                                 className={`flex items-center gap-3 pl-4 pr-3 py-1.5 rounded-r-md transition-all ${
                                   isActive(child.href)
@@ -284,7 +276,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     </AnimatePresence>
                   </div>
                 ) : (
-                  <Link prefetch={false}
+                  <Link
                     href={item.href}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                       isActive(item.href)
@@ -309,7 +301,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Bottom */}
         <div className="border-t border-pearl-100/[0.05] py-3 px-3 space-y-0.5">
           {bottomNav.map((item) => (
-            <Link prefetch={false}
+            <Link
               key={item.name}
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
@@ -348,7 +340,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               className="lg:hidden fixed inset-y-0 left-0 w-72 bg-obsidian border-r border-pearl-100/[0.05] z-50 flex flex-col"
             >
               <div className="h-[68px] flex items-center justify-between px-5 border-b border-pearl-100/[0.05]">
-                <Link prefetch={false} href="/dashboard" className="flex items-center gap-2.5">
+                <Link href="/dashboard" className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-sapphire-400 to-sapphire-700 flex items-center justify-center">
                     <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] text-pearl-50" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 17l6-6 4 4 8-8" />
@@ -375,7 +367,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                             {item.name}
                           </div>
                           {item.children.map((child) => (
-                            <Link prefetch={false}
+                            <Link
                               key={child.name}
                               href={child.href}
                               onClick={toggleMobileMenu}
@@ -391,7 +383,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                           ))}
                         </div>
                       ) : (
-                        <Link prefetch={false}
+                        <Link
                           href={item.href}
                           onClick={toggleMobileMenu}
                           className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${
@@ -453,7 +445,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </span>
               </div>
             ) : (
-              <Link prefetch={false}
+              <Link
                 href="/dashboard/connect-wallet"
                 className="hidden md:flex items-center gap-2 px-3 py-2 bg-pearl-50/[0.03] rounded-full border border-pearl-100/[0.06] hover:border-pearl-100/15 transition-colors group"
               >
@@ -462,7 +454,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </Link>
             )}
 
-            <Link prefetch={false}
+            <Link
               href="/dashboard/wallet"
               className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-pearl-50 hover:bg-pearl-100 text-void text-[13px] font-medium rounded-full transition-all"
             >
@@ -504,13 +496,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     </div>
 
                     <div className="py-1.5">
-                      <Link prefetch={false} href="/dashboard/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 text-[13px] text-pearl-200/80 hover:text-pearl-50 hover:bg-pearl-50/[0.03] transition-colors">
+                      <Link href="/dashboard/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 text-[13px] text-pearl-200/80 hover:text-pearl-50 hover:bg-pearl-50/[0.03] transition-colors">
                         <User className="w-3.5 h-3.5" /> Profile
                       </Link>
-                      <Link prefetch={false} href="/dashboard/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 text-[13px] text-pearl-200/80 hover:text-pearl-50 hover:bg-pearl-50/[0.03] transition-colors">
+                      <Link href="/dashboard/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 text-[13px] text-pearl-200/80 hover:text-pearl-50 hover:bg-pearl-50/[0.03] transition-colors">
                         <Shield className="w-3.5 h-3.5" /> Security
                       </Link>
-                      <Link prefetch={false} href="/dashboard/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 text-[13px] text-pearl-200/80 hover:text-pearl-50 hover:bg-pearl-50/[0.03] transition-colors">
+                      <Link href="/dashboard/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 text-[13px] text-pearl-200/80 hover:text-pearl-50 hover:bg-pearl-50/[0.03] transition-colors">
                         <Settings className="w-3.5 h-3.5" /> Settings
                       </Link>
                     </div>
@@ -530,11 +522,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8 pb-28 lg:pb-8">{children}</main>
+        <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8">{children}</main>
       </div>
 
       <SupportWidget />
-      <MobileBottomNav />
     </div>
   );
 }

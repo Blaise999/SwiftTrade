@@ -1,209 +1,172 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ArrowRight, ArrowDown, ArrowUpRight } from 'lucide-react';
-
-const FLOW = [
-  { n: '01', title: 'Choose your jurisdiction', desc: 'Select from 80+ supported markets. Specify the local amount and the digital asset you wish to receive.' },
-  { n: '02', title: 'Receive payout instructions', desc: 'Our concierge desk replies within minutes with a verified local bank, mobile-money or e-wallet account.' },
-  { n: '03', title: 'Settle locally, upload proof', desc: 'Send the local transfer through your usual rails. Upload a screenshot of confirmation. That is all.' },
-  { n: '04', title: 'Crypto credited, instantly tradable', desc: 'Verification, settlement, and credit happen in minutes. Trade or withdraw to any wallet on any chain.' },
-];
-
-const COUNTRIES = [
-  { code: 'hk', name: 'Hong Kong',     ccy: 'HKD' },
-  { code: 'sg', name: 'Singapore',     ccy: 'SGD' },
-  { code: 'jp', name: 'Japan',         ccy: 'JPY' },
-  { code: 'kr', name: 'South Korea',   ccy: 'KRW' },
-  { code: 'cn', name: 'China',         ccy: 'CNY' },
-  { code: 'tw', name: 'Taiwan',        ccy: 'TWD' },
-  { code: 'in', name: 'India',         ccy: 'INR' },
-  { code: 'ph', name: 'Philippines',   ccy: 'PHP' },
-  { code: 'id', name: 'Indonesia',     ccy: 'IDR' },
-  { code: 'th', name: 'Thailand',      ccy: 'THB' },
-  { code: 'vn', name: 'Vietnam',       ccy: 'VND' },
-  { code: 'my', name: 'Malaysia',      ccy: 'MYR' },
-  { code: 'au', name: 'Australia',     ccy: 'AUD' },
-  { code: 'ae', name: 'UAE',           ccy: 'AED' },
-  { code: 'gb', name: 'United Kingdom',ccy: 'GBP' },
-  { code: 'us', name: 'United States', ccy: 'USD' },
-];
+import { ArrowRight, Zap, Shield, Clock } from 'lucide-react';
 
 export default function SwiftBridgeShowcase() {
   return (
-    <section id="bridge" className="relative py-32 bg-void overflow-hidden">
-      <div className="absolute inset-0 z-0 opacity-[0.10]">
-        <Image
-          src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=2400&q=80"
-          alt=""
-          fill
-          className="object-cover"
+    <section className="relative py-20 sm:py-28 overflow-hidden">
+      {/* Backdrop */}
+      <div className="absolute inset-0 -z-10">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 50% at 50% 50%, rgba(231,198,106,0.06), transparent 70%),' +
+              'linear-gradient(180deg, #050713 0%, #080D1C 100%)',
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-void via-void/85 to-void" />
       </div>
-      <div className="absolute -top-20 right-0 w-[600px] h-[600px] bg-sapphire-500/10 blur-[160px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-champagne-500/8 blur-[140px] rounded-full pointer-events-none" />
 
-      <div className="relative z-10 max-w-[1280px] mx-auto px-5 sm:px-8">
-        {/* Header */}
-        <div className="grid lg:grid-cols-12 gap-x-10 mb-20">
+      <div className="max-w-[1280px] mx-auto px-5 sm:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* LEFT — copy */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-7"
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.6 }}
           >
-            <p className="text-[10px] uppercase tracking-[0.4em] text-champagne-300/80 mb-5">SwiftBridge — flagship feature</p>
-            <h2 className="font-serif text-5xl md:text-6xl lg:text-7xl font-light tracking-tight text-pearl-50 leading-[0.98]">
-              Local money,<br/>
-              <em className="italic font-medium text-champagne-300/95">global</em> markets.
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#E7C66A]/30 bg-[#E7C66A]/[0.06] mb-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E7C66A] animate-pulse" />
+              <span className="text-[10px] uppercase tracking-[0.18em] text-[#E7C66A]">
+                SwiftBridge
+              </span>
+            </div>
+
+            <h2 className="text-[36px] sm:text-[44px] lg:text-[52px] font-bold tracking-tight text-white leading-[1.02]">
+              Local money.
+              <br />
+              <span className="bg-gradient-to-r from-[#E7C66A] via-[#F5C542] to-[#E7C66A] bg-clip-text text-transparent">
+                Global access.
+              </span>
             </h2>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-5 lg:pt-4 flex items-end"
-          >
-            <p className="text-pearl-200/75 leading-relaxed text-base lg:text-lg">
-              SwiftBridge isn&apos;t peer-to-peer. It&apos;s a concierge — staffed
-              by humans, paying out through verified institutional rails. Pay
-              in your home currency. Receive USDT, USDC, BTC, ETH, or any
-              listed asset, on any chain.
-            </p>
-          </motion.div>
-        </div>
 
-        {/* Main grid */}
-        <div className="grid lg:grid-cols-12 gap-10 items-start">
-          {/* LEFT — Flow */}
-          <div className="lg:col-span-7">
-            <div className="border-t border-pearl-100/[0.07]">
-              {FLOW.map((f, i) => (
-                <motion.div
-                  key={f.n}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.07 }}
-                  className="group grid grid-cols-12 gap-6 py-8 border-b border-pearl-100/[0.07] hover:bg-pearl-50/[0.01] transition-colors -mx-2 px-2 rounded"
-                >
-                  <div className="col-span-2 lg:col-span-1">
-                    <div className="font-mono text-xs text-champagne-400/70 tracking-wider">{f.n}</div>
+            <p className="mt-5 text-[16px] text-[#94A3B8] leading-relaxed max-w-xl">
+              Pay in NGN, GHS, PHP, INR, BRL or any of 12 supported local
+              currencies. Receive USDT, BTC, ETH or USD into your Swift Trade
+              wallet in minutes. Compliance handled. No bank wire needed.
+            </p>
+
+            <div className="mt-7 space-y-3">
+              {[
+                { i: Zap,    t: 'Settles in 4–15 minutes during business hours' },
+                { i: Shield, t: 'Audited custody · Compliant in 12 jurisdictions' },
+                { i: Clock,  t: 'No SWIFT wire, no correspondent banks, no surprises' },
+              ].map(item => (
+                <div key={item.t} className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#E7C66A]/[0.08] border border-[#E7C66A]/20 flex items-center justify-center shrink-0">
+                    <item.i className="w-4 h-4 text-[#E7C66A]" />
                   </div>
-                  <div className="col-span-10 lg:col-span-11">
-                    <h3 className="font-serif text-2xl lg:text-[28px] font-light text-pearl-50 tracking-tight leading-tight">{f.title}</h3>
-                    <p className="mt-3 text-pearl-200/65 leading-relaxed text-[15px] max-w-xl">{f.desc}</p>
-                  </div>
-                </motion.div>
+                  <p className="text-[14px] text-[#CBD5E1] leading-relaxed pt-1.5">{item.t}</p>
+                </div>
               ))}
             </div>
 
             <Link
-              href="/dashboard/bridge"
-              className="group inline-flex items-center gap-2 px-6 py-3.5 mt-8 bg-pearl-50 hover:bg-pearl-100 rounded-full text-void font-medium transition-all hover:-translate-y-0.5"
+              href="/auth/signup"
+              className="mt-8 inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-[14.5px] font-semibold text-[#050713] bg-gradient-to-r from-[#E7C66A] to-[#F5C542] hover:brightness-110 transition-all active:scale-[0.98]"
             >
-              Begin a bridge request
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              Try SwiftBridge
+              <ArrowRight className="w-4 h-4" />
             </Link>
-          </div>
+          </motion.div>
 
-          {/* RIGHT — Visual mockup */}
+          {/* RIGHT — animated route mockup */}
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="lg:col-span-5 relative lg:sticky lg:top-28"
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7 }}
           >
-            <div className="relative bg-gradient-to-br from-charcoal/90 to-obsidian/95 border border-pearl-100/[0.07] rounded-[20px] p-7 backdrop-blur-2xl shadow-card">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <div className="text-[9px] uppercase tracking-[0.25em] text-pearl-300/50 mb-1">Bureau de change</div>
-                  <div className="font-serif font-medium text-pearl-50 text-lg">SwiftBridge</div>
-                </div>
-                <span className="text-[10px] text-profit/90 flex items-center gap-1.5 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-profit animate-pulse" />
-                  Open
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[9px] uppercase tracking-[0.2em] text-pearl-300/50 font-medium">From</label>
-                  <div className="mt-1.5 flex items-center gap-3 p-3.5 bg-pearl-50/[0.03] border border-pearl-100/[0.08] rounded-xl">
-                    <Image src="https://flagcdn.com/w80/sg.png" alt="SG" width={32} height={20} className="rounded" />
-                    <span className="font-medium text-pearl-50 text-sm">Singapore</span>
-                    <span className="ml-auto text-pearl-300/50 text-xs font-mono">SGD</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[9px] uppercase tracking-[0.2em] text-pearl-300/50 font-medium">You send</label>
-                  <div className="mt-1.5 flex items-baseline gap-2 p-3.5 bg-pearl-50/[0.03] border border-pearl-100/[0.08] rounded-xl">
-                    <span className="text-pearl-300/40 text-sm">S$</span>
-                    <span className="font-serif font-light text-3xl text-pearl-50 tracking-tight">12,500</span>
-                    <span className="text-pearl-300/40 text-sm">.00</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-center py-1">
-                  <div className="w-7 h-7 rounded-full bg-pearl-100/[0.04] border border-pearl-100/[0.08] flex items-center justify-center">
-                    <ArrowDown className="w-3 h-3 text-pearl-300/60" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[9px] uppercase tracking-[0.2em] text-champagne-300/70 font-medium">You receive</label>
-                  <div className="mt-1.5 flex items-baseline gap-2 p-3.5 bg-champagne-400/[0.05] border border-champagne-400/25 rounded-xl">
-                    <span className="text-champagne-300/70 text-xs">≈</span>
-                    <span className="font-serif font-light text-3xl text-champagne-200 tracking-tight">9,182</span>
-                    <span className="text-champagne-300/60 text-sm">.45 USDT</span>
-                  </div>
-                </div>
-              </div>
-
-              <button className="w-full mt-5 py-3 bg-pearl-50 hover:bg-pearl-100 text-void font-medium rounded-xl transition-colors text-sm">
-                Continue
-              </button>
-
-              <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-pearl-300/50">
-                Avg settlement <span className="text-pearl-50 font-mono">4 minutes</span>
-              </div>
-            </div>
+            <BridgeRoute />
           </motion.div>
-        </div>
-
-        {/* Country list */}
-        <div className="mt-28 pt-14 border-t border-pearl-100/[0.07]">
-          <div className="grid lg:grid-cols-12 gap-10 mb-10">
-            <div className="lg:col-span-5">
-              <p className="text-[10px] uppercase tracking-[0.4em] text-champagne-300/70 mb-4">16 of 80+ markets</p>
-              <h3 className="font-serif text-3xl md:text-4xl font-light tracking-tight text-pearl-50">
-                Wherever you bank, we&apos;ll meet you there.
-              </h3>
-            </div>
-            <div className="lg:col-span-7">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-px bg-pearl-100/[0.05] rounded-xl overflow-hidden border border-pearl-100/[0.05]">
-                {COUNTRIES.map((c) => (
-                  <div key={c.code} className="flex items-center gap-3 p-3.5 bg-void hover:bg-charcoal/40 transition-colors">
-                    <Image
-                      src={`https://flagcdn.com/w40/${c.code}.png`}
-                      alt={c.name}
-                      width={26}
-                      height={18}
-                      className="rounded flex-shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <div className="text-pearl-50 text-[12px] font-medium truncate leading-tight">{c.name}</div>
-                      <div className="text-pearl-300/45 text-[10px] font-mono">{c.ccy}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function BridgeRoute() {
+  return (
+    <div className="relative rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0D1324] via-[#0B1020] to-[#080A15] p-6 sm:p-8 shadow-2xl shadow-black/40 overflow-hidden">
+      {/* You send */}
+      <div className="mb-4">
+        <p className="text-[10.5px] uppercase tracking-[0.18em] text-[#94A3B8] mb-1.5">You send</p>
+        <div className="flex items-baseline gap-3">
+          <span className="text-[32px] sm:text-[38px] font-bold text-white tabular-nums leading-none">₦2,000,000</span>
+          <span className="text-[13px] text-[#64748B]">NGN</span>
+        </div>
+      </div>
+
+      {/* Animated route */}
+      <div className="relative my-7 py-5">
+        <svg width="100%" height="56" viewBox="0 0 400 56" preserveAspectRatio="none" className="overflow-visible">
+          <defs>
+            <linearGradient id="route-line" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#00E88F" />
+              <stop offset="50%" stopColor="#22D3EE" />
+              <stop offset="100%" stopColor="#5B7CFF" />
+            </linearGradient>
+            <filter id="dot-glow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <path
+            d="M 20 28 L 380 28"
+            stroke="url(#route-line)"
+            strokeWidth="2"
+            strokeDasharray="4 4"
+            strokeLinecap="round"
+            opacity="0.45"
+          />
+          <motion.circle
+            r="5"
+            fill="#00E88F"
+            filter="url(#dot-glow)"
+            initial={{ cx: 20 }}
+            animate={{ cx: [20, 200, 380, 20] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </svg>
+        {/* Labels */}
+        <div className="absolute inset-0 flex items-center justify-between text-[10px] uppercase tracking-[0.15em]">
+          <div className="text-center">
+            <div className="w-6 h-6 mx-auto rounded-full bg-[#00E88F]/15 border border-[#00E88F]/30 mb-1.5" />
+            <span className="text-[#00E88F]">Nigeria</span>
+          </div>
+          <div className="text-center">
+            <div className="w-6 h-6 mx-auto rounded-full bg-[#22D3EE]/15 border border-[#22D3EE]/30 mb-1.5" />
+            <span className="text-[#22D3EE]">Hong Kong</span>
+          </div>
+          <div className="text-center">
+            <div className="w-6 h-6 mx-auto rounded-full bg-[#5B7CFF]/15 border border-[#5B7CFF]/30 mb-1.5" />
+            <span className="text-[#5B7CFF]">Your Wallet</span>
+          </div>
+        </div>
+      </div>
+
+      {/* You receive */}
+      <div>
+        <p className="text-[10.5px] uppercase tracking-[0.18em] text-[#94A3B8] mb-1.5">You receive</p>
+        <div className="flex items-baseline gap-3">
+          <span className="text-[32px] sm:text-[38px] font-bold tabular-nums leading-none bg-gradient-to-r from-[#00E88F] to-[#22D3EE] bg-clip-text text-transparent">
+            1,284.42
+          </span>
+          <span className="text-[13px] text-[#64748B]">USDT · TRC-20</span>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-6 pt-5 border-t border-white/[0.05] flex items-center justify-between text-[12px]">
+        <span className="text-[#94A3B8]">ETA</span>
+        <span className="text-white font-medium tabular-nums">~4 minutes</span>
+      </div>
+    </div>
   );
 }

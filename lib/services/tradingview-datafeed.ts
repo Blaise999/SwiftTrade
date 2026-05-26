@@ -355,8 +355,7 @@ export class EducationalPriceGenerator {
       clearInterval(this.interval);
     }
 
-    // Generate price updates every 500ms
-    this.interval = setInterval(() => {
+    this.interval = (setInterval as any)(() => {
       if (!this.scenario) return;
 
       const elapsed = (Date.now() - this.startTime) / 1000 / 60; // minutes

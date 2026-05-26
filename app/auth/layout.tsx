@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -8,16 +9,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen bg-void flex selection:bg-champagne-400/30">
       {/* ─────────── LEFT — Editorial brand panel ─────────── */}
       <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden">
-        {/* Skyline backdrop — pure CSS, no external image */}
+        {/* Skyline backdrop */}
         <div className="absolute inset-0 z-0">
-          <div
-            className="absolute inset-0 opacity-[0.30]"
-            style={{
-              background:
-                'radial-gradient(ellipse 90% 60% at 30% 0%, rgba(91,109,255,0.22), transparent 60%),' +
-                'radial-gradient(ellipse 70% 50% at 80% 100%, rgba(245,197,66,0.10), transparent 55%),' +
-                'linear-gradient(160deg, #070612 0%, #0a0918 55%, #070612 100%)',
-            }}
+          <Image
+            src="https://images.unsplash.com/photo-1576487236230-eaa4afe68192?auto=format&fit=crop&w=1800&q=85"
+            alt=""
+            fill
+            priority
+            className="object-cover opacity-[0.18]"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-void via-void/70 to-void" />
         </div>
