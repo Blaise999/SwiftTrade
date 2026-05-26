@@ -1,4 +1,4 @@
-// hooks/useNotifications.ts
+// app/hooks/useNotifications.ts
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -20,7 +20,9 @@ export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fixed: Use ReturnType<typeof setInterval> to support both browser (number) and Node.js (NodeJS.Timeout)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const getHeaders = useCallback(() => {
     const h: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -83,7 +85,9 @@ export function useNotifications() {
         headers: getHeaders(),
         body: JSON.stringify({ markAllRead: true }),
       });
-      setNotifications(prev => prev.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() })));
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() }))
+      );
       setUnreadCount(0);
     } catch {}
   }, [getHeaders]);
@@ -91,10 +95,14 @@ export function useNotifications() {
   // Poll unread count every 30s
   useEffect(() => {
     if (!user?.id) return;
+
     refreshUnreadCount();
     intervalRef.current = setInterval(refreshUnreadCount, 30000);
+
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
   }, [user?.id, refreshUnreadCount]);
 
