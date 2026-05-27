@@ -52,61 +52,33 @@ async function getAuthUser() {
 async function saveWalletToDb(wallet: string): Promise<SavedProfile> {
   const authUser = await getAuthUser();
 
-  // IMPORTANT:
-  // This writes to `wallet_address`.
-  // If your DB column is literally `userwallet`, change ONLY this key below.
-  let result = await supabase
-    .from("profiles")
-    .update({ wallet_address: wallet })
-    .eq("id", authUser.id)
-    .select("id, wallet_address, registration_status")
-    .maybeSingle();
+  // Write through the server endpoint — it uses service-role to bypass
+  // (a) the read-only profiles view and (b) RLS UPDATE restrictions on
+  // public.users that would otherwise silently drop the write.
+  const res = await fetch('/api/user/wallet', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-user-id': authUser.id },
+    body: JSON.stringify({ userId: authUser.id, wallet }),
+  });
 
-  if (result.error) throw result.error;
-
-  if (!result.data && authUser.email) {
-    result = await supabase
-      .from("profiles")
-      .update({ wallet_address: wallet })
-      .eq("email", authUser.email)
-      .select("id, wallet_address, registration_status")
-      .maybeSingle();
-
-    if (result.error) throw result.error;
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || !j?.ok) {
+    throw new Error(j?.error || `Failed to save wallet (${res.status})`);
   }
-
-  if (!result.data) {
-    throw new Error("Profile row not found while saving wallet");
-  }
-
-  return result.data as SavedProfile;
+  return j.user as SavedProfile;
 }
 
 async function clearWalletFromDb(): Promise<void> {
   const authUser = await getAuthUser();
 
-  let result = await supabase
-    .from("profiles")
-    .update({ wallet_address: null })
-    .eq("id", authUser.id)
-    .select("id")
-    .maybeSingle();
-
-  if (result.error) throw result.error;
-
-  if (!result.data && authUser.email) {
-    result = await supabase
-      .from("profiles")
-      .update({ wallet_address: null })
-      .eq("email", authUser.email)
-      .select("id")
-      .maybeSingle();
-
-    if (result.error) throw result.error;
-  }
-
-  if (!result.data) {
-    throw new Error("Profile row not found while clearing wallet");
+  const res = await fetch('/api/user/wallet', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', 'x-user-id': authUser.id },
+    body: JSON.stringify({ userId: authUser.id }),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || !j?.ok) {
+    throw new Error(j?.error || `Failed to clear wallet (${res.status})`);
   }
 }
 

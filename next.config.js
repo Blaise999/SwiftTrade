@@ -1,6 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Some Web3 SDK transitive deps (encoding, pino-pretty) trip Webpack with
+  // "module not found" warnings even though they're optional. Silence them
+  // rather than installing unused packages.
+  webpack: (config, { isServer }) => {
+    config.resolve.fallback = {
+      ...(config.resolve.fallback || {}),
+      encoding: false,
+      'pino-pretty': false,
+      fs: false,
+      net: false,
+      tls: false,
+    };
+    config.externals = config.externals || [];
+    if (isServer) {
+      config.externals.push('pino-pretty', 'encoding');
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
