@@ -6,17 +6,6 @@ import { Eye, EyeOff, TrendingUp, TrendingDown } from 'lucide-react';
 type Range = '1D' | '1W' | '1M' | '1Y' | 'ALL';
 const RANGES: Range[] = ['1D', '1W', '1M', '1Y', 'ALL'];
 
-/**
- * Premium portfolio card per the design upgrade plan.
- *
- *   - Big bold balance number
- *   - Today's gain/loss with sign + percentage
- *   - Animated area chart (stroke-draws on mount, no external chart lib)
- *   - Time-range filters
- *   - Asset class allocation chips at the bottom
- *
- * Pure CSS / inline SVG — no chart library, no flash, no bundle bloat.
- */
 export function PortfolioCommandCard({
   totalAssets,
   cashBalance,
@@ -39,13 +28,11 @@ export function PortfolioCommandCard({
   const [pathLen, setPathLen] = useState(800);
   const up = dayPnl >= 0;
 
-  // Generate a deterministic chart line — seeds vary by range so it
-  // changes when the user clicks 1D/1W/1M/1Y/ALL.
-  const { path, area } = useMemo(() => {
-    return buildChartPath({ seed: totalAssets + RANGES.indexOf(range), up, width: 800, height: 140 });
-  }, [totalAssets, range, up]);
+  const { path, area } = useMemo(
+    () => buildChartPath({ seed: totalAssets + RANGES.indexOf(range), up, width: 800, height: 140 }),
+    [totalAssets, range, up]
+  );
 
-  // Stroke-draw animation — measure path length after mount
   useEffect(() => {
     const id = setTimeout(() => {
       const el = document.querySelector('[data-portfolio-line]') as SVGPathElement | null;
@@ -66,14 +53,13 @@ export function PortfolioCommandCard({
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0D1324] via-[#0B1020] to-[#080A15] p-5 sm:p-7 lg:p-8">
-      {/* Soft glow */}
       <div
         className="absolute -top-32 -right-24 w-[420px] h-[420px] rounded-full blur-3xl opacity-25 pointer-events-none"
         style={{ background: `radial-gradient(closest-side, ${accent}, transparent 70%)` }}
       />
 
       <div className="relative flex items-start justify-between gap-3 mb-1">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-[11px] uppercase tracking-[0.2em] text-[#94A3B8]">Portfolio value</p>
           <div className="mt-2 flex items-baseline gap-3 flex-wrap">
             <h2 className="text-[36px] sm:text-[44px] lg:text-[52px] font-bold text-white tabular-nums leading-none tracking-tight">
@@ -92,22 +78,15 @@ export function PortfolioCommandCard({
         </div>
         <button
           onClick={() => setHide(!hide)}
-          className="w-9 h-9 rounded-full border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] flex items-center justify-center text-[#94A3B8] transition-colors"
+          className="w-9 h-9 rounded-full border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] flex items-center justify-center text-[#94A3B8] transition-colors shrink-0"
           aria-label={hide ? 'Show balance' : 'Hide balance'}
         >
           {hide ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
       </div>
 
-      {/* Chart */}
       <div className="relative mt-5 -mx-1">
-        <svg
-          viewBox="0 0 800 140"
-          width="100%"
-          height="140"
-          preserveAspectRatio="none"
-          className="overflow-visible"
-        >
+        <svg viewBox="0 0 800 140" width="100%" height="140" preserveAspectRatio="none" className="overflow-visible">
           <defs>
             <linearGradient id="portfolioFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={accent} stopOpacity="0.30" />
@@ -119,13 +98,10 @@ export function PortfolioCommandCard({
               <stop offset="100%" stopColor="#5B7CFF" />
             </linearGradient>
           </defs>
-          {/* Soft grid lines */}
           {[25, 70, 115].map(y => (
             <line key={y} x1="0" y1={y} x2="800" y2={y} stroke="rgba(255,255,255,0.04)" strokeDasharray="2 6" />
           ))}
-          {/* Area */}
           <path d={area} fill="url(#portfolioFill)" />
-          {/* Line */}
           <path
             data-portfolio-line
             d={path}
@@ -137,18 +113,17 @@ export function PortfolioCommandCard({
             style={{
               strokeDasharray: pathLen,
               strokeDashoffset: pathLen,
-              animation: 'sweepDraw 1.2s ease-out 0.1s forwards',
+              animation: 'pcc-sweep 1.2s ease-out 0.1s forwards',
             }}
           />
         </svg>
         <style jsx>{`
-          @keyframes sweepDraw {
+          @keyframes pcc-sweep {
             to { stroke-dashoffset: 0; }
           }
         `}</style>
       </div>
 
-      {/* Time range tabs */}
       <div className="mt-4 flex items-center gap-1.5">
         {RANGES.map(r => (
           <button
@@ -165,14 +140,12 @@ export function PortfolioCommandCard({
         ))}
       </div>
 
-      {/* Allocation chips */}
       {allocations.length > 0 && (
         <div className="mt-5 pt-5 border-t border-white/[0.05]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10.5px] uppercase tracking-[0.2em] text-[#94A3B8]">Holdings</span>
             <span className="text-[11px] text-[#64748B]">{hide ? '••••' : `${allocations.length} asset classes`}</span>
           </div>
-          {/* Stacked bar */}
           <div className="flex h-1.5 rounded-full overflow-hidden bg-white/[0.04]">
             {allocations.map(a => (
               <div
@@ -207,10 +180,8 @@ function fmtUSD(v: number) {
 }
 
 function buildChartPath({ seed, up, width, height }: { seed: number; up: boolean; width: number; height: number }) {
-  // Deterministic LCG so the chart is stable per render but varies by seed
   let s = Math.floor((seed || 1) * 1000) % 9973 || 1;
   const lcg = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return (s % 1000) / 1000; };
-
   const N = 48;
   const pts: number[] = [];
   let v = 50;
@@ -219,10 +190,8 @@ function buildChartPath({ seed, up, width, height }: { seed: number; up: boolean
     v = Math.max(15, Math.min(85, v));
     pts.push(v);
   }
-  // Force end to be near max if up, near min if down
   if (up) pts[N - 1] = Math.max(...pts, 75);
   else    pts[N - 1] = Math.min(...pts, 25);
-
   const min = Math.min(...pts), max = Math.max(...pts), range = max - min || 1;
   const step = width / (N - 1);
   let path = '';

@@ -2,21 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, TrendingUp, Activity, Wallet, Menu } from 'lucide-react';
+import { Home, TrendingUp, Activity, Wallet } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 /**
- * Mobile bottom navigation — Robinhood/Trading-212 style.
- * Only renders on screens narrower than `lg` (desktop keeps the sidebar).
- *
- * The "Menu" item triggers the existing mobile drawer (the dashboard
- * layout listens for the custom event `swift:openMobileMenu`).
+ * Mobile bottom navigation — Robinhood-style 4-tab bar.
+ * Menu was removed because it covered the support widget. The
+ * SupportWidget itself now lifts above this bar via bottom-24 on mobile.
  */
 const ITEMS = [
-  { label: 'Home',      href: '/dashboard',           icon: Home,       match: (p: string) => p === '/dashboard' },
-  { label: 'Markets',   href: '/markets',             icon: Activity,   match: (p: string) => p.startsWith('/markets') },
-  { label: 'Invest',    href: '/dashboard/invest',    icon: TrendingUp, match: (p: string) => p.startsWith('/dashboard/invest') || p.startsWith('/dashboard/trade') },
-  { label: 'Wallet',    href: '/dashboard/wallet',    icon: Wallet,     match: (p: string) => p.startsWith('/dashboard/wallet') },
+  { label: 'Home',    href: '/dashboard',         icon: Home,       match: (p: string) => p === '/dashboard' },
+  { label: 'Markets', href: '/markets',           icon: Activity,   match: (p: string) => p.startsWith('/markets') },
+  { label: 'Invest',  href: '/dashboard/invest',  icon: TrendingUp, match: (p: string) => p.startsWith('/dashboard/invest') || p.startsWith('/dashboard/trade') },
+  { label: 'Wallet',  href: '/dashboard/wallet',  icon: Wallet,     match: (p: string) => p.startsWith('/dashboard/wallet') },
 ];
 
 export default function MobileBottomNav() {
@@ -24,7 +22,6 @@ export default function MobileBottomNav() {
   const [visible, setVisible] = useState(true);
   const [lastY, setLastY] = useState(0);
 
-  // Hide on scroll-down, show on scroll-up. Subtle Robinhood-style behavior.
   useEffect(() => {
     let raf = 0;
     const onScroll = () => {
@@ -42,7 +39,6 @@ export default function MobileBottomNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [lastY]);
 
-  // Hide entirely on landing / marketing / auth pages
   if (!pathname.startsWith('/dashboard') && !pathname.startsWith('/markets')) return null;
 
   return (
