@@ -1337,22 +1337,22 @@ export default function StockTradingPage() {
             {/* Summary */}
             <div className="p-3 border-b border-white/10">
               <div className="grid grid-cols-2 gap-2">
-                <div className="p-2 bg-white/5 rounded-lg">
-                  <p className="text-xs text-cream/50">Cash</p>
-                  <p className="text-sm font-semibold text-cream">{fmtMoney(cashBalance)}</p>
+                <div className="p-2 bg-white/5 rounded-lg min-w-0">
+                  <p className="text-[10px] text-cream/50 uppercase tracking-wider">Cash</p>
+                  <p className="text-[13px] sm:text-sm font-semibold text-cream tabular-nums break-words">{fmtMoney(cashBalance)}</p>
                 </div>
-                <div className="p-2 bg-white/5 rounded-lg">
-                  <p className="text-xs text-cream/50">Portfolio</p>
-                  <p className="text-sm font-semibold text-profit">{fmtMoney(portfolioValue)}</p>
+                <div className="p-2 bg-white/5 rounded-lg min-w-0">
+                  <p className="text-[10px] text-cream/50 uppercase tracking-wider">Portfolio</p>
+                  <p className="text-[13px] sm:text-sm font-semibold text-profit tabular-nums break-words">{fmtMoney(portfolioValue)}</p>
                 </div>
-                <div className="p-2 bg-white/5 rounded-lg">
-                  <p className="text-xs text-cream/50">Total</p>
-                  <p className="text-sm font-semibold text-cream">{fmtMoney(totalEquity)}</p>
+                <div className="p-2 bg-white/5 rounded-lg min-w-0">
+                  <p className="text-[10px] text-cream/50 uppercase tracking-wider">Total</p>
+                  <p className="text-[13px] sm:text-sm font-semibold text-cream tabular-nums break-words">{fmtMoney(totalEquity)}</p>
                 </div>
-                <div className="p-2 bg-white/5 rounded-lg">
-                  <p className="text-xs text-cream/50">P&amp;L</p>
-                  <p className={`text-sm font-semibold ${unrealizedPnL >= 0 ? 'text-profit' : 'text-loss'}`}>
-                    {unrealizedPnL >= 0 ? '+' : ''}{fmtUsd(Math.abs(unrealizedPnL))}
+                <div className="p-2 bg-white/5 rounded-lg min-w-0">
+                  <p className="text-[10px] text-cream/50 uppercase tracking-wider">P&amp;L</p>
+                  <p className={`text-[13px] sm:text-sm font-semibold tabular-nums break-words ${unrealizedPnL >= 0 ? 'text-profit' : 'text-loss'}`}>
+                    {unrealizedPnL >= 0 ? '+' : '−'}{fmtUsd(Math.abs(unrealizedPnL))}
                   </p>
                 </div>
               </div>

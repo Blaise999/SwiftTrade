@@ -113,7 +113,7 @@ export function PortfolioCommandCard({
             style={{
               strokeDasharray: pathLen,
               strokeDashoffset: pathLen,
-              animation: 'pcc-sweep 1.2s ease-out 0.1s forwards',
+              animation: 'pcc-sweep 0.6s ease-out forwards',
             }}
           />
         </svg>

@@ -30,6 +30,7 @@ import { useStore } from '@/lib/supabase/store-supabase';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAccount } from 'wagmi';
 import { PortfolioCommandCard } from '@/components/dashboard/PortfolioCommandCard';
+import { useSpotTradingStore } from '@/lib/spot-trading-store';
 
 // ----- helpers
 const n = (v: any) => {
@@ -182,7 +183,33 @@ export default function DashboardOverview() {
 
   // ─── Stock + crypto breakdown (live values + day P&L) ───────────────
   const [invest, setInvest] = useState({ value: 0, dayPnl: 0, dayPct: 0 });
-  const [crypto, setCrypto] = useState({ value: 0, dayPnl: 0, dayPct: 0 });
+
+  // Crypto value comes from the spot-trading Zustand store (same source the
+  // crypto trade page uses, so dashboard numbers match exactly).
+  const spotPositions = useSpotTradingStore((s) => s.positions);
+  const spotHydrated = useSpotTradingStore((s) => s._hydrated);
+  const loadSpotFromSupabase = useSpotTradingStore((s) => s.loadFromSupabase);
+
+  useEffect(() => {
+    if (!user?.id || spotHydrated) return;
+    loadSpotFromSupabase(user.id).catch(() => {/* silent */});
+  }, [user?.id, spotHydrated, loadSpotFromSupabase]);
+
+  const crypto = useMemo(() => {
+    let value = 0, pnl = 0, costBasis = 0;
+    for (const p of spotPositions || []) {
+      const v = Number((p as any).displayValue ?? (p as any).marketValue ?? 0);
+      const pl = Number((p as any).displayPnL ?? (p as any).unrealizedPnL ?? 0);
+      const qty = Number((p as any).quantity ?? 0);
+      const avg = Number((p as any).averageBuyPrice ?? (p as any).averagePrice ?? 0);
+      value += v;
+      pnl += pl;
+      costBasis += qty * avg;
+    }
+    const pct = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
+    return { value, dayPnl: pnl, dayPct: pct };
+  }, [spotPositions]);
+
   const investValue = invest.value;
   const cryptoValue = crypto.value;
 
@@ -201,27 +228,6 @@ export default function DashboardOverview() {
         }
       } catch {/* silent */}
     })();
-    (async () => {
-      try {
-        const { data } = await supabase
-          .from('crypto_positions')
-          .select('symbol, quantity, average_price, last_price, pnl, pnl_percent')
-          .eq('user_id', user.id);
-        if (Array.isArray(data) && data.length) {
-          let v = 0, p = 0, costBasis = 0;
-          for (const row of data) {
-            const qty = Number(row.quantity) || 0;
-            const lp = Number(row.last_price) || Number(row.average_price) || 0;
-            const avg = Number(row.average_price) || 0;
-            v += qty * lp;
-            costBasis += qty * avg;
-            p += Number(row.pnl) || 0;
-          }
-          const pct = costBasis > 0 ? (p / costBasis) * 100 : 0;
-          setCrypto({ value: v, dayPnl: p, dayPct: pct });
-        }
-      } catch {/* silent */}
-    })();
   }, [user?.id]);
 
   const formatBal = (val: number) =>
@@ -234,30 +240,51 @@ export default function DashboardOverview() {
 
 
   return (
-    <div className="space-y-10 pb-12">
-      {/* ─── HEADER ─── */}
-      <div className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-champagne-300/70 font-medium mb-3">
-            Console
-          </p>
-          <h1 className="font-serif text-4xl md:text-5xl font-light tracking-tight text-pearl-50 leading-[1.05]">
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'},{' '}
-            <em className="italic font-medium text-champagne-300/95">{user?.firstName || 'Trader'}</em>.
-          </h1>
-          <p className="text-sm text-pearl-300/60 mt-3">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} · Markets open · Hong Kong
-          </p>
+    <div className="space-y-6 pb-12">
+      {/* ─── HEADER (animated, on-brand) ─── */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-br from-[#0D1324] via-[#0B1020] to-[#080A15] px-5 py-5 sm:px-7 sm:py-6"
+      >
+        {/* Animated gradient glow */}
+        <div
+          className="absolute -top-32 -right-24 w-[420px] h-[420px] rounded-full blur-3xl opacity-25 pointer-events-none"
+          style={{ background: 'radial-gradient(closest-side, #22D3EE, transparent 70%)' }}
+        />
+        <div
+          className="absolute -bottom-24 -left-24 w-[320px] h-[320px] rounded-full blur-3xl opacity-15 pointer-events-none"
+          style={{ background: 'radial-gradient(closest-side, #F5C542, transparent 70%)' }}
+        />
+
+        <div className="relative flex items-center justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#16C784] animate-pulse" />
+              <span className="text-[10px] uppercase tracking-[0.22em] text-[#94A3B8] font-medium">
+                Markets open · Hong Kong
+              </span>
+            </div>
+            <h1 className="text-[26px] sm:text-[32px] font-bold tracking-tight text-white leading-tight">
+              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'},{' '}
+              <span className="bg-gradient-to-r from-[#00E88F] via-[#22D3EE] to-[#5B7CFF] bg-clip-text text-transparent">
+                {user?.firstName || 'Trader'}
+              </span>
+            </h1>
+            <p className="text-[12.5px] text-[#94A3B8] mt-1">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+          <Link
+            href="/dashboard/bridge"
+            className="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#F5C542]/[0.10] border border-[#F5C542]/30 hover:bg-[#F5C542]/[0.18] text-[#F5C542] text-[13px] font-semibold transition-all group"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            SwiftBridge
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         </div>
-        <Link
-          href="/dashboard/bridge"
-          className="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-pearl-50/[0.04] border border-pearl-100/[0.08] hover:border-champagne-400/30 text-pearl-100 hover:text-pearl-50 text-[13px] font-medium transition-all group"
-        >
-          <Globe className="w-3.5 h-3.5 text-champagne-300/80" />
-          Open SwiftBridge
-          <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-        </Link>
-      </div>
+      </motion.div>
 
       {/* ─── PORTFOLIO COMMAND CARD ─── */}
       <motion.div
@@ -282,7 +309,7 @@ export default function DashboardOverview() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08 }}
+        transition={{ duration: 0.25, delay: 0.03 }}
         className="grid grid-cols-2 gap-2.5"
       >
         <Link
@@ -327,7 +354,7 @@ export default function DashboardOverview() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.12 }}
+        transition={{ duration: 0.25, delay: 0.06 }}
         className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
       >
         {[
@@ -348,7 +375,7 @@ export default function DashboardOverview() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.16 }}
+        transition={{ duration: 0.25, delay: 0.09 }}
         className="grid grid-cols-2 lg:grid-cols-3 gap-3"
       >
         <CardLink href="/dashboard/portfolio" className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors">

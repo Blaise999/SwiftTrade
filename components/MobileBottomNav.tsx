@@ -58,7 +58,7 @@ export default function MobileBottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                prefetch={false}
+                prefetch={true}
                 className={`flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-colors ${
                   active ? 'text-white' : 'text-[#71717A] hover:text-[#A1A1AA]'
                 }`}
