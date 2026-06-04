@@ -1,26 +1,43 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
-  Search, TrendingUp, TrendingDown,
-  ChevronRight, Sparkles, Eye, EyeOff, LineChart,
+  Search, TrendingUp, TrendingDown, ChevronRight, Sparkles,
+  Eye, EyeOff, LineChart, X, ArrowDownLeft,
 } from 'lucide-react';
 import { useStore } from '@/lib/supabase/store-supabase';
 import {
   getSP500Etfs, getEtfsByCategory, getBeginnerEtfs, getMegaCapStocks,
-  getTopMovers, getStocksByCategory, CATEGORY_LABELS, type AssetCategory,
+  getTopMovers, getStocksByCategory, searchAssets, CATEGORY_LABELS, type AssetCategory,
 } from '@/lib/asset-catalog';
-import { EtfCard, SP500Card, Sparkline } from '@/components/investing/EtfCards';
+import { EtfCard, SP500Card, FullSparkline } from '@/components/investing/EtfCards';
+import { useStockQuotes } from '@/hooks/useStockQuotes';
 import { n, fmtUSD, fmtPct } from '@/lib/calc';
+
+/* Staggered entrance — gives the page life without being noisy */
+const section = {
+  hidden: { opacity: 0, y: 14 },
+  show: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.45, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] as any },
+  }),
+};
 
 export default function InvestHome() {
   const { user, refreshUser } = useStore();
   const [hide, setHide] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // Inline search (replaces the old /invest/search route)
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement | null>(null);
+
   // Live invest holdings for total-asset display
   const [invest, setInvest] = useState<{ totalValue: number; totalDayGain: number; totalDayGainPct: number } | null>(null);
+  const [holdings, setHoldings] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -40,123 +57,162 @@ export default function InvestHome() {
             totalDayGain: n(j.totalDayGain),
             totalDayGainPct: n(j.totalDayGainPct),
           });
+          if (Array.isArray(j.positions)) setHoldings(j.positions);
         }
       } catch {}
     })();
   }, [user?.id]);
 
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchRef.current?.focus(), 60);
+  }, [searchOpen]);
+
   const cashBalance = useMemo(
     () => n((user as any)?.balance_available) || n((user as any)?.balanceAvailable) || n((user as any)?.balance),
     [user]
   );
-  const stockBalance = invest?.totalValue || 0;  // ← stocks only, not total assets
+  const stockBalance = invest?.totalValue || 0;
   const dayPnl = invest?.totalDayGain || 0;
   const dayPct = invest?.totalDayGainPct || 0;
   const up = dayPnl >= 0;
-
-  // Held stocks list (with current 24h %)
-  const [holdings, setHoldings] = useState<any[]>([]);
-  useEffect(() => {
-    if (!user?.id) return;
-    (async () => {
-      try {
-        const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
-        const j = await r.json().catch(() => ({}));
-        if (j?.ok && Array.isArray(j.positions)) setHoldings(j.positions);
-      } catch {}
-    })();
-  }, [user?.id]);
 
   const sp500 = getSP500Etfs();
   const beginnerEtfs = getBeginnerEtfs();
   const megaCaps = getMegaCapStocks().slice(0, 10);
   const topMovers = getTopMovers(10);
-  const greeting =
-    new Date().getHours() < 12 ? 'Good morning' :
-    new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
 
   const stockRows: AssetCategory[] = ['technology', 'semiconductor', 'consumer', 'healthcare', 'financial', 'fintech', 'crypto_stock', 'energy'];
   const etfRows: AssetCategory[] = ['sp500', 'nasdaq_100', 'total_market', 'dividend', 'sector', 'bond'];
 
+  // ── Live quotes for the headline symbols (safe fallback to seed prices) ──
+  const liveSymbols = useMemo(() => {
+    const set = new Set<string>();
+    [...topMovers, ...megaCaps, ...sp500, ...beginnerEtfs].forEach(a => set.add(a.symbol));
+    holdings.forEach((h: any) => h?.symbol && set.add(String(h.symbol).toUpperCase()));
+    return Array.from(set);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [holdings.length]);
+  const live = useStockQuotes(liveSymbols);
+  const anyLive = Object.keys(live).length > 0;
+
+  const greeting =
+    new Date().getHours() < 12 ? 'Good morning' :
+    new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
+
+  const results = useMemo(() => (query.trim() ? searchAssets(query).slice(0, 24) : []), [query]);
+
   return (
-    <div className="min-h-screen bg-[#080A0D] pb-28">
-      <div className="max-w-2xl mx-auto pt-6">
+    <div className="min-h-screen w-full overflow-x-hidden pb-28">
+      <div className="w-full max-w-2xl mx-auto px-1">
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between pt-5 mb-1">
           <p className="text-[13px] text-[#A1A1AA]">{greeting},{' '}
-            <span className="text-white font-medium">{user?.firstName || 'Investor'}</span>
+            <span className="text-white font-semibold">{user?.firstName || 'Investor'}</span>
           </p>
-          <Link href="/dashboard/invest/search" prefetch={false}
-            className="w-9 h-9 rounded-full bg-[#101216] border border-white/[0.06] flex items-center justify-center hover:bg-[#14171D] transition-colors">
+          <button
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search stocks and ETFs"
+            className="w-9 h-9 rounded-full bg-[#101216] border border-white/[0.06] flex items-center justify-center hover:bg-[#14171D] transition-colors active:scale-95"
+          >
             <Search className="w-4 h-4 text-[#A1A1AA]" />
+          </button>
+        </div>
+
+        {/* ── HERO BALANCE CARD ── */}
+        <motion.div
+          variants={section} initial="hidden" animate="show" custom={0}
+          className="relative mt-3 overflow-hidden rounded-3xl border border-white/[0.07] bg-[#0C0E12] p-5"
+        >
+          {/* ambient glow */}
+          <div
+            className={`pointer-events-none absolute -top-24 -right-10 w-72 h-72 rounded-full blur-[90px] opacity-40 ${up ? 'bg-[#16C784]/30' : 'bg-[#FF4D4F]/25'}`}
+          />
+          <div className="relative">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] uppercase tracking-[0.24em] text-[#71717A]">Stock balance</span>
+              <button onClick={() => setHide(!hide)} className="text-[#71717A] hover:text-[#A1A1AA] transition-colors">
+                {hide ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+              {anyLive && (
+                <span className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-medium text-[#16C784]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#16C784] animate-pulse" /> LIVE
+                </span>
+              )}
+            </div>
+
+            <div className="mt-1.5 text-[clamp(34px,11vw,48px)] leading-none font-extrabold text-white tracking-tight tabular-nums">
+              {hide ? '••••••' : fmtUSD(stockBalance)}
+            </div>
+
+            {stockBalance > 0 ? (
+              <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums ${up ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
+                {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                {hide ? '••••' : <>{up ? '+' : '−'}{fmtUSD(Math.abs(dayPnl))}</>}
+                <span className="text-[#71717A] font-normal">({fmtPct(dayPct)}) today</span>
+              </div>
+            ) : (
+              <div className="mt-2 text-[13px] text-[#71717A]">
+                No stock holdings yet — pick one below to start
+              </div>
+            )}
+
+            {/* responsive, full-width chart — never overflows the screen */}
+            <div className="mt-4 -mx-1">
+              {mounted && <FullSparkline seed={stockBalance || 1234} up={up} h={96} />}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── Quick actions ── */}
+        <motion.div
+          variants={section} initial="hidden" animate="show" custom={1}
+          className="mt-4 grid grid-cols-3 gap-2.5"
+        >
+          <Link href="/dashboard/deposit" prefetch={false}
+            className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-[#16C784]/10 border border-[#16C784]/20 hover:bg-[#16C784]/15 transition-all active:scale-[0.97]">
+            <ArrowDownLeft className="w-[18px] h-[18px] text-[#16C784]" />
+            <span className="text-[12px] text-white font-medium">Add cash</span>
           </Link>
-        </div>
-
-        {/* ── STOCK BALANCE (just stocks, not total) ── */}
-        <div className="mt-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[12px] uppercase tracking-[0.2em] text-[#71717A]">Stock balance</span>
-            <button onClick={() => setHide(!hide)} className="text-[#71717A] hover:text-[#A1A1AA]">
-              {hide ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-          <div className="mt-1 text-[40px] sm:text-[44px] leading-none font-bold text-white tracking-tight tabular-nums">
-            {hide ? '••••••' : fmtUSD(stockBalance)}
-          </div>
-          {stockBalance > 0 ? (
-            <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-medium tabular-nums ${up ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
-              {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-              {hide ? '••••' : <>{up ? '+' : '−'}{fmtUSD(Math.abs(dayPnl))}</>}
-              <span className="text-[#71717A]">({fmtPct(dayPct)}) today</span>
-            </div>
-          ) : (
-            <div className="mt-2 text-[13px] text-[#71717A]">
-              No stock holdings yet — pick one below to start
-            </div>
-          )}
-          <div className="mt-4 -mx-1">
-            {mounted && <Sparkline seed={stockBalance || 1234} up={up} w={620} h={90} />}
-          </div>
-        </div>
-
-        {/* ── Invest / Search quick actions (no deposit/withdraw here) ── */}
-        <div className="mt-5 grid grid-cols-2 gap-2.5">
           <Link href="/dashboard/invest/etfs" prefetch={false}
-            className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#3B82F6]/10 border border-[#3B82F6]/20 hover:bg-[#3B82F6]/15 transition-all active:scale-[0.97]">
-            <LineChart className="w-4 h-4 text-[#3B82F6]" />
-            <span className="text-[13px] text-white font-medium">Explore ETFs</span>
+            className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-[#3B82F6]/10 border border-[#3B82F6]/20 hover:bg-[#3B82F6]/15 transition-all active:scale-[0.97]">
+            <LineChart className="w-[18px] h-[18px] text-[#3B82F6]" />
+            <span className="text-[12px] text-white font-medium">ETFs</span>
           </Link>
-          <Link href="/dashboard/invest/search" prefetch={false}
-            className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#101216] border border-white/[0.06] hover:bg-[#14171D] transition-all active:scale-[0.97]">
-            <Search className="w-4 h-4 text-[#A1A1AA]" />
-            <span className="text-[13px] text-white font-medium">Search</span>
-          </Link>
-        </div>
+          <button onClick={() => setSearchOpen(true)}
+            className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-[#101216] border border-white/[0.06] hover:bg-[#14171D] transition-all active:scale-[0.97]">
+            <Search className="w-[18px] h-[18px] text-[#A1A1AA]" />
+            <span className="text-[12px] text-white font-medium">Search</span>
+          </button>
+        </motion.div>
 
-        {/* ── YOUR HOLDINGS (each stock with 24h %) ── */}
+        {/* ── YOUR HOLDINGS ── */}
         {holdings.length > 0 && (
-          <section className="mt-8">
+          <motion.section variants={section} initial="hidden" animate="show" custom={2} className="mt-8">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[16px] font-semibold text-white">Your holdings</h2>
+              <h2 className="text-[16px] font-bold text-white tracking-tight">Your holdings</h2>
               <span className="text-[11px] text-[#71717A]">{holdings.length} position{holdings.length !== 1 ? 's' : ''}</span>
             </div>
             <div className="rounded-2xl border border-white/[0.06] bg-[#101216] overflow-hidden divide-y divide-white/[0.05]">
               {holdings.map((p: any) => {
-                const gain = (p.dayGain ?? p.pnl ?? 0) >= 0;
+                const sym = String(p.symbol).toUpperCase();
+                const lq = live[sym];
+                const pct = lq ? lq.changePercent24h : Number(p.dayGainPct ?? p.pnlPct ?? 0);
+                const gain = pct >= 0;
+                const value = lq && Number(p.quantity) ? lq.price * Number(p.quantity) : Number(p.value);
                 return (
                   <Link
                     key={p.id}
                     href={`/dashboard/invest/asset/${p.symbol}`}
                     prefetch={false}
-                    className="flex items-center justify-between px-4 py-3.5 hover:bg-white/[0.03] transition-colors"
+                    className="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-white/[0.03] transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3B82F6]/20 to-[#8B5CF6]/10 border border-white/[0.06] flex items-center justify-center shrink-0">
-                        <span className="text-[11.5px] font-bold text-white">{String(p.symbol).slice(0, 4)}</span>
+                        <span className="text-[11.5px] font-bold text-white">{sym.slice(0, 4)}</span>
                       </div>
                       <div className="min-w-0">
-                        <div className="text-[14px] font-semibold text-white truncate">{p.symbol}</div>
+                        <div className="text-[14px] font-semibold text-white truncate">{sym}</div>
                         <div className="text-[11px] text-[#71717A] truncate">
                           {Number(p.quantity).toFixed(4)} @ ${Number(p.avgPrice).toFixed(2)}
                         </div>
@@ -164,115 +220,213 @@ export default function InvestHome() {
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-[14px] font-semibold text-white tabular-nums">
-                        ${Number(p.value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                       <div className={`text-[12px] tabular-nums ${gain ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
-                        {gain ? '+' : ''}{Number(p.dayGainPct ?? p.pnlPct ?? 0).toFixed(2)}% 24h
+                        {gain ? '+' : ''}{pct.toFixed(2)}% {lq ? 'today' : '24h'}
                       </div>
                     </div>
                   </Link>
                 );
               })}
             </div>
-          </section>
+          </motion.section>
         )}
 
-        {/* ── Top movers (stocks + ETFs) ── */}
-        <section className="mt-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[16px] font-semibold text-white">Top movers</h2>
-            <Link href="/dashboard/invest/search" prefetch={false} className="text-[12px] text-[#3B82F6] flex items-center gap-0.5">
-              Search <ChevronRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
-            {topMovers.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
-          </div>
-        </section>
+        {/* ── Top movers ── */}
+        <Rail
+          custom={3}
+          title="Top movers"
+          right={<SeeAll onClick={() => setSearchOpen(true)} label="Search" />}
+          items={topMovers}
+          live={live}
+        />
 
-        {/* ── Mega-cap stocks ── */}
-        <section className="mt-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[16px] font-semibold text-white">Popular stocks</h2>
-            <Link href="/dashboard/invest/etfs" prefetch={false} className="text-[12px] text-[#3B82F6] flex items-center gap-0.5">
-              See all <ChevronRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
-            {megaCaps.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
-          </div>
-        </section>
+        {/* ── Popular stocks ── */}
+        <Rail
+          custom={4}
+          title="Popular stocks"
+          right={<SeeAllLink href="/dashboard/invest/etfs" label="See all" />}
+          items={megaCaps}
+          live={live}
+        />
 
         {/* ── Invest in the S&P 500 ── */}
-        <section className="mt-8">
-          <div className="rounded-2xl border border-[#F5C542]/15 bg-gradient-to-br from-[#F5C542]/[0.06] to-transparent p-4 mb-3">
+        <motion.section variants={section} initial="hidden" animate="show" custom={5} className="mt-8">
+          <div className="rounded-2xl border border-[#F5C542]/15 bg-gradient-to-br from-[#F5C542]/[0.07] to-transparent p-4 mb-3">
             <div className="flex items-center gap-2 mb-1.5">
               <Sparkles className="w-4 h-4 text-[#F5C542]" />
-              <h2 className="text-[16px] font-semibold text-white">Invest in the S&P 500</h2>
+              <h2 className="text-[16px] font-bold text-white tracking-tight">Invest in the S&P 500</h2>
             </div>
             <p className="text-[12.5px] text-[#A1A1AA] leading-relaxed">
               The S&P 500 tracks around 500 of the largest publicly traded companies in the United
-              States. You cannot buy the index directly, but you can invest through ETFs that track it.
+              States. You can&apos;t buy the index directly, but you can invest through ETFs that track it.
             </p>
           </div>
           <div className="space-y-2.5">
-            {sp500.map(etf => <SP500Card key={etf.symbol} etf={etf as any} />)}
+            {sp500.map(etf => {
+              const lq = live[etf.symbol];
+              return <SP500Card key={etf.symbol} etf={etf as any} livePrice={lq?.price} liveChangePct={lq?.changePercent24h} />;
+            })}
           </div>
-        </section>
+        </motion.section>
 
-        {/* ── Beginner-friendly ETFs ── */}
-        <section className="mt-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[16px] font-semibold text-white">Beginner-friendly</h2>
-            <Link href="/dashboard/invest/etfs" prefetch={false} className="text-[12px] text-[#3B82F6] flex items-center gap-0.5">
-              Explore all <ChevronRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
-            {beginnerEtfs.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
-          </div>
-        </section>
+        {/* ── Beginner-friendly ── */}
+        <Rail
+          custom={6}
+          title="Beginner-friendly"
+          right={<SeeAllLink href="/dashboard/invest/etfs" label="Explore all" />}
+          items={beginnerEtfs}
+          live={live}
+        />
 
         {/* ── Stock category rows ── */}
-        {stockRows.map(cat => {
+        {stockRows.map((cat, i) => {
           const list = getStocksByCategory(cat);
           if (!list.length) return null;
-          return (
-            <section key={cat} className="mt-8">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-[16px] font-semibold text-white">{CATEGORY_LABELS[cat]}</h2>
-              </div>
-              <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
-                {list.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
-              </div>
-            </section>
-          );
+          return <Rail key={cat} custom={7 + i} title={CATEGORY_LABELS[cat] || cat} items={list} live={live} />;
         })}
 
         {/* ── ETF category rows ── */}
-        {etfRows.map(cat => {
+        {etfRows.map((cat, i) => {
           const list = getEtfsByCategory(cat);
           if (!list.length) return null;
           return (
-            <section key={cat} className="mt-8">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-[16px] font-semibold text-white">{CATEGORY_LABELS[cat]}</h2>
-                <Link href="/dashboard/invest/etfs" prefetch={false} className="text-[12px] text-[#3B82F6] flex items-center gap-0.5">
-                  See all <ChevronRight className="w-3 h-3" />
-                </Link>
-              </div>
-              <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
-                {list.map(a => <EtfCard key={a.symbol} etf={a as any} />)}
-              </div>
-            </section>
+            <Rail
+              key={cat}
+              custom={15 + i}
+              title={CATEGORY_LABELS[cat] || cat}
+              right={<SeeAllLink href="/dashboard/invest/etfs" label="See all" />}
+              items={list}
+              live={live}
+            />
           );
         })}
 
         <p className="mt-10 text-[11px] text-[#52525B] leading-relaxed text-center px-4">
           Investing involves risk, including possible loss of principal. Past performance does not
-          guarantee future results. Prices shown are seed values for demonstration.
+          guarantee future results. Live prices shown where available; otherwise reference values.
         </p>
       </div>
+
+      {/* ── INLINE SEARCH SHEET ── */}
+      {searchOpen && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-[#080A0D]/95 backdrop-blur-md">
+          <div className="w-full max-w-2xl mx-auto px-4 pt-5 flex flex-col h-full">
+            <div className="flex items-center gap-2.5">
+              <div className="flex-1 flex items-center gap-2.5 px-4 h-12 rounded-2xl bg-[#101216] border border-white/[0.08]">
+                <Search className="w-4 h-4 text-[#71717A] shrink-0" />
+                <input
+                  ref={searchRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search stocks & ETFs…"
+                  className="flex-1 bg-transparent outline-none text-[15px] text-white placeholder:text-[#52525B]"
+                />
+                {query && (
+                  <button onClick={() => setQuery('')} className="text-[#71717A] hover:text-white">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => { setSearchOpen(false); setQuery(''); }}
+                className="text-[14px] text-[#A1A1AA] hover:text-white px-1"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="mt-4 flex-1 overflow-y-auto pb-10">
+              {!query.trim() ? (
+                <p className="text-[13px] text-[#71717A] px-1">Start typing a ticker or company name.</p>
+              ) : results.length === 0 ? (
+                <p className="text-[13px] text-[#71717A] px-1">No matches for “{query}”.</p>
+              ) : (
+                <div className="rounded-2xl border border-white/[0.06] bg-[#101216] overflow-hidden divide-y divide-white/[0.05]">
+                  {results.map((a) => {
+                    const lq = live[a.symbol];
+                    const pct = lq ? lq.changePercent24h : a.seedChangePct;
+                    const price = lq ? lq.price : a.seedPrice;
+                    const gain = pct >= 0;
+                    return (
+                      <Link
+                        key={a.symbol}
+                        href={`/dashboard/invest/asset/${a.symbol}`}
+                        prefetch={false}
+                        onClick={() => setSearchOpen(false)}
+                        className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3B82F6]/20 to-[#8B5CF6]/10 border border-white/[0.06] flex items-center justify-center shrink-0">
+                            <span className="text-[10.5px] font-bold text-white">{a.symbol.slice(0, 4)}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[14px] font-semibold text-white truncate">{a.symbol}</div>
+                            <div className="text-[11px] text-[#71717A] truncate max-w-[200px]">{a.name}</div>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-[13px] font-semibold text-white tabular-nums">${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                          <div className={`text-[11.5px] tabular-nums ${gain ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
+                            {gain ? '+' : ''}{pct.toFixed(2)}%
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+/* ── Reusable horizontal rail ── */
+function Rail({
+  title, items, live, right, custom = 0,
+}: {
+  title: string;
+  items: any[];
+  live: Record<string, { price: number; changePercent24h: number }>;
+  right?: React.ReactNode;
+  custom?: number;
+}) {
+  return (
+    <motion.section variants={section} initial="hidden" animate="show" custom={custom} className="mt-8">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-[16px] font-bold text-white tracking-tight">{title}</h2>
+        {right}
+      </div>
+      <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1 snap-x">
+        {items.map((a) => {
+          const lq = live[a.symbol];
+          return (
+            <div key={a.symbol} className="snap-start">
+              <EtfCard etf={a as any} livePrice={lq?.price} liveChangePct={lq?.changePercent24h} />
+            </div>
+          );
+        })}
+      </div>
+    </motion.section>
+  );
+}
+
+function SeeAllLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link href={href} prefetch={false} className="text-[12px] text-[#3B82F6] hover:text-[#60A5FA] flex items-center gap-0.5 transition-colors">
+      {label} <ChevronRight className="w-3 h-3" />
+    </Link>
+  );
+}
+
+function SeeAll({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button onClick={onClick} className="text-[12px] text-[#3B82F6] hover:text-[#60A5FA] flex items-center gap-0.5 transition-colors">
+      {label} <ChevronRight className="w-3 h-3" />
+    </button>
   );
 }

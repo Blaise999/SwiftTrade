@@ -197,8 +197,36 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const formatCash = (val: number) => `$${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
-    <div className="min-h-screen bg-void text-pearl-50 flex selection:bg-champagne-400/30">
+    <div className="font-app min-h-screen text-pearl-50 flex selection:bg-champagne-400/30">
       <StockPriceSync />
+
+      {/* ─────────── AMBIENT BACKDROP (behind every page) ─────────── */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div
+          className="absolute -top-40 -right-32 w-[640px] h-[640px] rounded-full blur-[140px] opacity-[0.16]"
+          style={{ background: 'radial-gradient(closest-side, #5B6DFF, transparent 70%)' }}
+        />
+        <div
+          className="absolute top-1/3 -left-40 w-[560px] h-[560px] rounded-full blur-[150px] opacity-[0.10]"
+          style={{ background: 'radial-gradient(closest-side, #16C784, transparent 70%)' }}
+        />
+        <div
+          className="absolute -bottom-48 right-1/4 w-[520px] h-[520px] rounded-full blur-[150px] opacity-[0.08]"
+          style={{ background: 'radial-gradient(closest-side, #EAD68A, transparent 70%)' }}
+        />
+        {/* faint dot grid for texture */}
+        <div
+          className="absolute inset-0 opacity-[0.5]"
+          style={{
+            backgroundImage:
+              'radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px)',
+            backgroundSize: '22px 22px',
+            maskImage: 'radial-gradient(ellipse at 50% 0%, black, transparent 80%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at 50% 0%, black, transparent 80%)',
+          }}
+        />
+      </div>
+
 
       {/* ─────────── DESKTOP SIDEBAR ─────────── */}
       <aside
@@ -217,7 +245,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
             {sidebarOpen && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="leading-none">
-                <div className="font-serif font-medium text-pearl-50 text-base tracking-tight">Swift Trade</div>
+                <div className="font-app font-bold text-pearl-50 text-base tracking-tight">Swift Trade</div>
                 <div className="text-[9px] text-pearl-300/60 tracking-[0.25em] uppercase mt-0.5">Console</div>
               </motion.div>
             )}
@@ -348,7 +376,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     </svg>
                   </div>
                   <div className="leading-none">
-                    <div className="font-serif font-medium text-pearl-50 text-base tracking-tight">Swift Trade</div>
+                    <div className="font-app font-bold text-pearl-50 text-base tracking-tight">Swift Trade</div>
                     <div className="text-[9px] text-pearl-300/60 tracking-[0.25em] uppercase mt-0.5">Console</div>
                   </div>
                 </Link>

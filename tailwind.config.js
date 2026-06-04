@@ -45,6 +45,8 @@ module.exports = {
         pearl: { 50:'#fdfcf8', 100:'#f4f1ea', 200:'#dcd6c8', 300:'#a8a293', 400:'#6e6a5e' },
       },
       fontFamily: {
+        // Modern, app-like sans for the console (Robinhood-ish, not corporate)
+        app:     ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         // Editorial-grade serif for headlines (premium fintech move)
         serif:   ['"Fraunces"', 'Georgia', 'serif'],
         // Geometric sans for display (Sora is fine)

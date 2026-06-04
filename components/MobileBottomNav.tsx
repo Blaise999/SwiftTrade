@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 const ITEMS = [
   { label: 'Home',    href: '/dashboard',         icon: Home,       match: (p: string) => p === '/dashboard' },
   { label: 'Markets', href: '/markets',           icon: Activity,   match: (p: string) => p.startsWith('/markets') },
-  { label: 'Invest',  href: '/dashboard/invest',  icon: TrendingUp, match: (p: string) => p.startsWith('/dashboard/invest') || p.startsWith('/dashboard/trade') },
+  { label: 'Stocks',  href: '/dashboard/invest',  icon: TrendingUp, match: (p: string) => p.startsWith('/dashboard/invest') },
   { label: 'Wallet',  href: '/dashboard/wallet',  icon: Wallet,     match: (p: string) => p.startsWith('/dashboard/wallet') },
 ];
 

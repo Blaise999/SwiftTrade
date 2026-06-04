@@ -332,7 +332,7 @@ export default function DashboardOverview() {
         </Link>
         <Link
           prefetch={false}
-          href="/dashboard/portfolio"
+          href="/dashboard/trade/crypto"
           className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors"
         >
           <div className="flex items-center gap-1.5 mb-1.5">
@@ -358,14 +358,19 @@ export default function DashboardOverview() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
       >
         {[
-          { l: 'Deposit',  h: '/dashboard/wallet',                i: CreditCard, c: 'text-[#16C784]', bg: 'from-[#16C784]/15 to-transparent' },
-          { l: 'Withdraw', h: '/dashboard/wallet?tab=withdraw',   i: Send,       c: 'text-[#A1A1AA]', bg: 'from-white/[0.05] to-transparent' },
-          { l: 'Trade',    h: '/dashboard/trade/crypto',          i: TrendingUp, c: 'text-[#3B82F6]', bg: 'from-[#3B82F6]/15 to-transparent' },
-          { l: 'Bridge',   h: '/dashboard/bridge',                i: Globe,      c: 'text-[#F5C542]', bg: 'from-[#F5C542]/15 to-transparent' },
+          { l: 'Deposit',  h: '/dashboard/wallet',                i: CreditCard, c: '#16C784', bg: 'from-[#16C784]/15 to-transparent' },
+          { l: 'Withdraw', h: '/dashboard/wallet?tab=withdraw',   i: Send,       c: '#A1A1AA', bg: 'from-white/[0.05] to-transparent' },
+          { l: 'Trade',    h: '/dashboard/trade/crypto',          i: TrendingUp, c: '#3B82F6', bg: 'from-[#3B82F6]/15 to-transparent' },
+          { l: 'Bridge',   h: '/dashboard/bridge',                i: Globe,      c: '#F5C542', bg: 'from-[#F5C542]/15 to-transparent' },
         ].map(a => (
           <Link key={a.l} prefetch={false} href={a.h}
             className={`group relative overflow-hidden flex flex-col items-center justify-center gap-2 py-5 rounded-2xl border border-white/[0.06] bg-gradient-to-br ${a.bg} bg-[#101216] hover:border-white/[0.12] active:scale-[0.98] transition-all`}>
-            <a.i className={`w-5 h-5 ${a.c}`} />
+            <span
+              className="w-9 h-9 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110"
+              style={{ borderColor: `${a.c}33`, background: `${a.c}14` }}
+            >
+              <a.i className="w-[18px] h-[18px]" style={{ color: a.c }} />
+            </span>
             <span className="text-[12.5px] text-white font-medium">{a.l}</span>
           </Link>
         ))}
@@ -411,24 +416,37 @@ export default function DashboardOverview() {
             <p className="text-[10px] uppercase tracking-[0.3em] text-champagne-300/70 font-medium mb-2">
               Markets
             </p>
-            <h2 className="font-serif text-2xl text-pearl-50 font-light tracking-tight">Three asset classes</h2>
+            <h2 className="font-app text-2xl text-white font-bold tracking-tight">Three asset classes</h2>
           </div>
         </div>
-        <div className="grid md:grid-cols-3 gap-px bg-pearl-100/[0.07] rounded-[20px] overflow-hidden border border-pearl-100/[0.07]">
+        <div className="grid sm:grid-cols-3 gap-3">
           {[
-            { name: 'Digital assets', sub: 'BTC · ETH · SOL · 350+ pairs', href: '/dashboard/trade/crypto', icon: Bitcoin },
-            { name: 'Foreign exchange', sub: 'EUR/USD · GBP/USD · 60+ pairs', href: '/dashboard/trade/fx', icon: DollarSign },
-            { name: 'Equities',          sub: 'AAPL · TSLA · NVDA · 5,000+ symbols', href: '/dashboard/trade/stocks', icon: BarChart3 },
+            { name: 'Digital assets', sub: 'BTC · ETH · SOL · 350+ pairs', href: '/dashboard/trade/crypto', icon: Bitcoin, accent: '#F7931A', tint: 'from-[#F7931A]/[0.14]' },
+            { name: 'Foreign exchange', sub: 'EUR/USD · GBP/USD · 60+ pairs', href: '/dashboard/trade/fx', icon: DollarSign, accent: '#3B82F6', tint: 'from-[#3B82F6]/[0.14]' },
+            { name: 'Equities', sub: 'AAPL · TSLA · NVDA · 5,000+ symbols', href: '/dashboard/invest', icon: BarChart3, accent: '#16C784', tint: 'from-[#16C784]/[0.14]' },
           ].map((m) => (
-            <Link key={m.name} href={m.href} className="group bg-gradient-to-br from-charcoal/40 to-obsidian/60 p-7 hover:from-charcoal/70 transition-colors flex items-start gap-5">
-              <div className="w-11 h-11 rounded-[10px] border border-pearl-100/[0.10] flex items-center justify-center flex-shrink-0 group-hover:border-champagne-400/30 transition-colors">
-                <m.icon className="w-[18px] h-[18px] text-pearl-100" strokeWidth={1.75} />
+            <Link
+              key={m.name}
+              href={m.href}
+              className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#101216] bg-gradient-to-br ${m.tint} to-transparent p-5 hover:border-white/[0.14] hover:-translate-y-0.5 transition-all`}
+            >
+              <div
+                className="pointer-events-none absolute -top-10 -right-8 w-32 h-32 rounded-full blur-2xl opacity-30 group-hover:opacity-50 transition-opacity"
+                style={{ background: `radial-gradient(closest-side, ${m.accent}, transparent 70%)` }}
+              />
+              <div className="relative flex items-start justify-between">
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border"
+                  style={{ borderColor: `${m.accent}40`, background: `${m.accent}1a` }}
+                >
+                  <m.icon className="w-[20px] h-[20px]" strokeWidth={2} style={{ color: m.accent }} />
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-[#71717A] group-hover:text-white group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
               </div>
-              <div className="flex-1">
-                <div className="font-serif text-pearl-50 text-lg font-medium tracking-tight">{m.name}</div>
-                <div className="text-xs text-pearl-300/55 mt-1">{m.sub}</div>
+              <div className="relative mt-4">
+                <div className="font-app text-white text-[17px] font-bold tracking-tight">{m.name}</div>
+                <div className="text-[12px] text-[#A1A1AA] mt-1">{m.sub}</div>
               </div>
-              <ArrowUpRight className="w-4 h-4 text-pearl-300/40 group-hover:text-champagne-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
             </Link>
           ))}
         </div>
@@ -442,7 +460,7 @@ export default function DashboardOverview() {
             <p className="text-[10px] uppercase tracking-[0.3em] text-champagne-300/70 font-medium mb-3">
               Verification
             </p>
-            <div className="font-serif text-2xl text-pearl-50 font-light tracking-tight mb-2">
+            <div className="font-app text-2xl text-white font-bold tracking-tight mb-2">
               {kycStatus === 'verified' ? 'Verified' : kycStatus === 'pending' ? 'In review' : 'Not verified'}
             </div>
             <p className="text-sm text-pearl-300/60 leading-relaxed mb-5">
@@ -468,7 +486,7 @@ export default function DashboardOverview() {
                 <p className="text-[10px] uppercase tracking-[0.3em] text-champagne-300/70 font-medium mb-1">
                   Activity
                 </p>
-                <div className="font-serif text-xl text-pearl-50 font-light tracking-tight">Recent</div>
+                <div className="font-app text-xl text-white font-bold tracking-tight">Recent</div>
               </div>
               <Link href="/dashboard/history" className="text-[12px] text-pearl-300/60 hover:text-pearl-50 transition-colors flex items-center gap-1">
                 View all <ChevronRight className="w-3 h-3" />

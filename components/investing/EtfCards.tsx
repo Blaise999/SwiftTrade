@@ -53,19 +53,71 @@ export function Sparkline({
 const fmtPrice = (p: number) =>
   p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+/* ─── Responsive, full-width sparkline (fills its container, never overflows) ─── */
+export function FullSparkline({
+  seed, up, h = 96,
+}: { seed: number; up: boolean; h?: number }) {
+  const W = 1000; // internal viewBox units — scales to 100% width
+  const pts: number[] = [];
+  let v = 50;
+  let s = Math.floor(seed * 1000) % 9973;
+  for (let i = 0; i < 60; i++) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    v += ((s % 100) / 100 - (up ? 0.45 : 0.55)) * 7;
+    v = Math.max(8, Math.min(92, v));
+    pts.push(v);
+  }
+  if (up) pts[pts.length - 1] = Math.max(...pts);
+  const min = Math.min(...pts), max = Math.max(...pts), range = max - min || 1;
+  const path = pts
+    .map((p, i) => {
+      const x = (i / (pts.length - 1)) * W;
+      const y = h - ((p - min) / range) * (h - 6) - 3;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+  const color = up ? '#16C784' : '#FF4D4F';
+  const gid = `fsg-${Math.round(seed * 1e6)}`;
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${h}`}
+      preserveAspectRatio="none"
+      className="block w-full"
+      style={{ height: h }}
+    >
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.30" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={`${path} L${W},${h} L0,${h} Z`} fill={`url(#${gid})`} />
+      <path d={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
 /* ─── Compact ETF card (used in horizontal category rows) ─── */
-export const EtfCard = memo(function EtfCard({ etf }: { etf: Etf }) {
-  const up = etf.seedChangePct >= 0;
+export const EtfCard = memo(function EtfCard({
+  etf, livePrice, liveChangePct,
+}: { etf: Etf; livePrice?: number; liveChangePct?: number }) {
+  const price = Number.isFinite(livePrice as number) ? (livePrice as number) : etf.seedPrice;
+  const changePct = Number.isFinite(liveChangePct as number) ? (liveChangePct as number) : etf.seedChangePct;
+  const up = changePct >= 0;
+  const live = Number.isFinite(livePrice as number);
   return (
     <Link
       href={`/dashboard/invest/asset/${etf.symbol}`}
       prefetch={false}
-      className="group relative shrink-0 w-[220px] rounded-2xl border border-white/[0.06] bg-[#101216] hover:bg-[#14171D] hover:border-white/[0.12] transition-all p-4 active:scale-[0.98]"
+      className="group relative shrink-0 w-[200px] sm:w-[220px] rounded-2xl border border-white/[0.06] bg-[#101216] hover:bg-[#14171D] hover:border-white/[0.12] transition-all p-4 active:scale-[0.98]"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="min-w-0">
-          <div className="text-[15px] font-semibold text-white tracking-tight">{etf.symbol}</div>
-          <div className="text-[11px] text-[#71717A] truncate max-w-[140px] mt-0.5">{etf.name}</div>
+          <div className="flex items-center gap-1.5">
+            <div className="text-[15px] font-semibold text-white tracking-tight">{etf.symbol}</div>
+            {live && <span className="w-1.5 h-1.5 rounded-full bg-[#16C784] animate-pulse" title="Live price" />}
+          </div>
+          <div className="text-[11px] text-[#71717A] truncate max-w-[120px] mt-0.5">{etf.name}</div>
         </div>
         <span className={`shrink-0 text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 ${
           (etf as any).assetType === 'stock'
@@ -75,12 +127,12 @@ export const EtfCard = memo(function EtfCard({ etf }: { etf: Etf }) {
           {(etf as any).assetType === 'stock' ? 'STOCK' : 'ETF'}
         </span>
       </div>
-      <div className="mb-3"><Sparkline seed={etf.seedPrice} up={up} w={188} h={40} /></div>
+      <div className="mb-3"><Sparkline seed={etf.seedPrice} up={up} w={168} h={40} /></div>
       <div className="flex items-end justify-between">
-        <div className="text-[17px] font-semibold text-white tabular-nums">${fmtPrice(etf.seedPrice)}</div>
+        <div className="text-[17px] font-semibold text-white tabular-nums">${fmtPrice(price)}</div>
         <div className={`flex items-center gap-1 text-[12px] font-medium tabular-nums ${up ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
           {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-          {up ? '+' : ''}{etf.seedChangePct.toFixed(2)}%
+          {up ? '+' : ''}{changePct.toFixed(2)}%
         </div>
       </div>
     </Link>
@@ -88,25 +140,33 @@ export const EtfCard = memo(function EtfCard({ etf }: { etf: Etf }) {
 });
 
 /* ─── Full-width S&P 500 card with actions ─── */
-export const SP500Card = memo(function SP500Card({ etf }: { etf: Etf }) {
-  const up = etf.seedChangePct >= 0;
+export const SP500Card = memo(function SP500Card({
+  etf, livePrice, liveChangePct,
+}: { etf: Etf; livePrice?: number; liveChangePct?: number }) {
+  const price = Number.isFinite(livePrice as number) ? (livePrice as number) : etf.seedPrice;
+  const changePct = Number.isFinite(liveChangePct as number) ? (liveChangePct as number) : etf.seedChangePct;
+  const up = changePct >= 0;
+  const live = Number.isFinite(livePrice as number);
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <Link href={`/dashboard/invest/asset/${etf.symbol}`} prefetch={false} className="flex items-center gap-3 min-w-0 group">
           <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#3B82F6]/20 to-[#F5C542]/10 border border-white/[0.06] flex items-center justify-center shrink-0">
             <span className="text-[13px] font-bold text-white">{etf.symbol.slice(0, 3)}</span>
           </div>
           <div className="min-w-0">
-            <div className="text-[15px] font-semibold text-white group-hover:text-[#3B82F6] transition-colors">{etf.symbol}</div>
+            <div className="flex items-center gap-1.5">
+              <div className="text-[15px] font-semibold text-white group-hover:text-[#3B82F6] transition-colors">{etf.symbol}</div>
+              {live && <span className="w-1.5 h-1.5 rounded-full bg-[#16C784] animate-pulse" title="Live price" />}
+            </div>
             <div className="text-[11px] text-[#71717A] truncate">{etf.name}</div>
             <div className="text-[10px] text-[#F5C542] mt-0.5">Tracks the S&P 500 · {etf.expenseRatio}% expense</div>
           </div>
         </Link>
         <div className="text-right shrink-0">
-          <div className="text-[16px] font-semibold text-white tabular-nums">${fmtPrice(etf.seedPrice)}</div>
+          <div className="text-[16px] font-semibold text-white tabular-nums">${fmtPrice(price)}</div>
           <div className={`text-[12px] font-medium tabular-nums ${up ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
-            {up ? '+' : ''}{etf.seedChangePct.toFixed(2)}% today
+            {up ? '+' : ''}{changePct.toFixed(2)}% today
           </div>
         </div>
       </div>
