@@ -7,7 +7,7 @@ import {
 } from 'framer-motion';
 import {
   ArrowRight, Play, Menu, X, Check, ShieldCheck, Zap, Globe2,
-  TrendingUp, Bitcoin, LineChart, ChevronRight, Star, Sparkles,
+  TrendingUp, LineChart, ChevronRight, Star,
 } from 'lucide-react';
 
 /* ════════════════════════════════════════════════════════════════
@@ -62,11 +62,11 @@ function StarfieldBG() {
       w = canvas.clientWidth; h = canvas.clientHeight;
       canvas.width = w * dpr; canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.min(90, Math.floor(w / 16));
+      const count = Math.min(46, Math.floor(w / 30));
       parts = Array.from({ length: count }, () => ({
         x: Math.random() * w, y: Math.random() * h,
-        vx: 0.2 + Math.random() * 0.7, len: 18 + Math.random() * 60,
-        sp: 0.2 + Math.random() * 0.9, a: 0.05 + Math.random() * 0.22,
+        vx: 0.18 + Math.random() * 0.5, len: 14 + Math.random() * 40,
+        sp: 0.18 + Math.random() * 0.6, a: 0.03 + Math.random() * 0.10,
       }));
     };
     resize();
@@ -107,18 +107,20 @@ function StarfieldBG() {
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      {/* base navy */}
-      <div className="absolute inset-0" style={{ background: `radial-gradient(120% 80% at 75% -10%, #0F1C3A 0%, ${NAVY} 45%, #060C18 100%)` }} />
-      {/* drifting glow orbs (parallax-feel via slow CSS) */}
-      <div className="absolute -top-40 right-[8%] w-[560px] h-[560px] rounded-full blur-[130px] opacity-[0.22]"
-        style={{ background: `radial-gradient(closest-side, ${CYAN}, transparent 70%)`, animation: 'st-float 18s ease-in-out infinite' }} />
-      <div className="absolute top-[45%] -left-40 w-[520px] h-[520px] rounded-full blur-[150px] opacity-[0.14]"
-        style={{ background: `radial-gradient(closest-side, ${BLUE}, transparent 70%)`, animation: 'st-float 22s ease-in-out infinite reverse' }} />
-      <div className="absolute bottom-[-10%] right-[20%] w-[420px] h-[420px] rounded-full blur-[150px] opacity-[0.10]"
-        style={{ background: `radial-gradient(closest-side, ${GOLD}, transparent 70%)`, animation: 'st-float 26s ease-in-out infinite' }} />
-      {/* speed-line particle canvas */}
+      {/* base navy — a single directional wash, no floating blobs */}
+      <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, #0C1730 0%, ${NAVY} 40%, #060C18 100%)` }} />
+      <div className="absolute top-0 right-0 w-[60%] h-[55%] opacity-[0.10]"
+        style={{ background: `radial-gradient(60% 60% at 80% 0%, ${CYAN}, transparent 70%)` }} />
+      {/* faint engineered grid for texture (not a blob) */}
+      <div className="absolute inset-0 opacity-[0.6]"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)',
+          backgroundSize: '64px 64px',
+          maskImage: 'radial-gradient(ellipse at 50% 0%, black, transparent 78%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at 50% 0%, black, transparent 78%)',
+        }} />
+      {/* very subtle speed-line canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-      <style>{`@keyframes st-float{0%,100%{transform:translate(0,0)}50%{transform:translate(-24px,28px)}}`}</style>
     </div>
   );
 }
@@ -311,7 +313,7 @@ export default function LandingClient() {
             <span className="font-satoshi font-black text-[19px] tracking-tight text-white">Swift<span className="text-[#00E5FF]">trade</span></span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-[14px] text-[#C7D2E4]">
-            {[['Products', '#features'], ['SwiftBridge', '#bridge'], ['Pricing', '#pricing'], ['How it works', '#how']].map(([l, h]) => (
+            {[['Products', '#fx'], ['SwiftBridge', '#bridge'], ['Pricing', '#pricing'], ['Company', '#about']].map(([l, h]) => (
               <a key={l} href={h} className="relative hover:text-white transition-colors group">
                 {l}
                 <span className="absolute -bottom-1 left-0 h-px w-0 bg-[#00E5FF] group-hover:w-full transition-all duration-300" />
@@ -341,7 +343,7 @@ export default function LandingClient() {
               <button onClick={() => setMenu(false)} aria-label="Close"><X className="w-6 h-6 text-white" /></button>
             </div>
             <div className="px-6 pt-8 flex flex-col gap-6 text-[22px] font-satoshi font-bold">
-              {[['Products', '#features'], ['SwiftBridge', '#bridge'], ['Pricing', '#pricing'], ['How it works', '#how']].map(([l, h]) => (
+              {[['Products', '#fx'], ['SwiftBridge', '#bridge'], ['Pricing', '#pricing'], ['Company', '#about']].map(([l, h]) => (
                 <a key={l} href={h} onClick={() => setMenu(false)} className="text-[#C7D2E4]">{l}</a>
               ))}
               <Link href="/auth/login" onClick={() => setMenu(false)} className="text-[#C7D2E4]">Log in</Link>
@@ -359,6 +361,11 @@ export default function LandingClient() {
         <HowItWorks />
         <Testimonials />
         <Pricing />
+        <About />
+        <Careers />
+        <Press />
+        <Blog />
+        <Legal />
         <FinalCTA />
       </main>
 
@@ -400,13 +407,14 @@ function HeroAndTicker({ onDemo }: { onDemo: () => void }) {
           {/* left text */}
           <div>
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 rounded-full border border-white/[0.10] bg-white/[0.03] px-3 py-1.5 text-[12px] text-[#C7D2E4] mb-6">
-              <Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" /> Regulated · 150+ countries · 4.9/5 from 200k+ traders
+              className="inline-flex items-center gap-2.5 rounded-full border border-white/[0.10] bg-white/[0.03] px-3.5 py-1.5 text-[12px] text-[#C7D2E4] mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22E0A1]" />
+              Regulated in 3 jurisdictions · 150+ countries · 4.9/5 from 200k+ traders
             </motion.div>
             <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.05 }}
               className="font-satoshi font-black tracking-[-0.03em] leading-[0.95] text-[clamp(48px,9vw,92px)]">
               Trade Fast.<br />
-              <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(100deg, ${CYAN}, ${BLUE} 70%)` }}>Send Faster.</span>
+              <span style={{ color: CYAN }}>Send Faster.</span>
             </motion.h1>
             <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.12 }}
               className="mt-6 max-w-xl text-[16px] sm:text-[18px] leading-[1.7] text-[#94A3B8]">
@@ -470,89 +478,108 @@ function Metrics() {
   );
 }
 
-/* ─── FEATURES (alternating storytelling, not a symmetric grid) ─── */
-function FeatureRow({ flip, eyebrow, title, body, accent, visual }: {
-  flip?: boolean; eyebrow: string; title: string; body: string; accent: string; visual: React.ReactNode;
+/* Real photography from Unsplash (hotlinked, license-free) */
+const IMG = (id: string, w = 1100) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=70`;
+
+function ProductSection({
+  id, flip, eyebrow, title, body, accent, img, alt, bullets, overlay,
+}: {
+  id: string; flip?: boolean; eyebrow: string; title: string; body: string;
+  accent: string; img: string; alt: string; bullets: string[]; overlay?: React.ReactNode;
 }) {
   return (
-    <div className={`grid lg:grid-cols-2 gap-10 items-center ${flip ? '' : ''}`}>
-      <motion.div initial={{ opacity: 0, x: flip ? 30 : -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}
-        className={flip ? 'lg:order-2' : ''}>
-        <div className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: accent }}>
-          <span className="w-6 h-px" style={{ background: accent }} />{eyebrow}
-        </div>
-        <h3 className="font-satoshi text-[clamp(26px,3.4vw,40px)] font-bold leading-[1.05] text-white">{title}</h3>
-        <p className="mt-4 text-[15.5px] leading-[1.75] text-[#94A3B8] max-w-md">{body}</p>
-        <Link href="/auth/signup" className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-semibold text-white group">
-          <span style={{ color: accent }}>Try it</span>
-          <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: accent }} />
-        </Link>
-      </motion.div>
-      <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.7 }}
-        className={flip ? 'lg:order-1' : ''}>
-        {visual}
-      </motion.div>
-    </div>
+    <section id={id} className="scroll-mt-24 max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-20">
+      <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+        <motion.div initial={{ opacity: 0, x: flip ? 28 : -28 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}
+          className={flip ? 'lg:order-2' : ''}>
+          <div className="inline-flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] mb-4" style={{ color: accent }}>
+            <span className="w-6 h-px" style={{ background: accent }} />{eyebrow}
+          </div>
+          <h2 className="font-satoshi text-[clamp(28px,3.6vw,44px)] font-bold leading-[1.04] text-white">{title}</h2>
+          <p className="mt-5 text-[15.5px] leading-[1.75] text-[#9DB0CC] max-w-md">{body}</p>
+          <ul className="mt-6 space-y-2.5">
+            {bullets.map((b) => (
+              <li key={b} className="flex items-start gap-2.5 text-[14.5px] text-[#D6DEEC]">
+                <Check className="w-4 h-4 mt-0.5 shrink-0" style={{ color: accent }} />{b}
+              </li>
+            ))}
+          </ul>
+          <Link href="/auth/signup" className="mt-7 inline-flex items-center gap-1.5 text-[14px] font-semibold group" style={{ color: accent }}>
+            Open an account <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 26 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.7 }}
+          className={`relative ${flip ? 'lg:order-1' : ''}`}>
+          {/* asymmetric framed photo (mixed radii, not a uniform rounded card) */}
+          <div className="relative overflow-hidden rounded-tl-[26px] rounded-br-[26px] rounded-tr-sm rounded-bl-sm border border-white/[0.10]">
+            <img src={img} alt={alt} loading="lazy" className="w-full h-[320px] sm:h-[380px] object-cover" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,20,40,0.15), rgba(8,17,31,0.78))' }} />
+            {overlay}
+          </div>
+        </motion.div>
+      </div>
+    </section>
   );
 }
 
 function Features() {
   return (
-    <section id="features" className="max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24 space-y-24">
-      {/* FX */}
-      <FeatureRow
-        eyebrow="Foreign exchange" accent={CYAN}
+    <>
+      <ProductSection
+        id="fx" eyebrow="Foreign exchange" accent={CYAN}
         title="Spot rates. Zero bank markup."
-        body="See the real mid-market rate and trade on it. We show you exactly what the banks hide — and your money moves on cyan-fast rails, not slow correspondent chains."
-        visual={
-          <div className="relative rounded-tl-[28px] rounded-br-[28px] rounded-tr-md rounded-bl-md border border-white/[0.08] bg-[#0B1426] p-6 overflow-hidden">
-            <div className="absolute -top-16 -right-10 w-48 h-48 rounded-full blur-3xl opacity-30" style={{ background: CYAN }} />
-            <div className="relative space-y-3">
-              {[{ n: 'Swifttrade', r: '1.0847', good: true }, { n: 'High-street bank', r: '1.0612', good: false }].map((x) => (
-                <div key={x.n} className={`flex items-center justify-between rounded-xl px-4 py-3.5 border ${x.good ? 'border-[#00E5FF]/40 bg-[#00E5FF]/[0.07]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
-                  <span className="text-[13px] text-[#C7D2E4]">{x.n}</span>
-                  <span className={`font-satoshi text-xl font-bold tabular-nums ${x.good ? 'text-[#00E5FF]' : 'text-[#7E92B5] line-through decoration-[#FF6B6B]/60'}`}>{x.r}</span>
-                </div>
-              ))}
-              <div className="text-[12px] text-[#22E0A1] font-medium pt-1">You keep ~2.2% more on every EUR/USD trade.</div>
+        body="See the real mid-market rate and trade on it. We show what the banks bury in the spread, then move your money on fast rails instead of slow correspondent chains."
+        img={IMG('photo-1611974789855-9c2a0a7236a3')} alt="Currency markets in motion"
+        bullets={['60+ currency pairs, majors to exotics', 'Mid-market rate, fee shown upfront', 'Limit and recurring conversions']}
+        overlay={
+          <div className="absolute left-4 bottom-4 right-4 rounded-xl border border-white/[0.12] bg-[#08111F]/85 backdrop-blur-sm p-3.5">
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-[#9DB0CC]">EUR / USD</span>
+              <span className="font-satoshi text-lg font-bold text-[#00E5FF] tabular-nums">1.0847</span>
             </div>
+            <div className="mt-1 text-[11px] text-[#22E0A1]">Banks quote ~1.0612 · you keep about 2.2% more</div>
           </div>
         }
       />
-      {/* Stocks & Crypto */}
-      <FeatureRow flip
-        eyebrow="Stocks & crypto" accent="#22E0A1"
-        title="One tap to every market."
-        body="5,000+ equities, 350+ crypto pairs, fractional shares and recurring buys. Smooth, drawable charts and instant execution — with a satisfying confirmation every time you fill."
-        visual={
-          <div className="relative rounded-tr-[28px] rounded-bl-[28px] rounded-tl-md rounded-br-md border border-white/[0.08] bg-[#0B1426] p-6 overflow-hidden">
-            <div className="absolute -bottom-16 -left-10 w-52 h-52 rounded-full blur-3xl opacity-25" style={{ background: '#22E0A1' }} />
-            <svg viewBox="0 0 360 150" className="relative w-full">
-              <defs>
-                <linearGradient id="fcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#22E0A1" stopOpacity="0.35" /><stop offset="100%" stopColor="#22E0A1" stopOpacity="0" /></linearGradient>
-              </defs>
-              {(() => {
-                const ys = [110, 96, 104, 80, 88, 60, 70, 44, 52, 30, 38, 18];
-                const d = ys.map((y, i) => `${i === 0 ? 'M' : 'L'}${(i / (ys.length - 1)) * 360},${y}`).join(' ');
-                return (<><path d={`${d} L360,150 L0,150 Z`} fill="url(#fcg)" /><path d={d} fill="none" stroke="#22E0A1" strokeWidth="2.5" strokeLinecap="round" /></>);
-              })()}
-            </svg>
-            <div className="relative mt-3 flex gap-2.5">
-              {['AAPL', 'BTC', 'NVDA', 'ETH'].map((s) => (
-                <span key={s} className="text-[11px] px-2.5 py-1 rounded-md bg-white/[0.05] border border-white/[0.06] text-[#C7D2E4]">{s}</span>
-              ))}
-            </div>
+      <ProductSection
+        id="stocks" flip eyebrow="Stocks &amp; ETFs" accent="#22E0A1"
+        title="Every market, one tap away."
+        body="Over 5,000 US equities and ETFs with fractional shares and recurring buys. Clean, drawable charts and instant fills — no clutter between you and the trade."
+        img={IMG('photo-1504805572947-34fad45aed93')} alt="Trader watching market screens"
+        bullets={['Fractional shares from $1', 'Recurring auto-invest', 'Real-time quotes and clean charts']}
+        overlay={
+          <div className="absolute left-4 bottom-4 flex gap-2">
+            {['AAPL', 'NVDA', 'TSLA', 'VOO'].map((s) => (
+              <span key={s} className="text-[11px] px-2.5 py-1 rounded-md bg-[#08111F]/85 border border-white/[0.12] text-[#D6DEEC]">{s}</span>
+            ))}
           </div>
         }
       />
-    </section>
+      <ProductSection
+        id="crypto" eyebrow="Crypto" accent="#F5A623"
+        title="350+ coins, self-custody optional."
+        body="Trade major coins and long-tail pairs with tight spreads. Keep funds with us for speed, or connect a self-custody wallet when you want the keys."
+        img={IMG('photo-1605792657660-596af9009e82')} alt="Cryptocurrency"
+        bullets={['350+ pairs, deep liquidity', 'Connect a self-custody wallet', 'On-chain withdrawals in minutes']}
+        overlay={
+          <div className="absolute left-4 bottom-4 right-4 rounded-xl border border-white/[0.12] bg-[#08111F]/85 backdrop-blur-sm p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-lg grid place-items-center text-[12px] font-bold text-white" style={{ background: '#F7931A22', border: '1px solid #F7931A55' }}>BT</span>
+              <span className="text-[13px] text-[#D6DEEC]">Bitcoin</span>
+            </div>
+            <span className="font-satoshi text-lg font-bold text-white tabular-nums">$67,482</span>
+          </div>
+        }
+      />
+    </>
   );
 }
 
 /* ─── SWIFTBRIDGE (standout) ─── */
 function Bridge() {
   return (
-    <section id="bridge" className="relative py-20 sm:py-28 border-y border-white/[0.06]" style={{ background: 'linear-gradient(180deg, rgba(0,229,255,0.04), transparent 30%, rgba(59,130,246,0.05))' }}>
+    <section id="bridge" className="scroll-mt-24 relative py-20 sm:py-28 border-y border-white/[0.06]" style={{ background: 'linear-gradient(180deg, rgba(0,229,255,0.04), transparent 30%, rgba(59,130,246,0.05))' }}>
       <div className="max-w-[1240px] mx-auto px-5 sm:px-8">
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#00E5FF] mb-3">
@@ -625,7 +652,7 @@ function HowItWorks() {
     { t: 'Watch it grow', d: 'Clear insights and clean portfolio breakdowns.', i: LineChart },
   ];
   return (
-    <section id="how" ref={ref} className="max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24">
+    <section id="how" ref={ref} className="scroll-mt-24 max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24">
       <h2 className="font-satoshi text-[clamp(30px,4.5vw,52px)] font-black text-white text-center">Up and running in minutes</h2>
       <p className="text-center text-[#94A3B8] mt-3 max-w-lg mx-auto">Four steps from download to your first trade or transfer.</p>
       <div className="relative mt-14">
@@ -657,24 +684,24 @@ function HowItWorks() {
 /* ─── TESTIMONIALS (horizontal snap carousel) ─── */
 function Testimonials() {
   const data = [
-    { q: 'Cut my FX costs by 4.8% instantly. The rate is just… the rate.', n: 'Marta K.', r: 'FX trader · Lisbon', f: '🇵🇹' },
-    { q: 'Finally, stocks + crypto + fast sends in one place. No more app-hopping.', n: 'Omar A.', r: 'Investor · Dubai', f: '🇦🇪' },
-    { q: 'Sent money home and it landed before I locked my phone. Wild.', n: 'Chidi N.', r: 'Engineer · Lagos', f: '🇳🇬' },
-    { q: 'The execution feels instant and the charts are gorgeous.', n: 'Sofia R.', r: 'Day trader · Madrid', f: '🇪🇸' },
+    { q: 'Cut my FX costs by 4.8% instantly. The rate is just… the rate.', n: 'Marta K.', r: 'FX trader · Lisbon' },
+    { q: 'Finally, stocks, crypto and fast sends in one place. No more app-hopping.', n: 'Omar A.', r: 'Investor · Dubai' },
+    { q: 'Sent money home and it landed before I locked my phone.', n: 'Chidi N.', r: 'Engineer · Lagos' },
+    { q: 'Execution feels instant and the charts stay out of my way.', n: 'Sofia R.', r: 'Day trader · Madrid' },
   ];
   return (
     <section className="py-16 sm:py-24">
       <div className="max-w-[1240px] mx-auto px-5 sm:px-8">
-        <h2 className="font-satoshi text-[clamp(30px,4.5vw,52px)] font-black text-white max-w-lg">Loved by people who move money.</h2>
+        <h2 className="font-satoshi text-[clamp(30px,4.5vw,52px)] font-black text-white max-w-lg">Built for people who move money.</h2>
       </div>
       <div className="mt-10 flex gap-5 overflow-x-auto snap-x snap-mandatory px-5 sm:px-8 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {data.map((t, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
             className="snap-start shrink-0 w-[300px] sm:w-[360px] rounded-2xl border border-white/[0.08] bg-[#0B1426] p-6 hover:border-[#00E5FF]/30 transition-colors">
             <div className="flex gap-0.5 mb-3">{Array.from({ length: 5 }).map((_, k) => <Star key={k} className="w-3.5 h-3.5 text-[#C5A05B] fill-[#C5A05B]" />)}</div>
-            <p className="text-[15.5px] leading-[1.6] text-[#E2E9F4]">“{t.q}”</p>
+            <p className="text-[15.5px] leading-[1.6] text-[#E2E9F4]">&ldquo;{t.q}&rdquo;</p>
             <div className="mt-5 flex items-center gap-3">
-              <span className="w-10 h-10 rounded-full grid place-items-center text-lg" style={{ background: 'linear-gradient(135deg,#0F1C3A,#142a4d)', border: '1px solid rgba(255,255,255,0.08)' }}>{t.f}</span>
+              <span className="w-10 h-10 rounded-full grid place-items-center text-[13px] font-bold text-[#9FE9FF]" style={{ background: 'linear-gradient(135deg,#0F1C3A,#142a4d)', border: '1px solid rgba(255,255,255,0.08)' }}>{t.n.split(' ').map((x) => x[0]).join('')}</span>
               <div><div className="text-[14px] font-semibold text-white">{t.n}</div><div className="text-[12px] text-[#5E7299]">{t.r}</div></div>
             </div>
           </motion.div>
@@ -692,7 +719,7 @@ function Pricing() {
     { n: 'Ultra', p: '$39', s: 'Highest limits & dedicated support', feats: ['Everything in Premium', 'Highest transfer limits', 'Metal card option', 'Dedicated manager', 'Exclusive insights'], cta: 'Go Ultra', pop: false, tall: false },
   ];
   return (
-    <section id="pricing" className="max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24">
+    <section id="pricing" className="scroll-mt-24 max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24">
       <div className="text-center max-w-xl mx-auto">
         <h2 className="font-satoshi text-[clamp(30px,4.5vw,52px)] font-black text-white">Transparent always.</h2>
         <p className="text-[#94A3B8] mt-3">No hidden fees. Pick the speed you trade at.</p>
@@ -729,6 +756,184 @@ function Pricing() {
   );
 }
 
+/* ─── ABOUT (founded 2020) ─── */
+function About() {
+  return (
+    <section id="about" className="scroll-mt-24 max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24 border-t border-white/[0.06]">
+      <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#00E5FF] mb-4">About Swifttrade</div>
+          <h2 className="font-satoshi text-[clamp(30px,4.4vw,52px)] font-black leading-[1.02] text-white">
+            Founded in 2020 to take the friction out of moving money.
+          </h2>
+          <p className="mt-5 text-[15.5px] leading-[1.75] text-[#9DB0CC] max-w-lg">
+            We started Swifttrade after one too many transfers that cost too much and took too long.
+            The plan was simple: one account for FX, stocks and crypto, with cross-border transfers
+            that actually arrive while you are still looking at your phone. Today a small team across
+            three offices runs that account for traders in 150+ countries.
+          </p>
+          <div className="mt-8 grid grid-cols-3 gap-5 max-w-md">
+            {[['2020', 'Founded'], ['150+', 'Countries'], ['200k+', 'Traders']].map(([v, k]) => (
+              <div key={k}>
+                <div className="font-satoshi text-2xl font-black text-white">{v}</div>
+                <div className="text-[12px] text-[#5E7299] mt-0.5">{k}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="relative">
+          <div className="overflow-hidden rounded-tr-[26px] rounded-bl-[26px] rounded-tl-sm rounded-br-sm border border-white/[0.10]">
+            <img src={IMG('photo-1486406146926-c627a92ad1ab')} alt="Swifttrade headquarters skyline" loading="lazy" className="w-full h-[360px] object-cover" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent, rgba(8,17,31,0.55))' }} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── CAREERS ─── */
+function Careers() {
+  const roles = [
+    { t: 'Senior Frontend Engineer', team: 'Product', loc: 'Remote · EU' },
+    { t: 'Payments Infrastructure Lead', team: 'SwiftBridge', loc: 'London' },
+    { t: 'Compliance Analyst', team: 'Risk', loc: 'Lagos' },
+    { t: 'Product Designer', team: 'Design', loc: 'Remote · Global' },
+  ];
+  return (
+    <section id="careers" className="scroll-mt-24 border-t border-white/[0.06]" style={{ background: '#08111F' }}>
+      <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24 grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
+        <div className="relative order-2 lg:order-1">
+          <div className="overflow-hidden rounded-tl-[26px] rounded-br-[26px] rounded-tr-sm rounded-bl-sm border border-white/[0.10]">
+            <img src={IMG('photo-1497215728101-856f4ea42174')} alt="Working at Swifttrade" loading="lazy" className="w-full h-[340px] object-cover" />
+          </div>
+        </div>
+        <div className="order-1 lg:order-2">
+          <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#00E5FF] mb-4">Careers</div>
+          <h2 className="font-satoshi text-[clamp(28px,4vw,46px)] font-black leading-[1.04] text-white">Help us move money at light speed.</h2>
+          <p className="mt-4 text-[15px] leading-[1.7] text-[#9DB0CC] max-w-md">Remote-first, async by default, and obsessed with shipping. We hire for judgement and curiosity over pedigree.</p>
+          <div className="mt-7 space-y-2.5">
+            {roles.map((r) => (
+              <a key={r.t} href="#careers" className="group flex items-center justify-between gap-4 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3.5 hover:border-[#00E5FF]/30 hover:bg-white/[0.04] transition-colors">
+                <div>
+                  <div className="text-[14.5px] font-semibold text-white">{r.t}</div>
+                  <div className="text-[12px] text-[#5E7299]">{r.team} · {r.loc}</div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-[#5E7299] group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-all" />
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── PRESS ─── */
+function Press() {
+  const items = [
+    { src: 'TechCrunch', title: 'Swifttrade raises to push instant cross-border transfers', date: 'Mar 2025' },
+    { src: 'Reuters', title: 'Fintech challenger expands FX and crypto rails to 150 markets', date: 'Jan 2025' },
+    { src: 'Bloomberg', title: 'SwiftBridge settles consumer transfers in seconds, not days', date: 'Nov 2024' },
+  ];
+  return (
+    <section id="press" className="scroll-mt-24 max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24 border-t border-white/[0.06]">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-9">
+        <div>
+          <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#00E5FF] mb-3">Press</div>
+          <h2 className="font-satoshi text-[clamp(28px,4vw,46px)] font-black text-white">In the news.</h2>
+        </div>
+        <a href="#press" className="text-[14px] text-[#9DB0CC] hover:text-white inline-flex items-center gap-1.5">Media kit <ArrowRight className="w-3.5 h-3.5" /></a>
+      </div>
+      <div className="grid md:grid-cols-3 gap-5">
+        {items.map((p) => (
+          <a key={p.title} href="#press" className="group rounded-2xl border border-white/[0.08] bg-[#0B1426] p-6 hover:border-[#00E5FF]/30 transition-colors">
+            <div className="font-satoshi text-[15px] font-bold text-white">{p.src}</div>
+            <p className="mt-3 text-[14.5px] leading-[1.5] text-[#C7D2E4]">{p.title}</p>
+            <div className="mt-5 flex items-center justify-between text-[12px] text-[#5E7299]">
+              <span>{p.date}</span>
+              <span className="inline-flex items-center gap-1 text-[#9DB0CC] group-hover:text-[#00E5FF] transition-colors">Read <ArrowRight className="w-3 h-3" /></span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─── BLOG ─── */
+function Blog() {
+  const posts = [
+    { img: IMG('photo-1611974789855-9c2a0a7236a3', 800), tag: 'FX', title: 'How banks hide markup in the exchange rate', read: '5 min' },
+    { img: IMG('photo-1504805572947-34fad45aed93', 800), tag: 'Investing', title: 'Fractional shares, explained without the jargon', read: '4 min' },
+    { img: IMG('photo-1605792657660-596af9009e82', 800), tag: 'Crypto', title: 'Custodial vs self-custody: which is right for you', read: '6 min' },
+  ];
+  return (
+    <section id="blog" className="scroll-mt-24 border-t border-white/[0.06]" style={{ background: '#08111F' }}>
+      <div className="max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24">
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-9">
+          <div>
+            <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#00E5FF] mb-3">Blog</div>
+            <h2 className="font-satoshi text-[clamp(28px,4vw,46px)] font-black text-white">Learn the markets.</h2>
+          </div>
+          <a href="#blog" className="text-[14px] text-[#9DB0CC] hover:text-white inline-flex items-center gap-1.5">All articles <ArrowRight className="w-3.5 h-3.5" /></a>
+        </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          {posts.map((p) => (
+            <a key={p.title} href="#blog" className="group rounded-2xl overflow-hidden border border-white/[0.08] bg-[#0B1426] hover:border-[#00E5FF]/30 transition-colors">
+              <div className="relative h-44 overflow-hidden">
+                <img src={p.img} alt={p.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" />
+                <span className="absolute top-3 left-3 text-[11px] font-semibold px-2.5 py-1 rounded-md bg-[#08111F]/85 border border-white/[0.12] text-[#9FE9FF]">{p.tag}</span>
+              </div>
+              <div className="p-5">
+                <h3 className="font-satoshi text-[16px] font-bold text-white leading-snug group-hover:text-[#9FE9FF] transition-colors">{p.title}</h3>
+                <div className="mt-3 text-[12px] text-[#5E7299]">{p.read} read</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── LEGAL (Terms / Privacy / Regulatory / Disclosures) ─── */
+function Legal() {
+  const blocks = [
+    {
+      id: 'terms', h: 'Terms of Service',
+      p: 'These terms govern your use of Swifttrade. By opening an account you agree to trade and transfer within the limits of your verified tier, to provide accurate information, and to use the platform lawfully. Market orders execute at prevailing prices and may differ from the last quote shown. We may update these terms with notice; continued use means acceptance.',
+    },
+    {
+      id: 'privacy', h: 'Privacy Policy',
+      p: 'We collect only what we need to run your account and meet our legal duties: identity details for verification, device and usage data for security, and transaction records. We do not sell your personal data. You can request access, correction or deletion of your data at any time, subject to records we are legally required to keep.',
+    },
+    {
+      id: 'regulatory', h: 'Regulatory',
+      p: 'Swifttrade operates through licensed entities and partners across the jurisdictions it serves. Money-transmission, brokerage and crypto activities are provided under the relevant local authorisations and are subject to KYC and anti-money-laundering checks. Available products and limits vary by country and by your verification tier.',
+    },
+    {
+      id: 'disclosures', h: 'Disclosures',
+      p: 'Investing carries risk, including the possible loss of principal. FX and crypto are volatile and may not be suitable for every investor. Figures shown on this page are illustrative. Crypto assets are generally not covered by deposit-protection schemes. Nothing here is investment advice; consider your circumstances and seek independent advice if unsure.',
+    },
+  ];
+  return (
+    <section id="legal" className="scroll-mt-24 max-w-[1240px] mx-auto px-5 sm:px-8 py-16 sm:py-24 border-t border-white/[0.06]">
+      <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#00E5FF] mb-3">Legal</div>
+      <h2 className="font-satoshi text-[clamp(28px,4vw,46px)] font-black text-white mb-9">The fine print, in plain words.</h2>
+      <div className="grid md:grid-cols-2 gap-x-10 gap-y-10">
+        {blocks.map((b) => (
+          <div key={b.id} id={b.id} className="scroll-mt-24">
+            <h3 className="font-satoshi text-[18px] font-bold text-white border-l-2 pl-3" style={{ borderColor: GOLD }}>{b.h}</h3>
+            <p className="mt-3 text-[14px] leading-[1.75] text-[#9DB0CC]">{b.p}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-10 text-[12px] text-[#5E7299]">Full policy documents are available on request and at account opening.</p>
+    </section>
+  );
+}
+
 /* ─── FINAL CTA ─── */
 function FinalCTA() {
   return (
@@ -752,9 +957,9 @@ function FinalCTA() {
 /* ─── FOOTER ─── */
 function SiteFooter() {
   const cols = [
-    { h: 'Product', l: ['FX', 'Stocks', 'Crypto', 'SwiftBridge', 'Pricing'] },
-    { h: 'Company', l: ['About', 'Careers', 'Press', 'Blog'] },
-    { h: 'Legal', l: ['Terms', 'Privacy', 'Regulatory', 'Disclosures'] },
+    { h: 'Product', l: [['FX', '#fx'], ['Stocks', '#stocks'], ['Crypto', '#crypto'], ['SwiftBridge', '#bridge'], ['Pricing', '#pricing']] },
+    { h: 'Company', l: [['About', '#about'], ['Careers', '#careers'], ['Press', '#press'], ['Blog', '#blog']] },
+    { h: 'Legal', l: [['Terms', '#terms'], ['Privacy', '#privacy'], ['Regulatory', '#regulatory'], ['Disclosures', '#disclosures']] },
   ];
   return (
     <footer id="company" className="border-t border-white/[0.06]" style={{ background: '#070E1C' }}>
@@ -772,7 +977,7 @@ function SiteFooter() {
             <div key={c.h}>
               <div className="text-[12px] uppercase tracking-[0.18em] text-[#5E7299] mb-4">{c.h}</div>
               <ul className="space-y-2.5">
-                {c.l.map((x) => <li key={x}><a href="#" className="text-[14px] text-[#C7D2E4] hover:text-white transition-colors">{x}</a></li>)}
+                {c.l.map(([x, href]) => <li key={x}><a href={href} className="text-[14px] text-[#C7D2E4] hover:text-white transition-colors">{x}</a></li>)}
               </ul>
             </div>
           ))}
