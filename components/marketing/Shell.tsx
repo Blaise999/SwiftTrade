@@ -70,11 +70,11 @@ export function BtnOutline({ href, children }: { href: string; children: React.R
 }
 
 const NAV = [
-  { l: 'FX', h: '/fx' },
   { l: 'Stocks', h: '/stocks' },
   { l: 'Crypto', h: '/crypto' },
+  { l: 'FX', h: '/fx' },
   { l: 'SwiftBridge', h: '/swiftbridge' },
-  { l: 'Pricing', h: '/pricing' },
+  { l: 'Company', h: '/about' },
 ];
 
 export function MarketingNav() {
@@ -152,7 +152,7 @@ function SentimentChip() {
 
 export function MarketingFooter() {
   const cols: { h: string; l: [string, string][] }[] = [
-    { h: 'Product', l: [['FX', '/fx'], ['Stocks', '/stocks'], ['Crypto', '/crypto'], ['SwiftBridge', '/swiftbridge'], ['Pricing', '/pricing']] },
+    { h: 'Markets', l: [['Stocks & ETFs', '/stocks'], ['Crypto', '/crypto'], ['FX', '/fx'], ['SwiftBridge', '/swiftbridge']] },
     { h: 'Company', l: [['About', '/about'], ['Careers', '/careers'], ['Press', '/press'], ['Blog', '/blog']] },
     { h: 'Legal', l: [['Terms', '/policies/terms'], ['Privacy', '/policies/privacy'], ['Regulatory', '/policies/regulatory'], ['Disclosures', '/policies/disclosures']] },
   ];
@@ -163,8 +163,7 @@ export function MarketingFooter() {
           <div>
             <div className="flex items-center gap-2.5"><Mark /><span className="font-satoshi font-black text-[18px] text-white">Swift<span style={{ color: C.gold }}>trade</span></span></div>
             <p className="mt-4 text-[13.5px] leading-relaxed text-[#7E8DA3] max-w-xs">
-              US stocks, crypto and FX in one account, with instant USD to HKD on stablecoin rails.
-              Built between New York and Hong Kong.
+              Trade US stocks, crypto and FX in one free account, and move money across borders with SwiftBridge. Built between New York and Hong Kong.
             </p>
             <div className="mt-5"><SentimentChip /></div>
             <div className="mt-5 flex gap-2.5 max-w-xs">

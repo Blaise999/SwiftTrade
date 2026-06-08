@@ -3,12 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, Play, X, Check, Zap, ShieldCheck, TrendingUp, LineChart } from 'lucide-react';
-import {
-  MarketingShell, C, IMG, Eyebrow, BtnPrimary, BtnOutline, Mark,
-} from '@/components/marketing/Shell';
+import { ArrowRight, ArrowUpRight, Play, X, Check, Zap, ShieldCheck, TrendingUp, LineChart, Lock, Landmark, Server, BadgeCheck } from 'lucide-react';
+import { MarketingShell, C, IMG, Eyebrow, BtnPrimary, BtnOutline } from '@/components/marketing/Shell';
+import { SectionHead, SpecGrid, CompareTable, FAQ } from '@/components/marketing/Templates';
 
-/* count-up on view */
 function CountUp({ to, prefix = '', suffix = '', decimals = 0 }: { to: number; prefix?: string; suffix?: string; decimals?: number }) {
   const ref = useRef<HTMLSpanElement | null>(null);
   const inView = useInView(ref, { once: true, margin: '-50px' });
@@ -22,12 +20,12 @@ function CountUp({ to, prefix = '', suffix = '', decimals = 0 }: { to: number; p
   return <span ref={ref}>{prefix}{v.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</span>;
 }
 
-/* one honest ticker row (NYSE / HKEX / crypto), no duplicated sections */
 const SEED = [
-  { s: 'AAPL', m: 'NYSE', p: 228.31, d: 0.46 }, { s: 'NVDA', m: 'NASDAQ', p: 132.9, d: 3.12 },
+  { s: 'AAPL', m: 'NASDAQ', p: 228.31, d: 0.46 }, { s: 'NVDA', m: 'NASDAQ', p: 132.9, d: 3.12 },
   { s: '0700.HK', m: 'HKEX', p: 384.2, d: -0.7 }, { s: 'BTC', m: 'Crypto', p: 67482, d: 1.84 },
   { s: 'USD/HKD', m: 'FX', p: 7.81, d: 0.02 }, { s: '9988.HK', m: 'HKEX', p: 78.55, d: 1.1 },
   { s: 'ETH', m: 'Crypto', p: 3521, d: -0.9 }, { s: 'TSLA', m: 'NASDAQ', p: 251.4, d: -1.12 },
+  { s: 'VOO', m: 'NYSE', p: 512.4, d: 0.3 }, { s: 'SOL', m: 'Crypto', p: 174.6, d: 4.05 },
 ];
 function Ticker() {
   const [rows, setRows] = useState(SEED);
@@ -37,7 +35,7 @@ function Ticker() {
   }, []);
   return (
     <div className="relative w-full overflow-hidden border-y border-white/[0.07]" style={{ background: '#08121F' }}>
-      <div className="flex gap-7 py-2.5 whitespace-nowrap" style={{ width: 'max-content', animation: 'st-tk 40s linear infinite' }}>
+      <div className="flex gap-7 py-2.5 whitespace-nowrap" style={{ width: 'max-content', animation: 'st-tk 42s linear infinite' }}>
         {[...rows, ...rows].map((r, i) => {
           const up = r.d >= 0;
           return (
@@ -55,7 +53,6 @@ function Ticker() {
   );
 }
 
-/* hand-drawn NY -> HK arrow (Figma-pencil feel) */
 function SketchArrow({ className = '' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 220 60" fill="none">
@@ -72,12 +69,17 @@ export default function LandingClient() {
       <Hero onDemo={() => setDemo(true)} />
       <Ticker />
       <Stats />
+      <MarketsIntro />
       <Markets />
+      <WhatYouCanTrade />
       <Bridge />
+      <Security />
+      <FreeModel />
       <Steps />
+      <Compare />
+      <Faqs />
       <Founder />
       <Voices />
-      <PricingTeaser />
       <CTA />
 
       {demo && (
@@ -87,8 +89,8 @@ export default function LandingClient() {
             <div className="aspect-video rounded-lg grid place-items-center border border-white/[0.07]" style={{ background: '#0A1526' }}>
               <div className="text-center">
                 <div className="mx-auto w-14 h-14 rounded-full grid place-items-center mb-3" style={{ background: C.gold }}><Play className="w-6 h-6 text-[#0A1526] ml-0.5" /></div>
-                <p className="font-satoshi text-lg font-bold text-white">Screen recording: New York to Hong Kong</p>
-                <p className="text-[13px] text-[#94A3B8] mt-1">USD in, HKD out, settled on stablecoin rails. Replace with your real capture before launch.</p>
+                <p className="font-satoshi text-lg font-bold text-white">Product tour: place a trade, then send the proceeds home</p>
+                <p className="text-[13px] text-[#94A3B8] mt-1">Buy NVDA, sell into USD, bridge to HKD. Replace with your real screen capture before launch.</p>
               </div>
             </div>
           </div>
@@ -98,50 +100,57 @@ export default function LandingClient() {
   );
 }
 
-/* ── HERO (real photo, no floating-stats trope, flat headline + drawn underline) ── */
+/* ── HERO: markets-led, free, SwiftBridge as a "plus" ── */
 function Hero({ onDemo }: { onDemo: () => void }) {
   const [px, setPx] = useState(67482);
   useEffect(() => { const id = setInterval(() => setPx((v) => v + (Math.random() - 0.48) * 35), 1500); return () => clearInterval(id); }, []);
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 pt-14 sm:pt-20 pb-8">
-      <div className="grid lg:grid-cols-[1.06fr_0.94fr] gap-12 items-center">
+      <div className="grid lg:grid-cols-[1.08fr_0.92fr] gap-12 items-center">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.10] bg-white/[0.03] px-3 py-1.5 text-[12px] text-[#C2CEDD] mb-6">
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: C.hk }} /> Beta, under SEC review
           </div>
-          <h1 className="font-satoshi font-black tracking-[-0.025em] leading-[0.98] text-white text-[clamp(38px,6.8vw,68px)]">
-            US stocks, crypto, FX.<br />
+          <h1 className="font-satoshi font-black tracking-[-0.025em] leading-[0.98] text-white text-[clamp(38px,6.6vw,66px)]">
+            Trade US stocks, crypto and FX.<br />
             <span className="relative inline-block">
-              Instant USD&#8594;HKD.
-              <svg className="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 300 10" preserveAspectRatio="none">
-                <path d="M2 6 Q90 1 150 4 T298 3" stroke={C.gold} strokeWidth="3" fill="none" strokeLinecap="round" />
+              Free.
+              <svg className="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 120 10" preserveAspectRatio="none">
+                <path d="M2 6 Q40 1 70 4 T118 3" stroke={C.gold} strokeWidth="3" fill="none" strokeLinecap="round" />
               </svg>
             </span>
           </h1>
-          <p className="mt-6 text-[17px] font-semibold text-[#D6DEEC]">Built in New York and Hong Kong by traders who hate slow wires.</p>
+          <p className="mt-6 text-[17px] leading-[1.6] text-[#D6DEEC] max-w-xl font-medium">
+            One account for the markets you actually use. And when money needs to cross the Pacific, SwiftBridge moves USD to HKD in about 8 seconds.
+          </p>
           <p className="mt-3 text-[14px] leading-[1.7] text-[#8A9BB3] max-w-lg">
             SEC-registered broker-dealer. FINRA member. HK SFC VA platform. HKMA stablecoin issuer.
           </p>
 
+          {/* what you trade, at a glance */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            {['5,000+ US stocks', '350+ crypto pairs', '50+ FX pairs', 'HKEX listings', 'Fractional from $1'].map((x) => (
+              <span key={x} className="text-[12px] px-2.5 py-1 rounded-md border border-white/[0.10] text-[#C2CEDD]" style={{ background: 'rgba(255,255,255,0.03)' }}>{x}</span>
+            ))}
+          </div>
+
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
             <div>
-              <BtnPrimary href="/auth/signup">Open US/HK account free <ArrowRight className="w-4 h-4" /></BtnPrimary>
-              <div className="mt-1.5 text-[12px] text-[#5C6B80] pl-1">90 seconds. No SSN yet.</div>
+              <BtnPrimary href="/auth/signup">Open free account <ArrowRight className="w-4 h-4" /></BtnPrimary>
+              <div className="mt-1.5 text-[12px] text-[#5C6B80] pl-1">90 seconds. No SSN until you fund.</div>
             </div>
             <button onClick={onDemo} className="inline-flex items-center gap-2 text-[14.5px] font-semibold text-white hover:text-[#D9BE84] transition-colors">
               <span className="grid place-items-center w-7 h-7 rounded-full border border-white/20"><Play className="w-3 h-3 ml-0.5" /></span>
-              Watch a real NY&#8594;HK transfer
+              Watch the 35s tour
             </button>
           </div>
 
           <div className="mt-8 flex items-center gap-3 text-[12px] text-[#5C6B80]">
-            <span>Partners</span>
-            <span className="h-3 w-px bg-white/10" />
+            <span>Partners</span><span className="h-3 w-px bg-white/10" />
             {['Plaid', 'Circle', 'HKMA FPS'].map((b) => <span key={b} className="text-[#8A9BB3] font-semibold">{b}</span>)}
           </div>
         </div>
 
-        {/* real photo with honest live overlay + drawn arrow, nudged 6px off-grid */}
         <div className="relative lg:translate-y-[6px]">
           <div className="relative overflow-hidden rounded-tl-[26px] rounded-br-[26px] rounded-tr-sm rounded-bl-sm border border-white/[0.10]">
             <img src={IMG('photo-1611974789855-9c2a0a7236a3')} alt="Markets in motion" className="w-full h-[360px] sm:h-[420px] object-cover" />
@@ -161,25 +170,26 @@ function Hero({ onDemo }: { onDemo: () => void }) {
   );
 }
 
-/* ── STATS (imperfect numbers, broken symmetry) ── */
 function Stats() {
   const items = [
-    { v: 1.4, suffix: 'M+', label: 'US trades placed', dec: 1, off: false },
+    { v: 1.4, suffix: 'M+', label: 'US trades placed', dec: 1 },
     { v: 680, suffix: 'k', label: 'HK / Asia trades last month', dec: 0, off: true },
-    { v: 8, prefix: '~', suffix: 's', label: 'average SwiftBridge settle', dec: 0, off: false },
-    { v: 150, suffix: '+', label: 'US & Asia markets', dec: 0, off: false },
+    { v: 5000, prefix: '', suffix: '+', label: 'US tickers, plus HKEX', dec: 0 },
+    { v: 350, suffix: '+', label: 'crypto pairs', dec: 0, off: true },
+    { v: 8, prefix: '~', suffix: 's', label: 'avg SwiftBridge settle', dec: 0 },
+    { v: 0, prefix: '$', suffix: '', label: 'to open and hold', dec: 0 },
   ];
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-12">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-5">
         {items.map((m, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-            className={m.off ? 'lg:translate-y-3' : ''}>
-            <div className="font-satoshi text-[clamp(26px,3.6vw,38px)] font-black text-white leading-none">
+          <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.04 }}
+            className={(m as any).off ? 'lg:translate-y-3' : ''}>
+            <div className="font-satoshi text-[clamp(22px,2.6vw,32px)] font-black text-white leading-none">
               <CountUp to={m.v} prefix={m.prefix || ''} suffix={m.suffix || ''} decimals={m.dec} />
             </div>
-            <div className="mt-2 text-[12.5px] text-[#8A9BB3]">{m.label}</div>
-            <div className="mt-3 h-px w-10" style={{ background: i % 2 ? C.teal : C.gold }} />
+            <div className="mt-2 text-[12px] text-[#8A9BB3] leading-snug">{m.label}</div>
+            <div className="mt-3 h-px w-9" style={{ background: i % 2 ? C.teal : C.gold }} />
           </motion.div>
         ))}
       </div>
@@ -187,28 +197,39 @@ function Stats() {
   );
 }
 
-/* ── MARKETS: irregular rows, real photos, link to real pages (not 3 identical cards) ── */
-function MarketRow({ flip, href, eyebrow, color, title, body, bullets, img, big }: {
-  flip?: boolean; href: string; eyebrow: string; color: string; title: string; body: string; bullets: string[]; img: string; big?: boolean;
+function MarketsIntro() {
+  return (
+    <section className="max-w-[1180px] mx-auto px-5 sm:px-7 pt-10">
+      <SectionHead eyebrow="Three markets, one free account"
+        title="Stocks, crypto and FX are the point. SwiftBridge is the bonus."
+        sub="Most of what you'll do here is trade. Buy a slice of NVDA, swap into ETH, hedge a position in EUR/USD, all from one balance, with no commission on US stocks and the FX fee printed before you confirm. SwiftBridge is there for the moment you need to move the money somewhere else." />
+    </section>
+  );
+}
+
+/* ── MARKET sections (rich, equal weight; markets first) ── */
+function MarketRow({ flip, href, eyebrow, color, title, body, body2, bullets, img, big }: {
+  flip?: boolean; href: string; eyebrow: string; color: string; title: string; body: string; body2?: string; bullets: string[]; img: string; big?: boolean;
 }) {
   return (
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-      <motion.div initial={{ opacity: 0, x: flip ? 24 : -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-70px' }} transition={{ duration: 0.55 }}
+      <motion.div initial={{ opacity: 0, x: flip ? 24 : -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-70px' }} transition={{ duration: 0.5 }}
         className={flip ? 'lg:order-2' : ''}>
         <Eyebrow color={color}>{eyebrow}</Eyebrow>
         <h3 className="font-satoshi text-[clamp(26px,3.4vw,42px)] font-bold leading-[1.04] text-white">{title}</h3>
         <p className="mt-4 text-[15.5px] leading-[1.7] text-[#9DB0CC] max-w-md">{body}</p>
-        <ul className="mt-5 space-y-2.5">
-          {bullets.map((b) => <li key={b} className="flex items-start gap-2.5 text-[14.5px] text-[#D6DEEC]"><Check className="w-4 h-4 mt-0.5 shrink-0" style={{ color }} />{b}</li>)}
+        {body2 && <p className="mt-3 text-[15.5px] leading-[1.7] text-[#9DB0CC] max-w-md">{body2}</p>}
+        <ul className="mt-5 grid sm:grid-cols-2 gap-x-6 gap-y-2.5">
+          {bullets.map((b) => <li key={b} className="flex items-start gap-2.5 text-[14px] text-[#D6DEEC]"><Check className="w-4 h-4 mt-0.5 shrink-0" style={{ color }} />{b}</li>)}
         </ul>
         <Link href={href} className="mt-6 inline-flex items-center gap-1.5 text-[14px] font-semibold group" style={{ color }}>
-          See {eyebrow} <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          Explore {eyebrow} <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
         </Link>
       </motion.div>
-      <motion.div initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-70px' }} transition={{ duration: 0.6 }}
+      <motion.div initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-70px' }} transition={{ duration: 0.55 }}
         className={`relative ${flip ? 'lg:order-1' : ''}`}>
         <div className="overflow-hidden rounded-tr-[24px] rounded-bl-[24px] rounded-tl-sm rounded-br-sm border border-white/[0.10]">
-          <img src={img} alt={title} loading="lazy" className={`w-full object-cover ${big ? 'h-[400px]' : 'h-[300px]'}`} />
+          <img src={img} alt={title} loading="lazy" className={`w-full object-cover ${big ? 'h-[420px]' : 'h-[320px]'}`} />
         </div>
       </motion.div>
     </div>
@@ -217,71 +238,112 @@ function MarketRow({ flip, href, eyebrow, color, title, body, bullets, img, big 
 
 function Markets() {
   return (
-    <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-14 sm:py-20 space-y-20">
-      <MarketRow
-        href="/fx" eyebrow="FX" color={C.gold}
-        title="The rate the banks won't show you."
-        body="USD/HKD, EUR/USD and 50+ pairs at the mid-market rate, fee printed before you confirm. Chase and HSBC bury their cut in the spread. We don't."
-        bullets={['Mid-market rate, fee shown upfront', 'USD to HKD on stablecoin rails', 'Limit and recurring conversions']}
-        img={IMG('photo-1628348068343-c6a848d2b6dd')}
-      />
+    <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-14 sm:py-18 space-y-20">
       <MarketRow flip big
         href="/stocks" eyebrow="Stocks" color={C.hk}
-        title="Buy a slice of NVDA before your coffee's cold."
-        body="Over 5,000 US tickers plus HKEX names like 0700 and 9988, fractional from a dollar, with a 1099-B at tax time so you're not guessing in April."
-        bullets={['Fractional shares from $1', 'US and HKEX listings', 'Recurring auto-invest']}
+        title="5,000+ US tickers. Plus the HK names you can't get elsewhere."
+        body="Buy a slice of NVDA before your coffee's cold, or pick up 0700.HK and 9988.HK in the same account. Fractional from a dollar, recurring buys on the day you choose, and extended-hours trading when the news doesn't wait for the open."
+        body2="At tax time you get a clean 1099-B for US filing and clear cost-basis records, so April is paperwork instead of panic."
+        bullets={['$0 commission on US stocks', 'Fractional shares from $1', 'US listings and HKEX names', 'Recurring auto-invest', 'Extended-hours trading', '1099-B at tax time']}
         img={IMG('photo-1504805572947-34fad45aed93')}
       />
       <MarketRow
         href="/crypto" eyebrow="Crypto" color={C.ny}
         title="350+ coins. Keep the keys if you want them."
-        body="Trade majors and long-tail pairs with tight spreads, or connect a self-custody wallet when you'd rather hold your own. Your call, not ours."
-        bullets={['350+ pairs, deep liquidity', 'Optional self-custody wallet', 'On-chain withdrawals in minutes']}
+        body="Trade BTC, ETH, SOL and 350+ pairs with spreads that hold up when the market actually moves. Settle to your Swifttrade balance for speed, or connect a self-custody wallet and hold your own keys. Switch any time."
+        body2="On-chain withdrawals clear in minutes across major networks, with the network fee shown before you sign. No lock-ins, no games."
+        bullets={['350+ pairs, deep liquidity', 'Custodial or self-custody', 'On-chain withdrawals in minutes', 'Major networks supported', 'Tight, visible spreads', 'Trade from $1']}
         img={IMG('photo-1605792657660-596af9009e82')}
+      />
+      <MarketRow flip
+        href="/fx" eyebrow="FX" color={C.gold}
+        title="The exchange rate the banks won't show you."
+        body="USD/HKD, EUR/USD, GBP/USD and 50+ pairs at the mid-market rate, with a flat fee printed before you confirm. The same rate you see on Google, not the marked-up one your bank quietly applies."
+        body2="Set limit orders that fire at your target rate, or schedule recurring conversions for rent and payroll across borders."
+        bullets={['Mid-market rate, flat visible fee', 'Live comparison vs your bank', '50+ pairs including USD/HKD', 'Limit orders and rate alerts', 'Recurring conversions', 'No hidden spread']}
+        img={IMG('photo-1628348068343-c6a848d2b6dd')}
       />
     </section>
   );
 }
 
-/* ── SWIFTBRIDGE ── */
-function Bridge() {
+function WhatYouCanTrade() {
+  const groups = [
+    { title: 'Stocks & ETFs', items: [
+      { k: 'US listings', v: '5,000+' }, { k: 'HKEX listings', v: 'Yes' }, { k: 'Fractional', v: 'From $1' },
+      { k: 'Commission (US)', v: '$0' }, { k: 'Recurring buys', v: 'Yes' }, { k: 'Extended hours', v: 'Yes' },
+      { k: 'Settlement', v: 'T+1' }, { k: 'Tax doc', v: '1099-B' },
+    ]},
+    { title: 'Crypto', items: [
+      { k: 'Pairs', v: '350+' }, { k: 'Networks', v: 'BTC, ETH, SOL +' }, { k: 'Self-custody', v: 'Optional' },
+      { k: 'Min trade', v: '$1' }, { k: 'On-chain withdrawal', v: 'Yes' }, { k: 'Spread', v: 'Shown live' },
+    ]},
+    { title: 'FX', items: [
+      { k: 'Pairs', v: '50+' }, { k: 'Rate', v: 'Mid-market' }, { k: 'Fee', v: 'Flat, upfront' },
+      { k: 'Limit orders', v: 'Yes' }, { k: 'Recurring', v: 'Yes' }, { k: 'Corridors', v: 'USD/HKD/SGD/EUR/GBP' },
+    ]},
+    { title: 'SwiftBridge', items: [
+      { k: 'Typical settle', v: '~8 seconds' }, { k: 'Compliance', v: 'GENIUS Act' }, { k: 'Rails', v: 'Regulated stablecoin' },
+      { k: 'Corridors', v: 'NY / HK / SG' }, { k: 'Fee', v: 'Shown upfront' },
+    ]},
+    { title: 'Account', items: [
+      { k: 'Minimum', v: '$0' }, { k: 'Funding (US)', v: 'Plaid / ACH / wire' }, { k: 'Funding (HK)', v: 'FPS' },
+      { k: 'Apps', v: 'iOS, Android, web' }, { k: '2FA', v: 'Required' }, { k: 'Support', v: '24/5 chat' },
+    ]},
+    { title: 'Markets coverage', items: [
+      { k: 'US equities', v: 'NYSE, NASDAQ' }, { k: 'Hong Kong', v: 'HKEX' }, { k: 'Crypto', v: '24/7' },
+      { k: 'FX', v: '24/5' }, { k: 'Order types', v: 'Market, limit, recurring' },
+    ]},
+  ];
   return (
     <section className="border-y border-white/[0.07]" style={{ background: '#08121F' }}>
-      <div className="max-w-[1180px] mx-auto px-5 sm:px-7 py-18 sm:py-24">
-        <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
-          <div>
-            <Eyebrow color={C.teal}>SwiftBridge</Eyebrow>
-            <h2 className="font-serif-accent text-[clamp(30px,4.6vw,54px)] font-semibold leading-[1.02] text-white">Money home before you lock your phone.</h2>
-            <p className="mt-5 text-[15.5px] leading-[1.7] text-[#9DB0CC] max-w-md">
-              Send New York to Hong Kong to Singapore on stablecoin rails. Roughly 8 seconds, GENIUS Act compliant, with the fee and rate shown before you press send. Old wires took two days and three banks. This doesn't.
-            </p>
-            <div className="mt-7 flex gap-3">
-              <BtnPrimary href="/swiftbridge">How SwiftBridge works <ArrowRight className="w-4 h-4" /></BtnPrimary>
-              <BtnOutline href="/auth/signup">Send a test $10</BtnOutline>
-            </div>
+      <div className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-20">
+        <SectionHead eyebrow="What you can trade" title="The whole menu, on one page." sub="No digging through help docs to find out what's supported. Here it is." />
+        <div className="mt-9"><SpecGrid groups={groups} /></div>
+      </div>
+    </section>
+  );
+}
+
+/* ── SwiftBridge: peer-level, framed as a bonus ── */
+function Bridge() {
+  return (
+    <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-20">
+      <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-12 items-center">
+        <div>
+          <Eyebrow color={C.teal}>SwiftBridge</Eyebrow>
+          <h2 className="font-satoshi text-[clamp(26px,3.6vw,44px)] font-bold leading-[1.04] text-white">And when you need it across borders.</h2>
+          <p className="mt-5 text-[15.5px] leading-[1.7] text-[#9DB0CC] max-w-md">
+            Trading is the day-to-day. SwiftBridge is for the moment you want the money somewhere else: send New York to Hong Kong to Singapore on regulated stablecoin rails, roughly 8 seconds, GENIUS Act compliant, with the rate and fee shown before you press send.
+          </p>
+          <p className="mt-3 text-[15.5px] leading-[1.7] text-[#9DB0CC] max-w-md">
+            Old wires took two days and three banks. This doesn't. But it's one feature in the account, not the whole pitch.
+          </p>
+          <div className="mt-7 flex gap-3">
+            <Link href="/swiftbridge" className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-[14.5px] font-semibold text-white border border-white/15 hover:bg-white/[0.05] transition-colors">How it works <ArrowRight className="w-4 h-4" /></Link>
           </div>
-          <div className="relative rounded-2xl border border-white/[0.08] overflow-hidden" style={{ background: '#0A1526' }}>
-            <svg viewBox="0 0 600 240" className="w-full">
-              {[['New York', 90, 150, C.ny], ['Hong Kong', 330, 90, C.gold], ['Singapore', 500, 170, C.teal]].map(([n, x, y, c]: any, i) => (
-                <g key={n}>
-                  {i < 2 && (() => {
-                    const nx = [90, 330, 500][i + 1], ny = [150, 90, 170][i + 1];
-                    const d = `M${x} ${y} Q${(x + nx) / 2} ${Math.min(y, ny) - 50} ${nx} ${ny}`;
-                    return (<g><path d={d} stroke={C.gold} strokeWidth="1.5" strokeOpacity="0.45" strokeDasharray="4 5" fill="none" /><motion.circle r="4" fill="#fff" animate={{ offsetDistance: ['0%', '100%'] }} transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }} style={{ offsetPath: `path("${d}")` } as any} /></g>);
-                  })()}
-                  <circle cx={x} cy={y} r="6" fill={c} />
-                  <text x={x} y={y + 24} textAnchor="middle" fill="#C2CEDD" fontSize="13" fontWeight="600">{n}</text>
-                </g>
-              ))}
-            </svg>
-            <div className="grid grid-cols-3 gap-px border-t border-white/[0.07]" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              {[['~8s', 'typical settle'], ['Upfront', 'fee shown'], ['Mid-market', 'real rate']].map(([k, v]) => (
-                <div key={k} className="px-4 py-4" style={{ background: '#0A1526' }}>
-                  <div className="font-satoshi text-base font-bold text-white">{k}</div>
-                  <div className="text-[11px] text-[#5C6B80] mt-0.5">{v}</div>
-                </div>
-              ))}
-            </div>
+        </div>
+        <div className="relative rounded-2xl border border-white/[0.08] overflow-hidden" style={{ background: '#0E1B30' }}>
+          <svg viewBox="0 0 600 240" className="w-full">
+            {[['New York', 90, 150, C.ny], ['Hong Kong', 330, 90, C.gold], ['Singapore', 500, 170, C.teal]].map(([n, x, y, c]: any, i) => (
+              <g key={n}>
+                {i < 2 && (() => {
+                  const nx = [90, 330, 500][i + 1], ny = [150, 90, 170][i + 1];
+                  const d = `M${x} ${y} Q${(x + nx) / 2} ${Math.min(y, ny) - 50} ${nx} ${ny}`;
+                  return (<g><path d={d} stroke={C.gold} strokeWidth="1.5" strokeOpacity="0.45" strokeDasharray="4 5" fill="none" /><motion.circle r="4" fill="#fff" animate={{ offsetDistance: ['0%', '100%'] }} transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }} style={{ offsetPath: `path("${d}")` } as any} /></g>);
+                })()}
+                <circle cx={x} cy={y} r="6" fill={c} />
+                <text x={x} y={y + 24} textAnchor="middle" fill="#C2CEDD" fontSize="13" fontWeight="600">{n}</text>
+              </g>
+            ))}
+          </svg>
+          <div className="grid grid-cols-3 gap-px border-t border-white/[0.07]" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            {[['~8s', 'typical settle'], ['Upfront', 'fee shown'], ['Mid-market', 'real rate']].map(([k, v]) => (
+              <div key={k} className="px-4 py-4" style={{ background: '#0E1B30' }}>
+                <div className="font-satoshi text-base font-bold text-white">{k}</div>
+                <div className="text-[11px] text-[#5C6B80] mt-0.5">{v}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -289,17 +351,79 @@ function Bridge() {
   );
 }
 
-/* ── STEPS ── */
-function Steps() {
-  const s = [
-    { t: 'Open in 90 seconds', d: 'Email and a tap. No SSN until you fund.', i: Zap, c: C.gold },
-    { t: 'Verify and fund', d: 'Plaid for US banks, FPS for HK.', i: ShieldCheck, c: C.teal },
-    { t: 'Trade or bridge', d: 'US/HK markets, or send across the Pacific.', i: TrendingUp, c: C.hk },
-    { t: 'Track it honestly', d: 'Clear P&L and a 1099-B at tax time.', i: LineChart, c: C.ny },
+function Security() {
+  const cards = [
+    { i: Landmark, c: C.gold, h: 'Regulated, not "trust us"', p: 'SEC-registered broker-dealer and FINRA member in the US. SFC-licensed VA platform and HKMA stablecoin authorisation in Hong Kong. License numbers and PDFs are published at launch.' },
+    { i: Lock, c: C.teal, h: 'Your access, locked down', p: 'Two-factor authentication is required, sessions expire, and withdrawals can be address-whitelisted. We never ask for your password or seed phrase.' },
+    { i: Server, c: C.hk, h: 'Custody done carefully', p: 'Crypto held in a mix of cold and warm storage with strict withdrawal controls. Connect a self-custody wallet any time if you would rather hold your own keys.' },
+    { i: BadgeCheck, c: C.ny, h: 'Funds and proof', p: 'Eligible US securities covered by SIPC where applicable. Stablecoin reserves subject to attestation. We run a public bug-bounty and post incident notes when something breaks.' },
   ];
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-20">
-      <h2 className="font-satoshi text-[clamp(28px,4vw,46px)] font-black text-white">From download to first trade.</h2>
+      <SectionHead eyebrow="Security & trust" title="Money apps should be boring about safety." sub="Here is exactly how your account and your assets are protected. No vague badges." />
+      <div className="mt-9 grid md:grid-cols-2 gap-5">
+        {cards.map((x) => (
+          <div key={x.h} className="rounded-2xl border border-white/[0.08] p-6" style={{ background: '#0E1B30' }}>
+            <div className="w-11 h-11 rounded-xl grid place-items-center mb-4 border border-white/[0.10]" style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <x.i className="w-5 h-5" style={{ color: x.c }} />
+            </div>
+            <h3 className="font-satoshi text-[17px] font-bold text-white">{x.h}</h3>
+            <p className="mt-2 text-[14px] leading-[1.7] text-[#8A9BB3]">{x.p}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── FREE model (replaces pricing tiers) ── */
+function FreeModel() {
+  return (
+    <section className="border-y border-white/[0.07]" style={{ background: '#08121F' }}>
+      <div className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-20">
+        <div className="grid lg:grid-cols-[1fr_1fr] gap-12 items-start">
+          <div>
+            <Eyebrow color={C.gold}>Pricing, in one word</Eyebrow>
+            <h2 className="font-satoshi text-[clamp(28px,4vw,48px)] font-black leading-[1.02] text-white">It's free.</h2>
+            <p className="mt-5 text-[15.5px] leading-[1.75] text-[#9DB0CC] max-w-md">
+              No monthly fee. No tiers. No "upgrade to unlock." Open it, hold it, and trade US stocks with zero commission. The whole product is on the table from day one.
+            </p>
+            <p className="mt-4 text-[15.5px] leading-[1.75] text-[#9DB0CC] max-w-md">
+              We're not going to pretend free means we make nothing, because that's the kind of thing that ends up on Reddit. Here's the honest version.
+            </p>
+            <div className="mt-7"><BtnPrimary href="/auth/signup">Open free account <ArrowRight className="w-4 h-4" /></BtnPrimary></div>
+          </div>
+          <div className="space-y-3">
+            {[
+              ['$0', 'to open, hold, and close your account'],
+              ['$0', 'commission on US stocks and ETFs'],
+              ['Flat fee', 'on FX, shown before you confirm. Not buried in the rate'],
+              ['Tight spread', 'on crypto trades, displayed live'],
+              ['Interest', 'we earn on idle cash, the standard brokerage model'],
+              ['No PFOF', 'on HK listings, and we tell you where US flow routes'],
+            ].map(([k, v]) => (
+              <div key={v} className="flex items-start gap-4 rounded-xl border border-white/[0.08] px-5 py-3.5" style={{ background: '#0E1B30' }}>
+                <span className="font-satoshi font-black text-white shrink-0 w-24" style={{ color: C.gold }}>{k}</span>
+                <span className="text-[14px] text-[#9DB0CC]">{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Steps() {
+  const s = [
+    { t: 'Open in 90 seconds', d: 'Email and a tap. No SSN until you fund. No minimum balance.', i: Zap, c: C.gold },
+    { t: 'Verify and fund', d: 'Plaid, ACH or wire for US banks. FPS for Hong Kong. Most accounts verify in minutes.', i: ShieldCheck, c: C.teal },
+    { t: 'Trade the markets', d: 'US stocks, 350+ crypto pairs, 50+ FX pairs, all from one balance.', i: TrendingUp, c: C.hk },
+    { t: 'Move it or grow it', d: 'Bridge to HKD when you need to, or set recurring buys and track P&L honestly.', i: LineChart, c: C.ny },
+  ];
+  return (
+    <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-20">
+      <SectionHead title="From download to your first trade." sub="No 12-step onboarding. Four steps, most of them you can do before your coffee lands." />
       <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {s.map((x, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
@@ -316,7 +440,48 @@ function Steps() {
   );
 }
 
-/* ── FOUNDER strip (real bio, real photo) ── */
+function Compare() {
+  return (
+    <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-12 sm:py-16">
+      <SectionHead eyebrow="The honest comparison" title="Against your bank and your old broker." sub="Rounded, real-world numbers for a typical US/HK user. Your mileage varies." />
+      <div className="mt-8">
+        <CompareTable
+          cols={['Swifttrade', 'High-street bank', 'Legacy broker']}
+          highlight={0}
+          rows={[
+            ['US stock commission', '$0', 'n/a', '$0 to $6.95'],
+            ['FX rate on USD/HKD', 'Mid-market + flat fee', 'Marked up ~2 to 3%', 'Marked up ~1%'],
+            ['USD to HKD transfer', '~8 seconds', '1 to 2 business days', '1 to 3 business days'],
+            ['Crypto', '350+ pairs, self-custody option', 'None', 'Limited or none'],
+            ['Fractional shares', 'From $1', 'No', 'Sometimes'],
+            ['HKEX access', 'Yes', 'Sometimes', 'Sometimes'],
+            ['Account fee', '$0', 'Varies', '$0 to monthly'],
+          ]}
+        />
+      </div>
+    </section>
+  );
+}
+
+function Faqs() {
+  const items = [
+    { q: 'Is it really free?', a: 'Yes. No account fee, no monthly tier, and $0 commission on US stocks and ETFs. We make money on a flat FX fee shown before you confirm, a tight crypto spread shown live, and interest on idle cash, which is the standard brokerage model.' },
+    { q: 'Do I need a US Social Security Number to sign up?', a: 'No, not to open and explore. You will need to complete identity verification (which may include an SSN for US tax reporting) before you fund and trade. HK users verify with local ID and FPS.' },
+    { q: 'Which markets can I trade?', a: 'Over 5,000 US stocks and ETFs across NYSE and NASDAQ, HKEX-listed names like 0700 and 9988, 350+ crypto pairs, and 50+ FX pairs including USD/HKD. Crypto trades 24/7, FX 24/5, equities during market and extended hours.' },
+    { q: 'How fast is SwiftBridge, really?', a: 'Typically around 8 seconds on regulated stablecoin rails for supported corridors (New York, Hong Kong, Singapore). It is GENIUS Act compliant and the rate and fee are shown before you send. It is one feature of the account, not a separate app.' },
+    { q: 'Can I hold my own crypto keys?', a: 'Yes. Keep funds with us for speed, or connect a self-custody wallet and hold your own keys. You can switch at any time and withdraw on-chain in minutes.' },
+    { q: 'How are my money and assets protected?', a: 'Eligible US securities are covered by SIPC where applicable. Crypto is held in a mix of cold and warm storage with strict withdrawal controls. Stablecoin reserves are subject to attestation, and we run a public bug-bounty.' },
+    { q: 'What about taxes?', a: 'US users get a 1099-B for reportable activity along with clear cost-basis records. You remain responsible for filing in every jurisdiction that applies to you.' },
+    { q: 'Are you actually licensed?', a: 'We operate as an SEC-registered broker-dealer and FINRA member in the US, and an SFC-licensed VA platform with HKMA stablecoin authorisation in Hong Kong. We are in beta and under SEC review; license numbers and PDFs are on the Regulatory page at launch.' },
+  ];
+  return (
+    <section className="max-w-[900px] mx-auto px-5 sm:px-7 py-12 sm:py-16">
+      <SectionHead title="Questions, answered straight." />
+      <div className="mt-8"><FAQ items={items} /></div>
+    </section>
+  );
+}
+
 function Founder() {
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-10">
@@ -325,7 +490,7 @@ function Founder() {
         <div>
           <Eyebrow>Who's building this</Eyebrow>
           <p className="font-serif-accent text-[19px] sm:text-[22px] leading-snug text-[#E7EEF8]">
-            &ldquo;I spent years watching transfers cost too much and take too long. We built the account I wanted: US and HK markets in one place, and money that actually arrives.&rdquo;
+            &ldquo;We built the account we wanted as traders: US and HK markets in one place, free to use, and money that actually arrives when you send it.&rdquo;
           </p>
           <div className="mt-3 text-[14px] text-white font-semibold">Alex Chen <span className="text-[#5C6B80] font-normal">· ex-Goldman HK &amp; Robinhood NY</span></div>
           <Link href="/about" className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: C.gold }}>Read our story <ArrowUpRight className="w-3.5 h-3.5" /></Link>
@@ -335,18 +500,17 @@ function Founder() {
   );
 }
 
-/* ── VOICES (staggered, monograms not AI faces, with handle links) ── */
 function Voices() {
   const t = [
     { q: 'Cut my FX cost vs HSBC by about 4.8%. First time the rate matched what I saw on Google.', n: 'Marcus T.', r: 'Trader, Central HK', at: '@marcustrades' },
-    { q: "Funded with Plaid, bought fractional NVDA, sent rent to HK. All before lunch.", n: 'Priya N.', r: 'PM, Brooklyn NY', at: 'in/priya-n' },
-    { q: "Self-custody connect actually works. I keep my own keys and still trade here.", n: 'Daniel K.', r: 'Builder, Singapore', at: '@dk_onchain' },
+    { q: 'Funded with Plaid, bought fractional NVDA, sent rent to HK. All before lunch.', n: 'Priya N.', r: 'PM, Brooklyn NY', at: 'in/priya-n' },
+    { q: 'Self-custody connect actually works. I keep my own keys and still trade here.', n: 'Daniel K.', r: 'Builder, Singapore', at: '@dk_onchain' },
   ];
   return (
-    <section className="py-16 sm:py-20">
+    <section className="py-14 sm:py-18">
       <div className="max-w-[1180px] mx-auto px-5 sm:px-7">
-        <h2 className="font-satoshi text-[clamp(28px,4vw,46px)] font-black text-white max-w-md">What early users say.</h2>
-        <div className="mt-10 grid md:grid-cols-3 gap-5">
+        <h2 className="font-satoshi text-[clamp(26px,4vw,42px)] font-black text-white max-w-md">What early users say.</h2>
+        <div className="mt-9 grid md:grid-cols-3 gap-5">
           {t.map((x, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
               className={`rounded-2xl border border-white/[0.08] p-6 ${i === 1 ? 'md:translate-y-5' : i === 2 ? 'md:translate-y-2' : ''}`} style={{ background: '#0E1B30' }}>
@@ -366,50 +530,15 @@ function Voices() {
   );
 }
 
-/* ── PRICING teaser (no MOST POPULAR badge) ── */
-function PricingTeaser() {
-  const tiers = [
-    { n: 'Free', p: '$0', s: 'Core trading and basic Swift sends', accent: false },
-    { n: 'Premium', p: '$12', s: 'Lower FX fees, advanced charts, virtual card', accent: true },
-    { n: 'Ultra', p: '$39', s: 'Highest limits, metal card, priority desk', accent: false },
-  ];
-  return (
-    <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-20">
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-9">
-        <h2 className="font-satoshi text-[clamp(28px,4vw,46px)] font-black text-white">Billed in USD. No surprises.</h2>
-        <Link href="/pricing" className="text-[14px] font-semibold inline-flex items-center gap-1.5" style={{ color: C.gold }}>See full pricing <ArrowUpRight className="w-3.5 h-3.5" /></Link>
-      </div>
-      <div className="grid lg:grid-cols-3 gap-5 items-end">
-        {tiers.map((t) => (
-          <div key={t.n} className={`rounded-2xl border p-7 ${t.accent ? 'lg:-mt-4 lg:pb-9' : ''}`}
-            style={{ background: t.accent ? '#12213b' : '#0E1B30', borderColor: t.accent ? 'rgba(196,160,82,0.4)' : 'rgba(255,255,255,0.08)' }}>
-            <div className="font-satoshi text-[14px] font-bold uppercase tracking-[0.1em]" style={{ color: t.accent ? C.gold : '#C2CEDD' }}>{t.n}</div>
-            <div className="mt-3 flex items-end gap-1.5">
-              <span className="font-satoshi text-[38px] font-black text-white leading-none">{t.p}</span>
-              <span className="text-[13px] text-[#5C6B80] mb-1.5">/ month</span>
-            </div>
-            <p className="mt-3 text-[13.5px] text-[#8A9BB3]">{t.s}</p>
-            <Link href="/auth/signup" className={`mt-6 inline-flex w-full items-center justify-center py-2.5 rounded-lg text-[14px] font-bold transition-colors ${t.accent ? '' : 'border border-white/15 text-white hover:bg-white/[0.05]'}`}
-              style={t.accent ? { background: C.gold, color: '#0A1526' } : undefined}>
-              Choose {t.n}
-            </Link>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ── FINAL CTA (no glow) ── */
 function CTA() {
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-24">
       <div className="rounded-2xl border border-white/[0.08] px-7 py-14 sm:py-18 text-center" style={{ background: '#0E1B30' }}>
-        <h2 className="font-satoshi text-[clamp(30px,5vw,56px)] font-black leading-[1.02] text-white">Stop feeding the wire fees.</h2>
-        <p className="mt-4 text-[15px] text-[#9DB0CC] max-w-md mx-auto">Open a US/HK account, move your first dollar, and see the rate for yourself.</p>
+        <h2 className="font-satoshi text-[clamp(30px,5vw,56px)] font-black leading-[1.02] text-white">Open the account. Trade the markets.</h2>
+        <p className="mt-4 text-[15px] text-[#9DB0CC] max-w-md mx-auto">Free to open, no SSN until you fund, and the whole product unlocked from minute one.</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <BtnPrimary href="/auth/signup">Open account free <ArrowRight className="w-4 h-4" /></BtnPrimary>
-          <BtnOutline href="/swiftbridge">See SwiftBridge</BtnOutline>
+          <BtnPrimary href="/auth/signup">Open free account <ArrowRight className="w-4 h-4" /></BtnPrimary>
+          <BtnOutline href="/stocks">Browse the markets</BtnOutline>
         </div>
       </div>
     </section>
