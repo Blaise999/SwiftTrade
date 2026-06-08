@@ -14,6 +14,15 @@
   font-family: 'Inter', system-ui, sans-serif;
   letter-spacing: -0.011em;
 }
+/* Marketing surface — Satoshi everywhere (Reddit: ditch Inter/system) */
+.mkt {
+  font-family: 'Satoshi', 'Plus Jakarta Sans', system-ui, sans-serif;
+  letter-spacing: -0.012em;
+}
+.font-serif-accent {
+  font-family: 'Fraunces', Georgia, serif;
+  letter-spacing: -0.01em;
+}
 html { scroll-behavior: smooth; }
 
 /* Modern, app-like console type — used across /dashboard to feel less "corporate". */

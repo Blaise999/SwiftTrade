@@ -2,8 +2,8 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata = {
-  title: 'Swift Trade — Trade crypto, forex & stocks. Convert local cash with SwiftBridge.',
-  description: 'The fastest way to move money and markets. Trade crypto, forex pairs and US stocks. Convert local currency to USDT in minutes with SwiftBridge — bureau de change for 20+ countries.',
+  title: 'Swifttrade — US stocks, crypto, FX, and instant USD to HKD',
+  description: 'US stocks, crypto and FX in one account, with instant USD to HKD on stablecoin rails via SwiftBridge. Built in New York and Hong Kong.',
 };
 
 export default function RootLayout({
