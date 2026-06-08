@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Sora:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap');
+
+/* Swifttrade landing — premium condensed heading face */
+.font-satoshi {
+  font-family: 'Satoshi', 'Plus Jakarta Sans', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+.landing-body {
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.011em;
+}
 
 /* Modern, app-like console type — used across /dashboard to feel less "corporate". */
 .font-app {
