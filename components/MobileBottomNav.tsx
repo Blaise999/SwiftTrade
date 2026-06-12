@@ -49,7 +49,7 @@ export default function MobileBottomNav() {
       }`}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="mx-3 mb-2 rounded-2xl border border-white/[0.08] bg-[#101216]/95 backdrop-blur-xl shadow-2xl shadow-black/60">
+      <div className="mx-3 mb-2 rounded-2xl border border-white/[0.08] bg-[#0F1D33]/95 backdrop-blur-xl shadow-2xl shadow-black/60">
         <div className="grid grid-cols-4 px-2 py-1.5">
           {ITEMS.map(item => {
             const Icon = item.icon;
@@ -60,11 +60,11 @@ export default function MobileBottomNav() {
                 href={item.href}
                 prefetch={true}
                 className={`flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-colors ${
-                  active ? 'text-white' : 'text-[#71717A] hover:text-[#A1A1AA]'
+                  active ? 'text-white' : 'text-[#5C6B80] hover:text-[#8A9BB3]'
                 }`}
               >
                 <Icon
-                  className={`w-5 h-5 ${active ? 'text-[#16C784]' : ''}`}
+                  className={`w-5 h-5 ${active ? 'text-[#2FA56B]' : ''}`}
                   strokeWidth={active ? 2.5 : 2}
                 />
                 <span className={`text-[10px] font-medium ${active ? 'text-white' : ''}`}>

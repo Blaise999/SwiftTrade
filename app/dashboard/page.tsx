@@ -254,13 +254,13 @@ export default function DashboardOverview() {
         />
         <div
           className="absolute -bottom-24 -left-24 w-[320px] h-[320px] rounded-full blur-3xl opacity-15 pointer-events-none"
-          style={{ background: 'radial-gradient(closest-side, #F5C542, transparent 70%)' }}
+          style={{ background: 'radial-gradient(closest-side, #C4A052, transparent 70%)' }}
         />
 
         <div className="relative flex items-center justify-between gap-4 flex-wrap">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#16C784] animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2FA56B] animate-pulse" />
               <span className="text-[10px] uppercase tracking-[0.22em] text-[#94A3B8] font-medium">
                 Markets open · Hong Kong
               </span>
@@ -277,7 +277,7 @@ export default function DashboardOverview() {
           </div>
           <Link
             href="/dashboard/bridge"
-            className="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#F5C542]/[0.10] border border-[#F5C542]/30 hover:bg-[#F5C542]/[0.18] text-[#F5C542] text-[13px] font-semibold transition-all group"
+            className="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#C4A052]/[0.10] border border-[#C4A052]/30 hover:bg-[#C4A052]/[0.18] text-[#C4A052] text-[13px] font-semibold transition-all group"
           >
             <Globe className="w-3.5 h-3.5" />
             SwiftBridge
@@ -315,37 +315,37 @@ export default function DashboardOverview() {
         <Link
           prefetch={false}
           href="/dashboard/invest"
-          className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors"
+          className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors"
         >
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
-            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#71717A]">Stocks &amp; ETFs</span>
+            <span className="w-2 h-2 rounded-full bg-[#C4A052]" />
+            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#5C6B80]">Stocks &amp; ETFs</span>
           </div>
           <div className="text-[18px] font-semibold text-white tabular-nums">{formatBal(investValue)}</div>
           {investValue > 0 ? (
-            <div className={`text-[11px] mt-0.5 tabular-nums ${invest.dayPnl >= 0 ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
+            <div className={`text-[11px] mt-0.5 tabular-nums ${invest.dayPnl >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
               {invest.dayPnl >= 0 ? '+' : ''}{invest.dayPnl.toFixed(2)} ({invest.dayPnl >= 0 ? '+' : ''}{invest.dayPct.toFixed(2)}%) today
             </div>
           ) : (
-            <div className="text-[11px] text-[#52525B] mt-0.5">No holdings yet</div>
+            <div className="text-[11px] text-[#4D5B70] mt-0.5">No holdings yet</div>
           )}
         </Link>
         <Link
           prefetch={false}
           href="/dashboard/trade/crypto"
-          className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors"
+          className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors"
         >
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
-            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#71717A]">Crypto</span>
+            <span className="w-2 h-2 rounded-full bg-[#C4A052]" />
+            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#5C6B80]">Crypto</span>
           </div>
           <div className="text-[18px] font-semibold text-white tabular-nums">{formatBal(cryptoValue)}</div>
           {cryptoValue > 0 ? (
-            <div className={`text-[11px] mt-0.5 tabular-nums ${crypto.dayPnl >= 0 ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
+            <div className={`text-[11px] mt-0.5 tabular-nums ${crypto.dayPnl >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
               {crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPnl.toFixed(2)} ({crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPct.toFixed(2)}%) total
             </div>
           ) : (
-            <div className="text-[11px] text-[#52525B] mt-0.5">No holdings yet</div>
+            <div className="text-[11px] text-[#4D5B70] mt-0.5">No holdings yet</div>
           )}
         </Link>
       </motion.div>
@@ -358,13 +358,13 @@ export default function DashboardOverview() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
       >
         {[
-          { l: 'Deposit',  h: '/dashboard/wallet',                i: CreditCard, c: '#16C784', bg: 'from-[#16C784]/15 to-transparent' },
-          { l: 'Withdraw', h: '/dashboard/wallet?tab=withdraw',   i: Send,       c: '#A1A1AA', bg: 'from-white/[0.05] to-transparent' },
-          { l: 'Trade',    h: '/dashboard/trade/crypto',          i: TrendingUp, c: '#3B82F6', bg: 'from-[#3B82F6]/15 to-transparent' },
-          { l: 'Bridge',   h: '/dashboard/bridge',                i: Globe,      c: '#F5C542', bg: 'from-[#F5C542]/15 to-transparent' },
+          { l: 'Deposit',  h: '/dashboard/wallet',                i: CreditCard, c: '#2FA56B', bg: 'from-[#2FA56B]/15 to-transparent' },
+          { l: 'Withdraw', h: '/dashboard/wallet?tab=withdraw',   i: Send,       c: '#8A9BB3', bg: 'from-white/[0.05] to-transparent' },
+          { l: 'Trade',    h: '/dashboard/trade/crypto',          i: TrendingUp, c: '#3B948C', bg: 'from-[#3B948C]/15 to-transparent' },
+          { l: 'Bridge',   h: '/dashboard/bridge',                i: Globe,      c: '#C4A052', bg: 'from-[#C4A052]/15 to-transparent' },
         ].map(a => (
           <Link key={a.l} prefetch={false} href={a.h}
-            className={`group relative overflow-hidden flex flex-col items-center justify-center gap-2 py-5 rounded-2xl border border-white/[0.06] bg-gradient-to-br ${a.bg} bg-[#101216] hover:border-white/[0.12] active:scale-[0.98] transition-all`}>
+            className={`group relative overflow-hidden flex flex-col items-center justify-center gap-2 py-5 rounded-2xl border border-white/[0.06] bg-gradient-to-br ${a.bg} bg-[#0F1D33] hover:border-white/[0.12] active:scale-[0.98] transition-all`}>
             <span
               className="w-9 h-9 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110"
               style={{ borderColor: `${a.c}33`, background: `${a.c}14` }}
@@ -383,27 +383,27 @@ export default function DashboardOverview() {
         transition={{ duration: 0.25, delay: 0.09 }}
         className="grid grid-cols-2 lg:grid-cols-3 gap-3"
       >
-        <CardLink href="/dashboard/portfolio" className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#71717A] mb-1.5">Portfolio</div>
+        <CardLink href="/dashboard/portfolio" className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[#5C6B80] mb-1.5">Portfolio</div>
           <div className="text-[18px] text-white font-semibold tabular-nums">{formatBal(cashBalance + investValue + cryptoValue)}</div>
-          <div className="text-[11px] text-[#16C784] mt-0.5 tabular-nums">+0.42% today</div>
+          <div className="text-[11px] text-[#2FA56B] mt-0.5 tabular-nums">+0.42% today</div>
         </CardLink>
-        <CardLink href="/dashboard/referrals" className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#71717A] mb-1.5">Referrals</div>
+        <CardLink href="/dashboard/referrals" className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[#5C6B80] mb-1.5">Referrals</div>
           <div className="text-[18px] text-white font-semibold tabular-nums">{(user as any)?.referral_count || 0}</div>
-          <div className="text-[11px] text-[#F5C542] mt-0.5">Invite, earn →</div>
+          <div className="text-[11px] text-[#C4A052] mt-0.5">Invite, earn →</div>
         </CardLink>
-        <CardLink href="/dashboard/connect-wallet" className="rounded-2xl border border-white/[0.06] bg-[#101216] p-4 hover:bg-[#14171D] transition-colors col-span-2 lg:col-span-1">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#71717A] mb-1.5">Self-custody wallet</div>
+        <CardLink href="/dashboard/connect-wallet" className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors col-span-2 lg:col-span-1">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[#5C6B80] mb-1.5">Self-custody wallet</div>
           {walletConnected ? (
             <>
-              <div className="text-[14px] font-mono text-[#16C784] tabular-nums">{walletAddress?.slice(0, 6)}…{walletAddress?.slice(-4)}</div>
-              <div className="text-[11px] text-[#71717A] mt-0.5">Connected</div>
+              <div className="text-[14px] font-mono text-[#2FA56B] tabular-nums">{walletAddress?.slice(0, 6)}…{walletAddress?.slice(-4)}</div>
+              <div className="text-[11px] text-[#5C6B80] mt-0.5">Connected</div>
             </>
           ) : (
             <>
               <div className="text-[16px] text-white font-medium">Not connected</div>
-              <div className="text-[11px] text-[#3B82F6] mt-0.5">Connect wallet →</div>
+              <div className="text-[11px] text-[#3B948C] mt-0.5">Connect wallet →</div>
             </>
           )}
         </CardLink>
@@ -422,13 +422,13 @@ export default function DashboardOverview() {
         <div className="grid sm:grid-cols-3 gap-3">
           {[
             { name: 'Digital assets', sub: 'BTC · ETH · SOL · 350+ pairs', href: '/dashboard/trade/crypto', icon: Bitcoin, accent: '#F7931A', tint: 'from-[#F7931A]/[0.14]' },
-            { name: 'Foreign exchange', sub: 'EUR/USD · GBP/USD · 60+ pairs', href: '/dashboard/trade/fx', icon: DollarSign, accent: '#3B82F6', tint: 'from-[#3B82F6]/[0.14]' },
-            { name: 'Equities', sub: 'AAPL · TSLA · NVDA · 5,000+ symbols', href: '/dashboard/invest', icon: BarChart3, accent: '#16C784', tint: 'from-[#16C784]/[0.14]' },
+            { name: 'Foreign exchange', sub: 'EUR/USD · GBP/USD · 60+ pairs', href: '/dashboard/trade/fx', icon: DollarSign, accent: '#3B948C', tint: 'from-[#3B948C]/[0.14]' },
+            { name: 'Equities', sub: 'AAPL · TSLA · NVDA · 5,000+ symbols', href: '/dashboard/invest', icon: BarChart3, accent: '#2FA56B', tint: 'from-[#2FA56B]/[0.14]' },
           ].map((m) => (
             <Link
               key={m.name}
               href={m.href}
-              className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#101216] bg-gradient-to-br ${m.tint} to-transparent p-5 hover:border-white/[0.14] hover:-translate-y-0.5 transition-all`}
+              className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0F1D33] bg-gradient-to-br ${m.tint} to-transparent p-5 hover:border-white/[0.14] hover:-translate-y-0.5 transition-all`}
             >
               <div
                 className="pointer-events-none absolute -top-10 -right-8 w-32 h-32 rounded-full blur-2xl opacity-30 group-hover:opacity-50 transition-opacity"
@@ -441,11 +441,11 @@ export default function DashboardOverview() {
                 >
                   <m.icon className="w-[20px] h-[20px]" strokeWidth={2} style={{ color: m.accent }} />
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-[#71717A] group-hover:text-white group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+                <ArrowUpRight className="w-4 h-4 text-[#5C6B80] group-hover:text-white group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
               </div>
               <div className="relative mt-4">
                 <div className="font-app text-white text-[17px] font-bold tracking-tight">{m.name}</div>
-                <div className="text-[12px] text-[#A1A1AA] mt-1">{m.sub}</div>
+                <div className="text-[12px] text-[#8A9BB3] mt-1">{m.sub}</div>
               </div>
             </Link>
           ))}

@@ -331,19 +331,19 @@ export default function PortfolioPage() {
     { 
       asset: 'Crypto', 
       value: totalEquity > 0 ? (totalValue / totalEquity) * 100 : 0, 
-      color: '#F59E0B',
+      color: '#C4A052',
       amount: totalValue
     },
     { 
       asset: 'Forex', 
       value: totalEquity > 0 ? (fxValue / totalEquity) * 100 : 0, 
-      color: '#3B82F6',
+      color: '#3B948C',
       amount: fxValue
     },
     { 
       asset: 'Stocks', 
       value: totalEquity > 0 ? (stocksValue / totalEquity) * 100 : 0, 
-      color: '#8B5CF6',
+      color: '#C4A052',
       amount: stocksValue
     },
     { 

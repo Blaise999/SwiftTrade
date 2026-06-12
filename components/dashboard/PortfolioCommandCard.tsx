@@ -42,14 +42,14 @@ export function PortfolioCommandCard({
   }, [path]);
 
   const allocations = [
-    { label: 'Stocks',  value: investValue, color: '#8B5CF6' },
-    { label: 'Crypto',  value: cryptoValue, color: '#F59E0B' },
-    { label: 'Forex',   value: fxValue,     color: '#3B82F6' },
+    { label: 'Stocks',  value: investValue, color: '#C4A052' },
+    { label: 'Crypto',  value: cryptoValue, color: '#C4A052' },
+    { label: 'Forex',   value: fxValue,     color: '#3B948C' },
     { label: 'Cash',    value: cashBalance, color: '#64748B' },
   ].filter(a => a.value > 0);
   const allocTotal = allocations.reduce((s, a) => s + a.value, 0) || 1;
 
-  const accent = up ? '#16C784' : '#FF4D4F';
+  const accent = up ? '#2FA56B' : '#D9743C';
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0D1324] via-[#0B1020] to-[#080A15] p-5 sm:p-7 lg:p-8">
@@ -65,7 +65,7 @@ export function PortfolioCommandCard({
             <h2 className="text-[36px] sm:text-[44px] lg:text-[52px] font-bold text-white tabular-nums leading-none tracking-tight">
               {hide ? '••••••' : fmtUSD(totalAssets)}
             </h2>
-            <span className={`text-[14px] font-medium tabular-nums flex items-center gap-1 ${up ? 'text-[#16C784]' : 'text-[#FF4D4F]'}`}>
+            <span className={`text-[14px] font-medium tabular-nums flex items-center gap-1 ${up ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
               {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
               {hide ? '••••' : (
                 <>

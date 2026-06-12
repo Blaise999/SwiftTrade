@@ -27,13 +27,13 @@ html { scroll-behavior: smooth; }
 
 /* Modern, app-like console type — used across /dashboard to feel less "corporate". */
 .font-app {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  letter-spacing: -0.011em;
+  font-family: 'Satoshi', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.012em;
 }
 .font-app h1,
 .font-app h2,
 .font-app h3 {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Satoshi', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   letter-spacing: -0.02em;
 }
 

@@ -11,16 +11,16 @@ const ORDER: EtfCategory[] = ['sp500', 'nasdaq_100', 'total_market', 'dividend',
 
 export default function ExploreEtfs() {
   return (
-    <div className="min-h-screen bg-[#080A0D] pb-28">
+    <div className="min-h-screen bg-[#0A1526] pb-28">
       <div className="max-w-2xl mx-auto pt-5">
         <div className="flex items-center gap-3 mb-1">
           <Link href="/dashboard/invest" prefetch={false}
-            className="w-9 h-9 rounded-full bg-[#101216] border border-white/[0.06] flex items-center justify-center hover:bg-[#14171D]">
-            <ArrowLeft className="w-4 h-4 text-[#A1A1AA]" />
+            className="w-9 h-9 rounded-full bg-[#0F1D33] border border-white/[0.06] flex items-center justify-center hover:bg-[#13243D]">
+            <ArrowLeft className="w-4 h-4 text-[#8A9BB3]" />
           </Link>
           <h1 className="text-[20px] font-bold text-white">Explore ETFs</h1>
         </div>
-        <p className="text-[12.5px] text-[#A1A1AA] ml-12 mb-6">
+        <p className="text-[12.5px] text-[#8A9BB3] ml-12 mb-6">
           Curated funds across the most popular long-term investing categories.
         </p>
 
@@ -44,7 +44,7 @@ export default function ExploreEtfs() {
           );
         })}
 
-        <p className="mt-6 text-[11px] text-[#52525B] leading-relaxed text-center px-4">
+        <p className="mt-6 text-[11px] text-[#4D5B70] leading-relaxed text-center px-4">
           Investing involves risk, including possible loss of principal. Past performance does not
           guarantee future results.
         </p>

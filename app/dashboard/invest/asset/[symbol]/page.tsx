@@ -37,15 +37,15 @@ export default function EtfDetail() {
 
   if (!etf) {
     return (
-      <div className="min-h-screen bg-[#080A0D] flex flex-col items-center justify-center px-6">
-        <p className="text-[#A1A1AA] text-sm">ETF “{symbol}” not found.</p>
-        <Link href="/dashboard/invest" className="mt-3 text-[#3B82F6] text-sm">Back to investing</Link>
+      <div className="min-h-screen bg-[#0A1526] flex flex-col items-center justify-center px-6">
+        <p className="text-[#8A9BB3] text-sm">ETF “{symbol}” not found.</p>
+        <Link href="/dashboard/invest" className="mt-3 text-[#3B948C] text-sm">Back to investing</Link>
       </div>
     );
   }
 
   const up = etf.seedChangePct >= 0;
-  const accent = up ? '#16C784' : '#FF4D4F';
+  const accent = up ? '#2FA56B' : '#D9743C';
   const balance = Number((user as any)?.balance_available ?? (user as any)?.balance ?? 0) || 0;
 
   const estQty = useMemo(() => {
@@ -111,20 +111,20 @@ export default function EtfDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080A0D] pb-44 lg:pb-28">
+    <div className="min-h-screen bg-[#0A1526] pb-44 lg:pb-28">
       <div className="max-w-2xl mx-auto pt-5">
 
         {/* Top bar */}
         <div className="flex items-center justify-between">
           <button onClick={() => router.back()}
-            className="w-9 h-9 rounded-full bg-[#101216] border border-white/[0.06] flex items-center justify-center hover:bg-[#14171D]">
-            <ArrowLeft className="w-4 h-4 text-[#A1A1AA]" />
+            className="w-9 h-9 rounded-full bg-[#0F1D33] border border-white/[0.06] flex items-center justify-center hover:bg-[#13243D]">
+            <ArrowLeft className="w-4 h-4 text-[#8A9BB3]" />
           </button>
           <div className="flex items-center gap-2">
-            <button className="w-9 h-9 rounded-full bg-[#101216] border border-white/[0.06] flex items-center justify-center hover:bg-[#14171D] text-[#71717A] hover:text-[#F5C542]">
+            <button className="w-9 h-9 rounded-full bg-[#0F1D33] border border-white/[0.06] flex items-center justify-center hover:bg-[#13243D] text-[#5C6B80] hover:text-[#C4A052]">
               <Star className="w-4 h-4" />
             </button>
-            <button className="w-9 h-9 rounded-full bg-[#101216] border border-white/[0.06] flex items-center justify-center hover:bg-[#14171D] text-[#71717A]">
+            <button className="w-9 h-9 rounded-full bg-[#0F1D33] border border-white/[0.06] flex items-center justify-center hover:bg-[#13243D] text-[#5C6B80]">
               <Share2 className="w-4 h-4" />
             </button>
           </div>
@@ -136,11 +136,11 @@ export default function EtfDetail() {
             <h1 className="text-[22px] font-bold text-white tracking-tight">{etf.symbol}</h1>
             <span className={`text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 ${
               etf.assetType === 'stock'
-                ? 'text-[#3B82F6] bg-[#3B82F6]/10 border border-[#3B82F6]/20'
-                : 'text-[#F5C542] bg-[#F5C542]/10 border border-[#F5C542]/20'
+                ? 'text-[#3B948C] bg-[#3B948C]/10 border border-[#3B948C]/20'
+                : 'text-[#C4A052] bg-[#C4A052]/10 border border-[#C4A052]/20'
             }`}>{etf.assetType === 'stock' ? 'STOCK' : 'ETF'}</span>
           </div>
-          <p className="text-[13px] text-[#A1A1AA] mt-0.5">{etf.name}</p>
+          <p className="text-[13px] text-[#8A9BB3] mt-0.5">{etf.name}</p>
           <div className="mt-3 flex items-end gap-3">
             <div className="text-[34px] font-bold text-white tabular-nums leading-none">
               ${etf.seedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -153,7 +153,7 @@ export default function EtfDetail() {
         </div>
 
         {/* Chart */}
-        <div className="mt-5 rounded-2xl border border-white/[0.06] bg-[#101216] p-4">
+        <div className="mt-5 rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4">
           <div className="h-[200px] flex items-center">
             <Sparkline seed={etf.seedPrice + RANGES.indexOf(range)} up={up} w={600} h={190} />
           </div>
@@ -161,7 +161,7 @@ export default function EtfDetail() {
             {RANGES.map(r => (
               <button key={r} onClick={() => setRange(r)}
                 className={`flex-1 h-8 rounded-lg text-[12px] font-semibold transition-colors ${
-                  range === r ? 'text-[#04150d]' : 'text-[#71717A] hover:text-[#A1A1AA]'
+                  range === r ? 'text-[#04150d]' : 'text-[#5C6B80] hover:text-[#8A9BB3]'
                 }`}
                 style={range === r ? { background: accent } : {}}>
                 {r}
@@ -186,31 +186,31 @@ export default function EtfDetail() {
                 { k: 'Category', v: String(etf.category).replace(/_/g, ' ') },
               ]
           ).map(s => (
-            <div key={s.k} className="rounded-xl border border-white/[0.06] bg-[#101216] p-3.5">
-              <div className="text-[10.5px] uppercase tracking-wider text-[#71717A]">{s.k}</div>
+            <div key={s.k} className="rounded-xl border border-white/[0.06] bg-[#0F1D33] p-3.5">
+              <div className="text-[10.5px] uppercase tracking-wider text-[#5C6B80]">{s.k}</div>
               <div className="text-[14px] text-white font-medium mt-1 capitalize">{s.v}</div>
             </div>
           ))}
         </div>
 
         {/* About */}
-        <div className="mt-5 rounded-2xl border border-white/[0.06] bg-[#101216] p-4">
+        <div className="mt-5 rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Info className="w-4 h-4 text-[#3B82F6]" />
+            <Info className="w-4 h-4 text-[#3B948C]" />
             <h3 className="text-[14px] font-semibold text-white">
               About {etf.assetType === 'stock' ? etf.symbol : 'this ETF'}
             </h3>
           </div>
-          <p className="text-[12.5px] text-[#A1A1AA] leading-relaxed">{etf.description}</p>
+          <p className="text-[12.5px] text-[#8A9BB3] leading-relaxed">{etf.description}</p>
           <div className="mt-3 pt-3 border-t border-white/[0.05]">
-            <div className="text-[10.5px] uppercase tracking-wider text-[#71717A] mb-1">
+            <div className="text-[10.5px] uppercase tracking-wider text-[#5C6B80] mb-1">
               {etf.assetType === 'stock' ? 'Recent news' : 'Top holdings'}
             </div>
-            <div className="text-[12px] text-[#52525B]">
+            <div className="text-[12px] text-[#4D5B70]">
               {etf.assetType === 'stock' ? 'News feed coming soon.' : 'Holdings data coming soon.'}
             </div>
           </div>
-          <p className="mt-3 text-[11px] text-[#52525B] leading-relaxed">
+          <p className="mt-3 text-[11px] text-[#4D5B70] leading-relaxed">
             Investing involves risk. This is a long-term investing option, not financial advice.
             Past performance does not guarantee future results.
           </p>
@@ -218,10 +218,10 @@ export default function EtfDetail() {
       </div>
 
       {/* Sticky action bar — sits above the mobile bottom nav */}
-      <div className="fixed inset-x-0 z-40 bg-[#080A0D]/95 backdrop-blur-xl border-t border-white/[0.06] px-4 py-3 bottom-[88px] lg:bottom-0">
+      <div className="fixed inset-x-0 z-40 bg-[#0A1526]/95 backdrop-blur-xl border-t border-white/[0.06] px-4 py-3 bottom-[88px] lg:bottom-0">
         <div className="max-w-2xl mx-auto flex items-center gap-2.5">
           <button onClick={() => setSheet('recurring')}
-            className="h-12 px-4 rounded-2xl border border-white/[0.08] hover:bg-white/[0.04] text-[#A1A1AA] text-[13px] font-medium flex items-center gap-1.5 transition-colors shrink-0">
+            className="h-12 px-4 rounded-2xl border border-white/[0.08] hover:bg-white/[0.04] text-[#8A9BB3] text-[13px] font-medium flex items-center gap-1.5 transition-colors shrink-0">
             <Repeat className="w-4 h-4" /> Recurring
           </button>
           <button onClick={() => setSheet('buy')}
@@ -238,18 +238,18 @@ export default function EtfDetail() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div
             onClick={e => e.stopPropagation()}
-            className="relative w-full max-w-2xl bg-[#101216] border-t border-white/[0.08] rounded-t-3xl p-5 pb-8 animate-[slideUp_.25s_ease-out]"
+            className="relative w-full max-w-2xl bg-[#0F1D33] border-t border-white/[0.08] rounded-t-3xl p-5 pb-8 animate-[slideUp_.25s_ease-out]"
             style={{ animationName: 'none' }}
           >
             {done ? (
               <div className="py-10 text-center">
-                <div className="w-14 h-14 rounded-full bg-[#16C784]/15 border border-[#16C784]/30 flex items-center justify-center mx-auto mb-4">
-                  <Check className="w-7 h-7 text-[#16C784]" />
+                <div className="w-14 h-14 rounded-full bg-[#2FA56B]/15 border border-[#2FA56B]/30 flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-7 h-7 text-[#2FA56B]" />
                 </div>
                 <div className="text-[17px] font-semibold text-white">
                   {sheet === 'buy' ? 'Order submitted' : 'Recurring plan created'}
                 </div>
-                <p className="text-[12.5px] text-[#A1A1AA] mt-1">
+                <p className="text-[12.5px] text-[#8A9BB3] mt-1">
                   {sheet === 'buy'
                     ? `${estQty.toFixed(4)} shares of ${etf.symbol}`
                     : `$${parseFloat(amount || '0').toFixed(2)} ${freq} into ${etf.symbol}`}
@@ -261,7 +261,7 @@ export default function EtfDetail() {
                   <h3 className="text-[17px] font-bold text-white">
                     {sheet === 'buy' ? `Buy ${etf.symbol}` : `Recurring · ${etf.symbol}`}
                   </h3>
-                  <button onClick={() => setSheet(null)} className="text-[#71717A] hover:text-white">
+                  <button onClick={() => setSheet(null)} className="text-[#5C6B80] hover:text-white">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -271,7 +271,7 @@ export default function EtfDetail() {
                     {(['dollars', 'shares'] as const).map(m => (
                       <button key={m} onClick={() => setMode(m)}
                         className={`flex-1 h-9 rounded-xl text-[12.5px] font-semibold capitalize transition-colors ${
-                          mode === m ? 'bg-white text-[#080A0D]' : 'bg-[#14171D] text-[#A1A1AA] border border-white/[0.06]'
+                          mode === m ? 'bg-white text-[#0A1526]' : 'bg-[#13243D] text-[#8A9BB3] border border-white/[0.06]'
                         }`}>
                         {m === 'dollars' ? 'In dollars' : 'In shares'}
                       </button>
@@ -279,8 +279,8 @@ export default function EtfDetail() {
                   </div>
                 )}
 
-                <div className="rounded-2xl border border-white/[0.06] bg-[#14171D] p-4 mb-4">
-                  <div className="text-[11px] uppercase tracking-wider text-[#71717A] mb-1">
+                <div className="rounded-2xl border border-white/[0.06] bg-[#13243D] p-4 mb-4">
+                  <div className="text-[11px] uppercase tracking-wider text-[#5C6B80] mb-1">
                     {sheet === 'recurring' ? 'Amount per cycle' : mode === 'dollars' ? 'Amount (USD)' : 'Shares'}
                   </div>
                   <div className="flex items-center gap-1">
@@ -300,7 +300,7 @@ export default function EtfDetail() {
                   <div className="grid grid-cols-4 gap-2 mb-4">
                     {['10', '25', '50', '100'].map(q => (
                       <button key={q} onClick={() => setAmount(q)}
-                        className="h-9 rounded-xl bg-[#14171D] border border-white/[0.06] text-[#A1A1AA] text-[12.5px] font-medium hover:border-white/[0.15] transition-colors">
+                        className="h-9 rounded-xl bg-[#13243D] border border-white/[0.06] text-[#8A9BB3] text-[12.5px] font-medium hover:border-white/[0.15] transition-colors">
                         {mode === 'dollars' ? `$${q}` : q}
                       </button>
                     ))}
@@ -312,7 +312,7 @@ export default function EtfDetail() {
                     {(['daily', 'weekly', 'monthly'] as const).map(f => (
                       <button key={f} onClick={() => setFreq(f)}
                         className={`h-9 rounded-xl text-[12.5px] font-semibold capitalize transition-colors ${
-                          freq === f ? 'bg-[#3B82F6] text-white' : 'bg-[#14171D] text-[#A1A1AA] border border-white/[0.06]'
+                          freq === f ? 'bg-[#3B948C] text-white' : 'bg-[#13243D] text-[#8A9BB3] border border-white/[0.06]'
                         }`}>
                         {f}
                       </button>
@@ -330,13 +330,13 @@ export default function EtfDetail() {
                   <Row k="Order type" v="Market" />
                 </div>
 
-                <p className="text-[10.5px] text-[#52525B] mb-4 leading-relaxed">
+                <p className="text-[10.5px] text-[#4D5B70] mb-4 leading-relaxed">
                   Market orders execute at the next available price. Investing involves risk.
                   Past performance does not guarantee future results.
                 </p>
 
                 {submitError && (
-                  <div className="mb-3 px-3 py-2.5 rounded-xl bg-[#FF4D4F]/10 border border-[#FF4D4F]/25 text-[#FF6B6E] text-[12px]">
+                  <div className="mb-3 px-3 py-2.5 rounded-xl bg-[#D9743C]/10 border border-[#D9743C]/25 text-[#FF6B6E] text-[12px]">
                     {submitError}
                   </div>
                 )}
@@ -362,7 +362,7 @@ export default function EtfDetail() {
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[#71717A]">{k}</span>
+      <span className="text-[#5C6B80]">{k}</span>
       <span className="text-white font-medium">{v}</span>
     </div>
   );

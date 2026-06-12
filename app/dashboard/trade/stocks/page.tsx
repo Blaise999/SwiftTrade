@@ -514,7 +514,7 @@ export default function StockTradingPage() {
   const [favorites, setFavorites] = useState<string[]>(['AAPL', 'NVDA', 'TSLA', 'MSFT', 'AMZN', 'GOOGL']);
   const [searchQuery, setSearchQuery] = useState('');
   const [chartTimeframe, setChartTimeframe] = useState<Timeframe>('15m');
-  const [chartType, setChartType] = useState<'candle' | 'line'>('candle');
+  const [chartType] = useState<'candle' | 'line'>('line');
   const [mobileTab, setMobileTab] = useState<MobileTab>('chart');
 
   const [orderMode, setOrderMode] = useState<'shares' | 'dollars'>('shares');
@@ -1220,20 +1220,6 @@ export default function StockTradingPage() {
                   {candlesStale ? 'Cached' : 'Live'}{' '}
                   {candlesUpdatedAt ? `· ${new Date(candlesUpdatedAt).toLocaleTimeString()}` : ''}
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setChartType('candle')}
-                    className={`p-1.5 rounded-lg ${chartType === 'candle' ? 'bg-white/10 text-cream' : 'text-cream/40'}`}
-                  >
-                    <CandlestickChart className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setChartType('line')}
-                    className={`p-1.5 rounded-lg ${chartType === 'line' ? 'bg-white/10 text-cream' : 'text-cream/40'}`}
-                  >
-                    <LineChartIcon className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -1276,26 +1262,32 @@ export default function StockTradingPage() {
                 {chartType === 'candle' &&
                   chart.items.map((c, i) => (
                     <g key={i}>
-                      <line x1={c.x} y1={c.hY} x2={c.x} y2={c.lY} stroke={c.isUp ? '#00d9a5' : '#ef4444'} strokeWidth="1" />
+                      <line x1={c.x} y1={c.hY} x2={c.x} y2={c.lY} stroke={c.isUp ? '#2FA56B' : '#D9743C'} strokeWidth="1" />
                       <rect
                         x={c.x - c.bodyW / 2}
                         y={Math.min(c.oY, c.cY)}
                         width={c.bodyW}
                         height={Math.max(1, Math.abs(c.cY - c.oY))}
-                        fill={c.isUp ? '#00d9a5' : '#ef4444'}
+                        fill={c.isUp ? '#2FA56B' : '#D9743C'}
                         rx="1"
                       />
                     </g>
                   ))}
 
-                {/* line */}
+                {/* line — Robinhood style */}
                 {chartType === 'line' && chart.linePath && (
                   <>
-                    <path d={chart.linePath} fill="none" stroke={up ? '#00d9a5' : '#ef4444'} strokeWidth="2" />
+                    <defs>
+                      <linearGradient id="rhFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={up ? '#2FA56B' : '#D9743C'} stopOpacity="0.28" />
+                        <stop offset="100%" stopColor={up ? '#2FA56B' : '#D9743C'} stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
                     <path
                       d={`${chart.linePath} L ${chart.w - chart.pad.r} ${chart.h - chart.pad.b} L ${chart.pad.l} ${chart.h - chart.pad.b} Z`}
-                      fill={up ? 'rgba(0,217,165,0.15)' : 'rgba(239,68,68,0.15)'}
+                      fill="url(#rhFill)"
                     />
+                    <path d={chart.linePath} fill="none" stroke={up ? '#2FA56B' : '#D9743C'} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                   </>
                 )}
 

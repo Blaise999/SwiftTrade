@@ -49,7 +49,7 @@ const faqs = [
       },
       {
         q: 'What assets can I trade?',
-        a: 'Swift Trade offers over 200+ assets including cryptocurrencies (BTC, ETH, SOL, etc.), forex pairs (EUR/USD, GBP/USD, etc.), stocks (AAPL, TSLA, NVDA, etc.), and commodities (Gold, Silver, Oil).'
+        a: 'Swifttrade offers over 200+ assets including cryptocurrencies (BTC, ETH, SOL, etc.), forex pairs (EUR/USD, GBP/USD, etc.), stocks (AAPL, TSLA, NVDA, etc.), and commodities (Gold, Silver, Oil).'
       },
       {
         q: 'How do the trading bots work?',

@@ -204,15 +204,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div
           className="absolute -top-40 -right-32 w-[640px] h-[640px] rounded-full blur-[140px] opacity-[0.16]"
-          style={{ background: 'radial-gradient(closest-side, #5B6DFF, transparent 70%)' }}
+          style={{ background: 'radial-gradient(closest-side, #C4A052, transparent 70%)' }}
         />
         <div
           className="absolute top-1/3 -left-40 w-[560px] h-[560px] rounded-full blur-[150px] opacity-[0.10]"
-          style={{ background: 'radial-gradient(closest-side, #16C784, transparent 70%)' }}
+          style={{ background: 'radial-gradient(closest-side, #2FA56B, transparent 70%)' }}
         />
         <div
           className="absolute -bottom-48 right-1/4 w-[520px] h-[520px] rounded-full blur-[150px] opacity-[0.08]"
-          style={{ background: 'radial-gradient(closest-side, #EAD68A, transparent 70%)' }}
+          style={{ background: 'radial-gradient(closest-side, #3B948C, transparent 70%)' }}
         />
         {/* faint dot grid for texture */}
         <div
@@ -237,15 +237,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Brand */}
         <div className="h-[68px] flex items-center justify-between px-5 border-b border-pearl-100/[0.05]">
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-sapphire-400 to-sapphire-700 flex items-center justify-center flex-shrink-0">
-              <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] text-pearl-50" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 17l6-6 4 4 8-8" />
-                <path d="M14 7h7v7" />
-              </svg>
-            </div>
+            <div className="flex-shrink-0"><svg width="36" height="36" viewBox="0 0 40 40" fill="none" aria-label="Swifttrade"><rect x="0.5" y="0.5" width="39" height="39" rx="9" fill="#0E1B30" stroke="rgba(255,255,255,0.10)" /><path d="M9 15 L18 10 L24 14 L31 10" stroke="#C4A052" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><path d="M9 24 L16 27 L23 22 L31 26" stroke="#3B948C" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
             {sidebarOpen && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="leading-none">
-                <div className="font-app font-bold text-pearl-50 text-base tracking-tight">Swift Trade</div>
+                <div className="font-app font-bold text-pearl-50 text-base tracking-tight">Swift<span style={{ color: '#C4A052' }}>trade</span></div>
                 <div className="text-[9px] text-pearl-300/60 tracking-[0.25em] uppercase mt-0.5">Console</div>
               </motion.div>
             )}
@@ -369,14 +364,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             >
               <div className="h-[68px] flex items-center justify-between px-5 border-b border-pearl-100/[0.05]">
                 <Link href="/dashboard" className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-sapphire-400 to-sapphire-700 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] text-pearl-50" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 17l6-6 4 4 8-8" />
-                      <path d="M14 7h7v7" />
-                    </svg>
-                  </div>
+                  <div className="flex-shrink-0"><svg width="36" height="36" viewBox="0 0 40 40" fill="none" aria-label="Swifttrade"><rect x="0.5" y="0.5" width="39" height="39" rx="9" fill="#0E1B30" stroke="rgba(255,255,255,0.10)" /><path d="M9 15 L18 10 L24 14 L31 10" stroke="#C4A052" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><path d="M9 24 L16 27 L23 22 L31 26" stroke="#3B948C" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
                   <div className="leading-none">
-                    <div className="font-app font-bold text-pearl-50 text-base tracking-tight">Swift Trade</div>
+                    <div className="font-app font-bold text-pearl-50 text-base tracking-tight">Swift<span style={{ color: '#C4A052' }}>trade</span></div>
                     <div className="text-[9px] text-pearl-300/60 tracking-[0.25em] uppercase mt-0.5">Console</div>
                   </div>
                 </Link>
