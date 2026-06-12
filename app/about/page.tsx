@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { MarketingShell, C, IMG, Eyebrow, BtnPrimary } from '@/components/marketing/Shell';
+import { MarketingShell, C, Eyebrow, BtnPrimary } from '@/components/marketing/Shell';
+import { SkylineVisual } from '@/components/marketing/Visuals';
 export default function Page() {
   return (
     <MarketingShell>
@@ -15,17 +16,15 @@ export default function Page() {
         </p>
       </section>
       <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-10">
-        <div className="overflow-hidden rounded-tl-[24px] rounded-br-[24px] rounded-tr-sm rounded-bl-sm border border-white/[0.10]">
-          <img src={IMG('photo-1486406146926-c627a92ad1ab', 1400)} alt="Hong Kong skyline" loading="lazy" className="w-full h-[300px] object-cover" />
-        </div>
+        <SkylineVisual h={300} />
       </section>
       <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-10 grid md:grid-cols-2 gap-6">
         {[
-          { img: 'photo-1500648767791-00dcc994a43e', n: 'Alex Chen', r: 'Co-founder, CEO', b: 'ex-Goldman Sachs (HK), ex-Robinhood (NY). Built clearing tooling before deciding to fix the consumer side.' },
-          { img: 'photo-1521119989659-a83eee488004', n: 'Dana Whitfield', r: 'Co-founder, CTO', b: 'Payments infra and crypto custody. Has wired money internationally enough times to take it personally.' },
+          { n: 'Alex Chen', r: 'Co-founder, CEO', b: 'ex-Goldman Sachs (HK), ex-Robinhood (NY). Built clearing tooling before deciding to fix the consumer side.' },
+          { n: 'Dana Whitfield', r: 'Co-founder, CTO', b: 'Payments infrastructure and crypto custody. Has wired money internationally enough times to take it personally.' },
         ].map((p) => (
           <div key={p.n} className="rounded-2xl border border-white/[0.08] p-6 flex gap-5" style={{ background: '#0E1B30' }}>
-            <img src={IMG(p.img, 300)} alt={p.n} loading="lazy" className="w-20 h-20 rounded-xl object-cover border border-white/[0.10]" />
+            <span className="w-20 h-20 rounded-xl grid place-items-center font-satoshi text-[20px] font-black shrink-0 border" style={{ background: '#13243d', color: C.goldSoft, borderColor: 'rgba(196,160,82,0.35)' }}>{p.n.split(' ').map((x) => x[0]).join('')}</span>
             <div>
               <div className="text-white font-semibold text-[16px]">{p.n}</div>
               <div className="text-[13px] mb-2" style={{ color: C.gold }}>{p.r}</div>

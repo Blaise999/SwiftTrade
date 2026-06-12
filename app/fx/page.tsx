@@ -1,6 +1,7 @@
 'use client';
 import { ProductPage } from '@/components/marketing/Templates';
-import { IMG, C } from '@/components/marketing/Shell';
+import { C } from '@/components/marketing/Shell';
+import { FxVisual } from '@/components/marketing/Visuals';
 export default function Page() {
   return (
     <ProductPage
@@ -8,10 +9,10 @@ export default function Page() {
       title="The exchange rate, without the bank's cut."
       sub="USD/HKD, EUR/USD, GBP/USD and 50+ pairs at the mid-market rate, with a flat fee printed before you confirm."
       lead="Banks make their money on FX where you can't see it: in the spread. You ask for dollars to Hong Kong dollars and quietly lose 2 to 3% to a marked-up rate. Swifttrade shows you the mid-market rate, the same one on Google, plus a flat fee stated before you confirm. Compare it live against Chase or HSBC, set a limit order to fire at your target, or schedule recurring conversions for rent and payroll across borders. When you want the money to actually move, the same engine powers SwiftBridge."
-      heroImg={IMG('photo-1628348068343-c6a848d2b6dd')}
+      heroVisual={<FxVisual />}
       blocks={[
         { h: 'Mid-market, not "our" rate', p: 'You see the same rate the market sees, plus a flat fee we print upfront. Compare it live against your bank before you convert a single dollar.', bullets: ['Flat, visible fee', 'Live bank comparison', 'No hidden spread', '50+ pairs'] },
-        { h: 'Set it and forget it', p: 'Limit orders fire automatically at your target rate. Recurring conversions handle rent or payroll on schedule so you are not watching the chart all day.', img: IMG('photo-1611974789855-9c2a0a7236a3') },
+        { h: 'Set it and forget it', p: 'Limit orders fire automatically at your target rate. Recurring conversions handle rent or payroll on schedule so you are not watching the chart all day.', bullets: ['Limit orders at your target', 'Recurring conversions', 'Rate alerts', 'No chart-watching required'] },
         { h: 'Built for the NY to Asia corridor', p: 'USD, HKD, SGD, EUR and GBP, with the corridors our users actually use. The same FX engine settles SwiftBridge transfers in about 8 seconds.', bullets: ['USD/HKD, USD/SGD and more', 'Rate alerts', 'Powers SwiftBridge', 'Recurring conversions'] },
       ]}
       specs={[

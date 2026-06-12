@@ -1,6 +1,7 @@
 'use client';
 import { ProductPage } from '@/components/marketing/Templates';
-import { IMG, C } from '@/components/marketing/Shell';
+import { C } from '@/components/marketing/Shell';
+import { BridgeReceiptVisual } from '@/components/marketing/Visuals';
 export default function Page() {
   return (
     <ProductPage
@@ -8,10 +9,10 @@ export default function Page() {
       title="Money home before you lock your phone."
       sub="Send New York to Hong Kong to Singapore on regulated stablecoin rails. Roughly 8 seconds, GENIUS Act compliant, fee shown upfront."
       lead="SwiftBridge is the part of the account for moving money, not trading it. A traditional wire bounces through three banks and a weekend, costs a flat fee plus a hidden FX markup, and lands in a day or two if you are lucky. SwiftBridge settles on regulated stablecoin rails in roughly 8 seconds, at the mid-market rate, with the fee printed before you press send. It is one feature inside Swifttrade, alongside stocks, crypto and FX, not a separate app you have to manage."
-      heroImg={IMG('photo-1486406146926-c627a92ad1ab')}
+      heroVisual={<BridgeReceiptVisual />}
       blocks={[
         { h: 'Roughly 8 seconds, not two days', p: 'Old wires route through correspondent banks and stall over weekends. SwiftBridge moves on regulated stablecoin rails and settles while you are still looking at the screen.', bullets: ['~8s typical settle', 'GENIUS Act compliant', 'No correspondent banks', 'Works on weekends'] },
-        { h: 'See the fee before you send', p: 'The rate and the fee are printed before you confirm. No "pending" surprises, no FX markup hidden in the math, no guessing what lands on the other side.', img: IMG('photo-1628348068343-c6a848d2b6dd') },
+        { h: 'See the fee before you send', p: 'The rate and the fee are printed before you confirm. No "pending" surprises, no FX markup hidden in the math, no guessing what lands on the other side.', bullets: ['Rate and fee printed first', 'No deductions on arrival', 'Receipt with reference ID', 'Mid-market conversion'] },
         { h: 'Built for the NY to Asia corridor', p: 'Designed around the routes our users actually use: USD to HKD and SGD and back, with limits that scale as you verify your account.', bullets: ['USD, HKD, SGD', 'Tiered limits by verification', 'Anonymised recent transfers shown live', 'Same FX engine as the rest of the app'] },
       ]}
       specs={[

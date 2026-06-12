@@ -63,7 +63,7 @@ type SignupForm = z.infer<typeof signupSchema>;
 function PageFallback() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center">
-      <div className="flex items-center gap-2 text-gold">
+      <div className="flex items-center gap-2 text-[#C4A052]">
         <Loader2 className="w-5 h-5 animate-spin" />
         <span>Loading…</span>
       </div>
@@ -80,12 +80,12 @@ function AnimatedBackground() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(212,175,55,0.15),rgba(0,0,0,0))]" />
 
       <motion.div
-        className="absolute top-1/4 -left-32 w-96 h-96 bg-gold/10 rounded-full blur-[120px]"
+        className="absolute top-1/4 -left-32 w-96 h-96 bg-[#C4A052]/10 rounded-full blur-[120px]"
         animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute bottom-1/4 -right-32 w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px]"
+        className="absolute bottom-1/4 -right-32 w-80 h-80 bg-[#2FA56B]/10 rounded-full blur-[100px]"
         animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -128,8 +128,8 @@ function PasswordStrength({ password }: { password: string }) {
       : strength <= 3
       ? 'bg-yellow-500'
       : strength <= 4
-      ? 'bg-emerald-400'
-      : 'bg-emerald-500';
+      ? 'bg-[#2FA56B]'
+      : 'bg-[#2FA56B]';
 
   if (!password) return null;
 
@@ -154,12 +154,12 @@ function PasswordStrength({ password }: { password: string }) {
           <div
             key={i}
             className={`flex items-center gap-1.5 text-xs transition-colors ${
-              req.met ? 'text-emerald-400' : 'text-slate-500'
+              req.met ? 'text-[#2FA56B]' : 'text-slate-500'
             }`}
           >
             <div
               className={`w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors ${
-                req.met ? 'bg-emerald-500/20' : 'bg-white/5'
+                req.met ? 'bg-[#2FA56B]/20' : 'bg-white/5'
               }`}
             >
               {req.met && <Check className="w-2.5 h-2.5" />}
@@ -252,8 +252,8 @@ function SignupInner() {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-200px)] flex items-center justify-center py-8">
-      <AnimatedBackground />
+    <div className="relative min-h-0 w-full flex items-center justify-center py-8">
+      
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -262,17 +262,17 @@ function SignupInner() {
         className="relative z-10 w-full max-w-md"
       >
         <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-gold/20 via-transparent to-emerald-500/20 rounded-3xl blur-xl opacity-50" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-[#C4A052]/20 via-transparent to-[#2FA56B]/20 rounded-3xl blur-xl opacity-50" />
 
-          <div className="relative bg-[#0a0a0f]/80 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-8 shadow-2xl">
+          <div className="relative bg-[#0E1B30]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-8 shadow-2xl">
             <div className="text-center mb-8">
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.1, duration: 0.4 }}
-                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-gold/20 to-emerald-500/10 border border-gold/20 mb-4"
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#C4A052]/20 to-[#2FA56B]/10 border border-[#C4A052]/20 mb-4"
               >
-                <Sparkles className="w-7 h-7 text-gold" />
+                <svg width="30" height="30" viewBox="0 0 40 40" fill="none" aria-label="Swifttrade"><rect x="0.5" y="0.5" width="39" height="39" rx="9" fill="#0E1B30" stroke="rgba(255,255,255,0.10)" /><path d="M9 15 L18 10 L24 14 L31 10" stroke="#C4A052" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><path d="M9 24 L16 27 L23 22 L31 26" stroke="#3B948C" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </motion.div>
 
               <motion.h1
@@ -320,9 +320,9 @@ function SignupInner() {
                       {...register('firstName')}
                       type="text"
                       placeholder="John"
-                      className={`w-full pl-12 pr-4 py-3.5 bg-white/[0.03] border ${
+                      className={`w-full pl-12 pr-4 py-3.5 bg-white/[0.04] border ${
                         errors.firstName ? 'border-red-500/50' : 'border-white/[0.08]'
-                      } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all`}
+                      } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-[#C4A052]/50 focus:ring-1 focus:ring-[#C4A052]/20 transition-all`}
                     />
                   </div>
                   {errors.firstName && (
@@ -340,9 +340,9 @@ function SignupInner() {
                       {...register('lastName')}
                       type="text"
                       placeholder="Doe"
-                      className={`w-full pl-12 pr-4 py-3.5 bg-white/[0.03] border ${
+                      className={`w-full pl-12 pr-4 py-3.5 bg-white/[0.04] border ${
                         errors.lastName ? 'border-red-500/50' : 'border-white/[0.08]'
-                      } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all`}
+                      } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-[#C4A052]/50 focus:ring-1 focus:ring-[#C4A052]/20 transition-all`}
                     />
                   </div>
                   {errors.lastName && (
@@ -361,9 +361,9 @@ function SignupInner() {
                     {...register('email')}
                     type="email"
                     placeholder="you@example.com"
-                    className={`w-full pl-12 pr-4 py-3.5 bg-white/[0.03] border ${
+                    className={`w-full pl-12 pr-4 py-3.5 bg-white/[0.04] border ${
                       errors.email ? 'border-red-500/50' : 'border-white/[0.08]'
-                    } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all`}
+                    } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-[#C4A052]/50 focus:ring-1 focus:ring-[#C4A052]/20 transition-all`}
                   />
                 </div>
                 {errors.email && (
@@ -379,9 +379,9 @@ function SignupInner() {
                   {...register('referralCode')}
                   type="text"
                   placeholder="e.g. WEST123"
-                  className={`w-full px-4 py-3.5 bg-white/[0.03] border ${
+                  className={`w-full px-4 py-3.5 bg-white/[0.04] border ${
                     errors.referralCode ? 'border-red-500/50' : 'border-white/[0.08]'
-                  } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all`}
+                  } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-[#C4A052]/50 focus:ring-1 focus:ring-[#C4A052]/20 transition-all`}
                 />
                 {errors.referralCode && (
                   <p className="mt-1.5 text-xs text-red-400">{errors.referralCode.message}</p>
@@ -398,9 +398,9 @@ function SignupInner() {
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Create a strong password"
-                    className={`w-full pl-12 pr-12 py-3.5 bg-white/[0.03] border ${
+                    className={`w-full pl-12 pr-12 py-3.5 bg-white/[0.04] border ${
                       errors.password ? 'border-red-500/50' : 'border-white/[0.08]'
-                    } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all`}
+                    } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-[#C4A052]/50 focus:ring-1 focus:ring-[#C4A052]/20 transition-all`}
                   />
                   <button
                     type="button"
@@ -430,9 +430,9 @@ function SignupInner() {
                     {...register('confirmPassword')}
                     type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Confirm your password"
-                    className={`w-full pl-12 pr-12 py-3.5 bg-white/[0.03] border ${
+                    className={`w-full pl-12 pr-12 py-3.5 bg-white/[0.04] border ${
                       errors.confirmPassword ? 'border-red-500/50' : 'border-white/[0.08]'
-                    } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all`}
+                    } rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-[#C4A052]/50 focus:ring-1 focus:ring-[#C4A052]/20 transition-all`}
                   />
                   <button
                     type="button"
@@ -456,15 +456,15 @@ function SignupInner() {
                   {...register('acceptTerms')}
                   type="checkbox"
                   id="terms"
-                  className="mt-1 w-4 h-4 bg-white/5 border-white/20 rounded focus:ring-gold text-gold"
+                  className="mt-1 w-4 h-4 bg-white/5 border-white/20 rounded focus:ring-[#C4A052] text-[#C4A052]"
                 />
                 <label htmlFor="terms" className="text-sm text-slate-400">
                   I agree to the{' '}
-                  <Link href="/legal/terms" className="text-gold hover:underline">
+                  <Link href="/legal/terms" className="text-[#C4A052] hover:underline">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link href="/legal/privacy" className="text-gold hover:underline">
+                  <Link href="/legal/privacy" className="text-[#C4A052] hover:underline">
                     Privacy Policy
                   </Link>
                 </label>
@@ -480,8 +480,8 @@ function SignupInner() {
                 whileTap={{ scale: 0.99 }}
                 className={`w-full py-4 rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all ${
                   isLoading || !isValid
-                    ? 'bg-gold/50 text-void/70 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-gold to-sapphire-700 text-void hover:shadow-lg hover:shadow-gold/25'
+                    ? 'bg-[#C4A052]/50 text-void/70 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-[#C4A052] to-sapphire-700 text-void hover:shadow-lg hover:shadow-[#C4A052]/25'
                 }`}
               >
                 {isLoading ? (
@@ -500,7 +500,7 @@ function SignupInner() {
 
             <p className="mt-6 text-center text-sm text-slate-400">
               Already have an account?{' '}
-              <Link href="/auth/login" className="text-gold font-medium hover:underline">
+              <Link href="/auth/login" className="text-[#C4A052] font-medium hover:underline">
                 Sign in
               </Link>
             </p>

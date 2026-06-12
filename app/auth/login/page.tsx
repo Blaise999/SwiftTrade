@@ -42,7 +42,7 @@ function AnimatedBackground() {
       
       {/* Animated orbs */}
       <motion.div
-        className="absolute top-1/4 -left-32 w-96 h-96 bg-gold/10 rounded-full blur-[120px]"
+        className="absolute top-1/4 -left-32 w-96 h-96 bg-[#C4A052]/10 rounded-full blur-[120px]"
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.5, 0.3],
@@ -58,7 +58,7 @@ function AnimatedBackground() {
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px]"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#2FA56B]/5 rounded-full blur-[80px]"
         animate={{
           scale: [1, 1.3, 1],
         }}
@@ -154,8 +154,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-200px)] flex items-center justify-center">
-      <AnimatedBackground />
+    <div className="relative min-h-0 w-full flex items-center justify-center">
+      
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -166,19 +166,19 @@ export default function LoginPage() {
         {/* Card */}
         <div className="relative">
           {/* Glow effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-gold/20 via-transparent to-gold/20 rounded-3xl blur-xl opacity-50" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-[#C4A052]/20 via-transparent to-[#C4A052]/20 rounded-3xl blur-xl opacity-50" />
           
           {/* Main card */}
-          <div className="relative bg-[#0a0a0f]/80 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-8 shadow-2xl">
+          <div className="relative bg-[#0E1B30]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-8 shadow-2xl">
             {/* Header */}
             <div className="text-center mb-8">
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.1, duration: 0.4 }}
-                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20 mb-4"
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#C4A052]/20 to-[#C4A052]/5 border border-[#C4A052]/20 mb-4"
               >
-                <Sparkles className="w-7 h-7 text-gold" />
+                <svg width="30" height="30" viewBox="0 0 40 40" fill="none" aria-label="Swifttrade"><rect x="0.5" y="0.5" width="39" height="39" rx="9" fill="#0E1B30" stroke="rgba(255,255,255,0.10)" /><path d="M9 15 L18 10 L24 14 L31 10" stroke="#C4A052" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><path d="M9 24 L16 27 L23 22 L31 26" stroke="#3B948C" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </motion.div>
               
               <motion.h1
@@ -207,19 +207,19 @@ export default function LoginPage() {
                   initial={{ opacity: 0, y: -10, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
+                  className="mb-6 p-4 rounded-xl bg-[#2FA56B]/10 border border-[#2FA56B]/20"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#2FA56B]/20 flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4 text-[#2FA56B]" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-emerald-400">{successMessage}</p>
+                      <p className="text-sm font-medium text-[#2FA56B]">{successMessage}</p>
                       {redirectMessage && (
                         <p className="text-xs text-slate-400 mt-1">{redirectMessage}</p>
                       )}
                     </div>
-                    <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-[#2FA56B] animate-spin" />
                   </div>
                 </motion.div>
               )}
@@ -265,19 +265,19 @@ export default function LoginPage() {
                   Email
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-gold/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#C4A052]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5" />
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-gold transition-colors" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-[#C4A052] transition-colors" />
                     <input
                       {...register('email')}
                       type="email"
                       placeholder="you@example.com"
                       autoComplete="email"
                       disabled={isLoading}
-                      className={`w-full pl-12 pr-4 py-3.5 bg-white/[0.03] border rounded-xl text-white placeholder:text-slate-600 focus:outline-none transition-all disabled:opacity-50 ${
+                      className={`w-full pl-12 pr-4 py-3.5 bg-white/[0.04] border rounded-xl text-white placeholder:text-slate-600 focus:outline-none transition-all disabled:opacity-50 ${
                         errors.email
                           ? 'border-red-500/50 focus:border-red-500'
-                          : 'border-white/[0.08] focus:border-gold/50 focus:bg-white/[0.05]'
+                          : 'border-white/[0.08] focus:border-[#C4A052]/50 focus:bg-white/[0.05]'
                       }`}
                     />
                   </div>
@@ -307,25 +307,25 @@ export default function LoginPage() {
                   </label>
                   <Link
                     href="/auth/forgot-password"
-                    className="text-xs text-gold/70 hover:text-gold transition-colors"
+                    className="text-xs text-[#C4A052]/70 hover:text-[#C4A052] transition-colors"
                   >
                     Forgot password?
                   </Link>
                 </div>
                 <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-gold/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#C4A052]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5" />
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-gold transition-colors" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-[#C4A052] transition-colors" />
                     <input
                       {...register('password')}
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Enter your password"
                       autoComplete="current-password"
                       disabled={isLoading}
-                      className={`w-full pl-12 pr-12 py-3.5 bg-white/[0.03] border rounded-xl text-white placeholder:text-slate-600 focus:outline-none transition-all disabled:opacity-50 ${
+                      className={`w-full pl-12 pr-12 py-3.5 bg-white/[0.04] border rounded-xl text-white placeholder:text-slate-600 focus:outline-none transition-all disabled:opacity-50 ${
                         errors.password
                           ? 'border-red-500/50 focus:border-red-500'
-                          : 'border-white/[0.08] focus:border-gold/50 focus:bg-white/[0.05]'
+                          : 'border-white/[0.08] focus:border-[#C4A052]/50 focus:bg-white/[0.05]'
                       }`}
                     />
                     <button
@@ -368,7 +368,7 @@ export default function LoginPage() {
                       disabled={isLoading}
                       className="sr-only peer"
                     />
-                    <div className="w-5 h-5 border border-white/20 rounded-md bg-white/[0.03] peer-checked:bg-gold peer-checked:border-gold transition-all flex items-center justify-center peer-disabled:opacity-50">
+                    <div className="w-5 h-5 border border-white/20 rounded-md bg-white/[0.04] peer-checked:bg-[#C4A052] peer-checked:border-[#C4A052] transition-all flex items-center justify-center peer-disabled:opacity-50">
                       <svg
                         className="w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity"
                         fill="none"
@@ -398,11 +398,11 @@ export default function LoginPage() {
                   className="relative w-full py-4 rounded-xl font-semibold text-black overflow-hidden group disabled:cursor-not-allowed"
                 >
                   {/* Button background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-gold via-sapphire-500 to-gold bg-[length:200%_100%] group-hover:animate-shimmer transition-all group-disabled:opacity-50" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#C4A052] via-sapphire-500 to-[#C4A052] bg-[length:200%_100%] group-hover:animate-shimmer transition-all group-disabled:opacity-50" />
                   
                   {/* Hover glow */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="absolute inset-0 bg-gold/20 blur-xl" />
+                    <div className="absolute inset-0 bg-[#C4A052]/20 blur-xl" />
                   </div>
                   
                   {/* Button content */}
@@ -433,7 +433,7 @@ export default function LoginPage() {
               Don't have an account?{' '}
               <Link
                 href="/auth/signup"
-                className="text-gold hover:text-gold/80 font-medium transition-colors"
+                className="text-[#C4A052] hover:text-[#C4A052]/80 font-medium transition-colors"
               >
                 Create account
               </Link>

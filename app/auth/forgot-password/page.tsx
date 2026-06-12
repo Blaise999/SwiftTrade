@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
             Didn&apos;t receive the email? Check your spam folder or{' '}
             <button 
               onClick={() => setIsSubmitted(false)}
-              className="text-gold hover:text-gold/80 font-medium"
+              className="text-[#C4A052] hover:text-[#C4A052]/80 font-medium"
             >
               try another email
             </button>
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
         
         <Link 
           href="/auth/login"
-          className="inline-flex items-center gap-2 text-gold hover:text-gold/80 font-medium"
+          className="inline-flex items-center gap-2 text-[#C4A052] hover:text-[#C4A052]/80 font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to sign in
@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
               className={`w-full pl-12 pr-4 py-3.5 bg-white/5 border rounded-xl text-cream placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all ${
                 errors.email 
                   ? 'border-loss focus:ring-loss/20' 
-                  : 'border-white/10 focus:border-gold focus:ring-gold/20'
+                  : 'border-white/10 focus:border-[#C4A052] focus:ring-[#C4A052]/20'
               }`}
             />
           </div>
@@ -183,7 +183,7 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-4 bg-gradient-to-r from-gold to-gold/80 text-void font-semibold rounded-xl hover:shadow-lg hover:shadow-gold/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group"
+          className="w-full py-4 bg-gradient-to-r from-[#C4A052] to-[#C4A052]/80 text-void font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C4A052]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group"
         >
           {isLoading ? (
             <>
@@ -203,7 +203,7 @@ export default function ForgotPasswordPage() {
       <div className="text-center">
         <p className="text-sm text-slate-500">
           Remember your password?{' '}
-          <Link href="/auth/login" className="text-gold hover:text-gold/80 font-medium">
+          <Link href="/auth/login" className="text-[#C4A052] hover:text-[#C4A052]/80 font-medium">
             Sign in
           </Link>
         </p>

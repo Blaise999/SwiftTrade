@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Check, Plus, Minus } from 'lucide-react';
 import { MarketingShell, C, Eyebrow, PageHero, BtnPrimary, BtnOutline } from '@/components/marketing/Shell';
 
-export type Block = { h: string; p: string; img?: string; bullets?: string[] };
+export type Block = { h: string; p: string; img?: string; visual?: React.ReactNode; bullets?: string[] };
 export type Spec = { k: string; v: string };
 export type SpecGroup = { title: string; items: Spec[] };
 export type Faq = { q: string; a: string };
@@ -90,14 +90,14 @@ export function FAQ({ items }: { items: Faq[] }) {
 
 /* ── Rich product page ── */
 export function ProductPage({
-  eyebrow, color, title, sub, lead, heroImg, blocks, specs, faqs, ctaTitle, ctaHref = '/auth/signup',
+  eyebrow, color, title, sub, lead, heroImg, heroVisual, blocks, specs, faqs, ctaTitle, ctaHref = '/auth/signup',
 }: {
-  eyebrow: string; color: string; title: string; sub: string; lead?: string; heroImg: string;
+  eyebrow: string; color: string; title: string; sub: string; lead?: string; heroImg?: string; heroVisual?: React.ReactNode;
   blocks: Block[]; specs?: SpecGroup[]; faqs?: Faq[]; ctaTitle: string; ctaHref?: string;
 }) {
   return (
     <MarketingShell>
-      <PageHero eyebrow={eyebrow} title={title} sub={sub} color={color} img={heroImg} alt={eyebrow} />
+      <PageHero eyebrow={eyebrow} title={title} sub={sub} color={color} img={heroImg} visual={heroVisual} alt={eyebrow} />
 
       {lead && (
         <section className="max-w-[820px] mx-auto px-5 sm:px-7 pb-4">
@@ -122,7 +122,9 @@ export function ProductPage({
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-70px' }} transition={{ duration: 0.55 }}
                 className={flip ? 'lg:order-1' : ''}>
-                {b.img ? (
+                {b.visual ? (
+                  b.visual
+                ) : b.img ? (
                   <div className="overflow-hidden rounded-tr-[24px] rounded-bl-[24px] rounded-tl-sm rounded-br-sm border border-white/[0.10]">
                     <img src={b.img} alt={b.h} loading="lazy" className="w-full h-[300px] object-cover" />
                   </div>

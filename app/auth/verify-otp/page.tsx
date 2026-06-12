@@ -40,7 +40,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 function PageFallback() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center">
-      <div className="flex items-center gap-2 text-gold">
+      <div className="flex items-center gap-2 text-[#C4A052]">
         <Loader2 className="w-5 h-5 animate-spin" />
         <span>Loading…</span>
       </div>
@@ -394,7 +394,7 @@ function VerifyOTPInner() {
           <h2 className="text-2xl font-display font-bold text-cream">Email Verified!</h2>
           <p className="mt-2 text-slate-400">Your account has been created successfully. Redirecting...</p>
         </div>
-        <div className="flex items-center justify-center gap-2 text-gold">
+        <div className="flex items-center justify-center gap-2 text-[#C4A052]">
           <Loader2 className="w-5 h-5 animate-spin" />
           <span>Setting up your account...</span>
         </div>
@@ -437,7 +437,7 @@ function VerifyOTPInner() {
                   navigator.clipboard.writeText(debugLog.join('\n'));
                 } catch {}
               }}
-              className="text-xs text-gold hover:text-gold/80"
+              className="text-xs text-[#C4A052] hover:text-[#C4A052]/80"
             >
               Copy log
             </button>
@@ -449,8 +449,8 @@ function VerifyOTPInner() {
       )}
 
       <div className="text-center">
-        <div className="w-16 h-16 bg-gold/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <Mail className="w-8 h-8 text-gold" />
+        <div className="w-16 h-16 bg-[#C4A052]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Mail className="w-8 h-8 text-[#C4A052]" />
         </div>
         <h2 className="text-3xl font-display font-bold text-cream">Check your email</h2>
         <p className="mt-2 text-slate-400">
@@ -486,8 +486,8 @@ function VerifyOTPInner() {
                 error
                   ? 'border-loss focus:ring-loss/20'
                   : digit
-                  ? 'border-gold focus:ring-gold/20'
-                  : 'border-white/10 focus:border-gold focus:ring-gold/20'
+                  ? 'border-[#C4A052] focus:ring-[#C4A052]/20'
+                  : 'border-white/10 focus:border-[#C4A052] focus:ring-[#C4A052]/20'
               }`}
             />
           ))}
@@ -507,7 +507,7 @@ function VerifyOTPInner() {
       <button
         onClick={() => handleVerify('manual')}
         disabled={otp.some((d) => !d) || isLoading}
-        className="w-full py-4 bg-gradient-to-r from-gold to-gold/80 text-void font-semibold rounded-xl hover:shadow-lg hover:shadow-gold/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+        className="w-full py-4 bg-gradient-to-r from-[#C4A052] to-[#C4A052]/80 text-void font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C4A052]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>
@@ -528,7 +528,7 @@ function VerifyOTPInner() {
             <button
               onClick={handleResend}
               disabled={isResending}
-              className="text-gold hover:text-gold/80 font-medium inline-flex items-center gap-1"
+              className="text-[#C4A052] hover:text-[#C4A052]/80 font-medium inline-flex items-center gap-1"
             >
               {isResending ? (
                 <>

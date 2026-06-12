@@ -1,6 +1,7 @@
 'use client';
 import { ProductPage } from '@/components/marketing/Templates';
-import { IMG, C } from '@/components/marketing/Shell';
+import { C } from '@/components/marketing/Shell';
+import { TerminalVisual, DualMarketVisual } from '@/components/marketing/Visuals';
 export default function Page() {
   return (
     <ProductPage
@@ -8,12 +9,12 @@ export default function Page() {
       title="US and HK stocks in one free account."
       sub="Over 5,000 US tickers plus HKEX listings, fractional from a dollar, zero commission, with a 1099-B at tax time."
       lead="Most brokers make you pick a side of the Pacific. Swifttrade doesn't. Buy fractional NVDA and VOO on NASDAQ and NYSE, pick up 0700.HK and 9988.HK on the Hong Kong exchange, and hold it all in one balance with no commission on US trades and no account fee. Recurring buys run on the day you choose, extended-hours trading is on when the news breaks early, and every reportable trade lands on a clean 1099-B so April is paperwork instead of panic."
-      heroImg={IMG('photo-1504805572947-34fad45aed93')}
+      heroVisual={<TerminalVisual />}
       blocks={[
         { h: 'Fractional from $1, no commission', p: 'Own a slice of a $900 share for a dollar. Buy by amount, not share count, and pay $0 commission on US stocks and ETFs. No PFOF on HK listings, and we tell you where US flow routes.', bullets: ['$0 US commission', 'Dollar-based investing', 'No account minimum', 'No monthly fee'] },
-        { h: 'US and Hong Kong, one balance', p: 'NYSE and NASDAQ names alongside HKEX listings most US brokers can\'t touch. Trade Apple in the morning and Tencent at night without moving money between apps.', img: IMG('photo-1486406146926-c627a92ad1ab') },
+        { h: 'US and Hong Kong, one balance', p: 'NYSE and NASDAQ names alongside HKEX listings most US brokers can\'t touch. Trade Apple in the morning and Tencent at night without moving money between apps.', visual: <DualMarketVisual /> },
         { h: 'Recurring buys and extended hours', p: 'Set an amount and a day and we buy on schedule, so you stop trying to time the open. When earnings drop after the bell, extended-hours trading means you are not stuck waiting until tomorrow.', bullets: ['Recurring auto-invest', 'Extended-hours trading', 'Market and limit orders', 'Real-time quotes'] },
-        { h: 'Honest at tax time', p: 'A clean 1099-B for US filing, clear cost-basis records, and exportable statements. No reconstructing your year from screenshots in April.', img: IMG('photo-1497215728101-856f4ea42174') },
+        { h: 'Honest at tax time', p: 'A clean 1099-B for US filing, clear cost-basis records, and exportable statements. No reconstructing your year from screenshots in April.', bullets: ['1099-B for US filing', 'Cost-basis records', 'Exportable statements', 'Full trade history'] },
       ]}
       specs={[
         { title: 'Coverage', items: [{ k: 'US listings', v: '5,000+' }, { k: 'Exchanges', v: 'NYSE, NASDAQ' }, { k: 'Hong Kong', v: 'HKEX' }, { k: 'ETFs', v: 'Yes' }] },

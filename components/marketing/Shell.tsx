@@ -210,22 +210,22 @@ export function Eyebrow({ children, color = C.gold }: { children: React.ReactNod
   );
 }
 
-export function PageHero({ eyebrow, title, sub, color = C.gold, img, alt }: {
-  eyebrow: string; title: string; sub: string; color?: string; img?: string; alt?: string;
+export function PageHero({ eyebrow, title, sub, color = C.gold, img, visual, alt }: {
+  eyebrow: string; title: string; sub: string; color?: string; img?: string; visual?: React.ReactNode; alt?: string;
 }) {
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 pt-16 sm:pt-24 pb-10">
-      <div className={`grid ${img ? 'lg:grid-cols-2' : ''} gap-12 items-center`}>
+      <div className={`grid ${(img || visual) ? 'lg:grid-cols-2' : ''} gap-12 items-center`}>
         <div>
           <Eyebrow color={color}>{eyebrow}</Eyebrow>
           <h1 className="font-satoshi text-[clamp(34px,6vw,64px)] font-black leading-[0.98] text-white">{title}</h1>
           <p className="mt-5 text-[16px] leading-[1.7] text-[#9DB0CC] max-w-xl">{sub}</p>
         </div>
-        {img && (
+        {visual ? visual : img ? (
           <div className="overflow-hidden rounded-tl-[24px] rounded-br-[24px] rounded-tr-sm rounded-bl-sm border border-white/[0.10]">
             <img src={img} alt={alt || ''} loading="lazy" className="w-full h-[320px] object-cover" />
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );

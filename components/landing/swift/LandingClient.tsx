@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Play, X, Check, Zap, ShieldCheck, TrendingUp, LineChart, Lock, Landmark, Server, BadgeCheck } from 'lucide-react';
-import { MarketingShell, C, IMG, Eyebrow, BtnPrimary, BtnOutline } from '@/components/marketing/Shell';
+import { MarketingShell, C, Eyebrow, BtnPrimary, BtnOutline } from '@/components/marketing/Shell';
 import { SectionHead, SpecGrid, CompareTable, FAQ } from '@/components/marketing/Templates';
+import { HeroVisual, TerminalVisual, CryptoVisual, FxVisual } from '@/components/marketing/Visuals';
 
 function CountUp({ to, prefix = '', suffix = '', decimals = 0 }: { to: number; prefix?: string; suffix?: string; decimals?: number }) {
   const ref = useRef<HTMLSpanElement | null>(null);
@@ -102,8 +103,6 @@ export default function LandingClient() {
 
 /* ── HERO: markets-led, free, SwiftBridge as a "plus" ── */
 function Hero({ onDemo }: { onDemo: () => void }) {
-  const [px, setPx] = useState(67482);
-  useEffect(() => { const id = setInterval(() => setPx((v) => v + (Math.random() - 0.48) * 35), 1500); return () => clearInterval(id); }, []);
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 pt-14 sm:pt-20 pb-8">
       <div className="grid lg:grid-cols-[1.08fr_0.92fr] gap-12 items-center">
@@ -152,17 +151,7 @@ function Hero({ onDemo }: { onDemo: () => void }) {
         </div>
 
         <div className="relative lg:translate-y-[6px]">
-          <div className="relative overflow-hidden rounded-tl-[26px] rounded-br-[26px] rounded-tr-sm rounded-bl-sm border border-white/[0.10]">
-            <img src={IMG('photo-1611974789855-9c2a0a7236a3')} alt="Markets in motion" className="w-full h-[360px] sm:h-[420px] object-cover" />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,21,38,0.10), rgba(8,18,31,0.82))' }} />
-            <div className="absolute left-4 bottom-4 right-4 rounded-lg border border-white/[0.12] p-3.5" style={{ background: 'rgba(8,18,31,0.85)' }}>
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] text-[#9DB0CC]">BTC / USD</span>
-                <span className="font-satoshi text-lg font-bold text-white tabular-nums">${px.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-              </div>
-              <div className="mt-1 text-[11px] text-[#5C6B80]">Markets move fast. Prices on this page are delayed 15s.</div>
-            </div>
-          </div>
+          <HeroVisual />
           <SketchArrow className="hidden lg:block absolute -top-7 -left-6 w-40 rotate-[-6deg]" />
         </div>
       </div>
@@ -202,14 +191,14 @@ function MarketsIntro() {
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 pt-10">
       <SectionHead eyebrow="Three markets, one free account"
         title="Stocks, crypto and FX are the point. SwiftBridge is the bonus."
-        sub="Most of what you'll do here is trade. Buy a slice of NVDA, swap into ETH, hedge a position in EUR/USD, all from one balance, with no commission on US stocks and the FX fee printed before you confirm. SwiftBridge is there for the moment you need to move the money somewhere else." />
+        sub="The core of Swifttrade is trading: US equities with zero commission, 350+ crypto pairs with visible spreads, and FX at the mid-market rate with the fee disclosed before you confirm. All from one balance, one statement, one tax view. SwiftBridge handles the moment you need that money on the other side of the world." />
     </section>
   );
 }
 
 /* ── MARKET sections (rich, equal weight; markets first) ── */
-function MarketRow({ flip, href, eyebrow, color, title, body, body2, bullets, img, big }: {
-  flip?: boolean; href: string; eyebrow: string; color: string; title: string; body: string; body2?: string; bullets: string[]; img: string; big?: boolean;
+function MarketRow({ flip, href, eyebrow, color, title, body, body2, bullets, visual }: {
+  flip?: boolean; href: string; eyebrow: string; color: string; title: string; body: string; body2?: string; bullets: string[]; visual: React.ReactNode;
 }) {
   return (
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
@@ -228,9 +217,7 @@ function MarketRow({ flip, href, eyebrow, color, title, body, body2, bullets, im
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-70px' }} transition={{ duration: 0.55 }}
         className={`relative ${flip ? 'lg:order-1' : ''}`}>
-        <div className="overflow-hidden rounded-tr-[24px] rounded-bl-[24px] rounded-tl-sm rounded-br-sm border border-white/[0.10]">
-          <img src={img} alt={title} loading="lazy" className={`w-full object-cover ${big ? 'h-[420px]' : 'h-[320px]'}`} />
-        </div>
+        {visual}
       </motion.div>
     </div>
   );
@@ -239,29 +226,29 @@ function MarketRow({ flip, href, eyebrow, color, title, body, body2, bullets, im
 function Markets() {
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-14 sm:py-18 space-y-20">
-      <MarketRow flip big
+      <MarketRow flip
         href="/stocks" eyebrow="Stocks" color={C.hk}
-        title="5,000+ US tickers. Plus the HK names you can't get elsewhere."
-        body="Buy a slice of NVDA before your coffee's cold, or pick up 0700.HK and 9988.HK in the same account. Fractional from a dollar, recurring buys on the day you choose, and extended-hours trading when the news doesn't wait for the open."
+        title="5,000+ US tickers, plus the HK names most brokers can't offer."
+        body="Trade NYSE and NASDAQ alongside HKEX listings such as 0700.HK and 9988.HK from a single balance. Fractional ownership from one dollar, scheduled recurring buys, and extended-hours access when news breaks outside the session."
         body2="At tax time you get a clean 1099-B for US filing and clear cost-basis records, so April is paperwork instead of panic."
         bullets={['$0 commission on US stocks', 'Fractional shares from $1', 'US listings and HKEX names', 'Recurring auto-invest', 'Extended-hours trading', '1099-B at tax time']}
-        img={IMG('photo-1504805572947-34fad45aed93')}
+        visual={<TerminalVisual />}
       />
       <MarketRow
         href="/crypto" eyebrow="Crypto" color={C.ny}
         title="350+ coins. Keep the keys if you want them."
-        body="Trade BTC, ETH, SOL and 350+ pairs with spreads that hold up when the market actually moves. Settle to your Swifttrade balance for speed, or connect a self-custody wallet and hold your own keys. Switch any time."
+        body="Trade BTC, ETH, SOL and 350+ pairs with spreads that hold under volatility. Settle to your Swifttrade balance for speed, or connect a self-custody wallet and hold your own keys. Switch whenever you like."
         body2="On-chain withdrawals clear in minutes across major networks, with the network fee shown before you sign. No lock-ins, no games."
         bullets={['350+ pairs, deep liquidity', 'Custodial or self-custody', 'On-chain withdrawals in minutes', 'Major networks supported', 'Tight, visible spreads', 'Trade from $1']}
-        img={IMG('photo-1605792657660-596af9009e82')}
+        visual={<CryptoVisual />}
       />
       <MarketRow flip
         href="/fx" eyebrow="FX" color={C.gold}
         title="The exchange rate the banks won't show you."
-        body="USD/HKD, EUR/USD, GBP/USD and 50+ pairs at the mid-market rate, with a flat fee printed before you confirm. The same rate you see on Google, not the marked-up one your bank quietly applies."
+        body="USD/HKD, EUR/USD, GBP/USD and 50+ pairs at the true mid-market rate, with a flat fee disclosed before you confirm. The rate you see quoted publicly, not a marked-up house rate."
         body2="Set limit orders that fire at your target rate, or schedule recurring conversions for rent and payroll across borders."
         bullets={['Mid-market rate, flat visible fee', 'Live comparison vs your bank', '50+ pairs including USD/HKD', 'Limit orders and rate alerts', 'Recurring conversions', 'No hidden spread']}
-        img={IMG('photo-1628348068343-c6a848d2b6dd')}
+        visual={<FxVisual />}
       />
     </section>
   );
@@ -389,7 +376,7 @@ function FreeModel() {
               No monthly fee. No tiers. No "upgrade to unlock." Open it, hold it, and trade US stocks with zero commission. The whole product is on the table from day one.
             </p>
             <p className="mt-4 text-[15.5px] leading-[1.75] text-[#9DB0CC] max-w-md">
-              We're not going to pretend free means we make nothing, because that's the kind of thing that ends up on Reddit. Here's the honest version.
+              Free does not mean we earn nothing, and we would rather state the model plainly than hide it. Here is exactly how the business works.
             </p>
             <div className="mt-7"><BtnPrimary href="/auth/signup">Open free account <ArrowRight className="w-4 h-4" /></BtnPrimary></div>
           </div>
@@ -416,7 +403,7 @@ function FreeModel() {
 
 function Steps() {
   const s = [
-    { t: 'Open in 90 seconds', d: 'Email and a tap. No SSN until you fund. No minimum balance.', i: Zap, c: C.gold },
+    { t: 'Open in 90 seconds', d: 'Email and basic details. Identity verification is only required before you fund. No minimum balance.', i: Zap, c: C.gold },
     { t: 'Verify and fund', d: 'Plaid, ACH or wire for US banks. FPS for Hong Kong. Most accounts verify in minutes.', i: ShieldCheck, c: C.teal },
     { t: 'Trade the markets', d: 'US stocks, 350+ crypto pairs, 50+ FX pairs, all from one balance.', i: TrendingUp, c: C.hk },
     { t: 'Move it or grow it', d: 'Bridge to HKD when you need to, or set recurring buys and track P&L honestly.', i: LineChart, c: C.ny },
@@ -486,11 +473,11 @@ function Founder() {
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-10">
       <div className="rounded-2xl border border-white/[0.08] p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-6" style={{ background: '#0E1B30' }}>
-        <img src={IMG('photo-1500648767791-00dcc994a43e', 400)} alt="Alex Chen, co-founder" loading="lazy" className="w-20 h-20 rounded-xl object-cover border border-white/[0.10]" />
+        <span className="w-20 h-20 rounded-xl grid place-items-center font-satoshi text-[22px] font-black shrink-0 border" style={{ background: '#13243d', color: C.goldSoft, borderColor: 'rgba(196,160,82,0.35)' }}>AC</span>
         <div>
           <Eyebrow>Who's building this</Eyebrow>
           <p className="font-serif-accent text-[19px] sm:text-[22px] leading-snug text-[#E7EEF8]">
-            &ldquo;We built the account we wanted as traders: US and HK markets in one place, free to use, and money that actually arrives when you send it.&rdquo;
+            &ldquo;We built the account we always wanted as traders: US and Hong Kong markets in one place, free to use, with transfers that settle while you watch.&rdquo;
           </p>
           <div className="mt-3 text-[14px] text-white font-semibold">Alex Chen <span className="text-[#5C6B80] font-normal">· ex-Goldman HK &amp; Robinhood NY</span></div>
           <Link href="/about" className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: C.gold }}>Read our story <ArrowUpRight className="w-3.5 h-3.5" /></Link>
