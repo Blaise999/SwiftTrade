@@ -5,41 +5,33 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: 'class',
-
   theme: {
     extend: {
       colors: {
-        // === Use CSS Variables for opacity support ===
-        void: 'rgb(var(--void) / <alpha-value>)',
-        obsidian: 'rgb(var(--obsidian) / <alpha-value>)',
-        charcoal: 'rgb(var(--charcoal) / <alpha-value>)',
-        slate: 'rgb(var(--slate) / <alpha-value>)',
-        cream: 'rgb(var(--cream) / <alpha-value>)',
-
-        gold: 'rgb(var(--gold) / <alpha-value>)',
-        'gold-light': 'rgb(var(--gold-light) / <alpha-value>)',
-
-        profit: 'rgb(var(--profit) / <alpha-value>)',
-        loss: 'rgb(var(--loss) / <alpha-value>)',
-        electric: 'rgb(var(--electric) / <alpha-value>)',
-        cyan: 'rgb(var(--cyan) / <alpha-value>)',
-
-        // Fallback colors (in case variables aren't loaded)
-        'gold-fallback': '#D4AF37',
-        'profit-fallback': '#00D9A5',
-        'loss-fallback': '#FF4757',
+        // Core palette - dark luxury trading
+        void: '#050508',
+        obsidian: '#0A0A0F',
+        charcoal: '#111118',
+        slate: '#1A1A24',
+        // Accent colors
+        cream: '#F8F6F0',
+        gold: '#D4AF37',
+        'gold-light': '#E5C76B',
+        // Trading colors
+        profit: '#00D9A5',
+        'profit-dark': '#00B88A',
+        loss: '#FF4757',
+        'loss-dark': '#E53E4D',
+        // Electric accent
+        electric: '#6366F1',
+        'electric-light': '#818CF8',
+        cyan: '#22D3EE',
       },
-
       fontFamily: {
         display: ['Playfair Display', 'serif'],
         body: ['DM Sans', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
-        satoshi: ['Satoshi', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
-        inter: ['Inter', 'system-ui', 'sans-serif'],
-        fraunces: ['Fraunces', 'Georgia', 'serif'],
       },
-
       animation: {
         'fade-in': 'fadeIn 0.8s ease-out forwards',
         'slide-up': 'slideUp 0.8s ease-out forwards',
@@ -52,13 +44,27 @@ module.exports = {
         'glow': 'glow 2s ease-in-out infinite alternate',
         'line-grow': 'lineGrow 1.5s ease-out forwards',
       },
-
       keyframes: {
-        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-        slideUp: { '0%': { opacity: '0', transform: 'translateY(40px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-        slideDown: { '0%': { opacity: '0', transform: 'translateY(-20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-        scaleIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
-        shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(40px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideDown: {
+          '0%': { opacity: '0', transform: 'translateY(-20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        scaleIn: {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
         pulseGlow: {
           '0%, 100%': { boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' },
           '50%': { boxShadow: '0 0 40px rgba(212, 175, 55, 0.6)' },
@@ -80,7 +86,11 @@ module.exports = {
           '100%': { width: '100%' },
         },
       },
-
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'grid-pattern': 'linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)',
+      },
       boxShadow: {
         'glow-gold': '0 0 60px rgba(212, 175, 55, 0.3)',
         'glow-profit': '0 0 40px rgba(0, 217, 165, 0.3)',

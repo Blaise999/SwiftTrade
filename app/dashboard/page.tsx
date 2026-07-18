@@ -50,9 +50,9 @@ function CardLink({
   return (
     <Link
       href={href}
-      className={`block select-none rounded-xl border border-white/10 bg-white/5 transition-all
-        hover:border-white/20 hover:bg-white/[0.07]
-        active:scale-[0.99] active:bg-white/[0.09]
+      className={`block select-none rounded-xl border border-[color:var(--line)] bg-[color:var(--wash-strong)] transition-all
+        hover:border-[color:var(--line-strong)] hover:bg-[color:var(--wash-strong)]
+        active:scale-[0.99] active:bg-[color:var(--wash-strong)]
         focus:outline-none focus:ring-2 focus:ring-gold/30 ${className}`}
     >
       {children}
@@ -245,7 +245,7 @@ export default function DashboardOverview() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-br from-[#0D1324] via-[#0B1020] to-[#080A15] px-5 py-5 sm:px-7 sm:py-6"
+        className="relative overflow-hidden rounded-3xl border border-[color:var(--line)] bg-gradient-to-br from-[#0D1324] via-[#0B1020] to-[#080A15] px-5 py-5 sm:px-7 sm:py-6"
       >
         {/* Animated gradient glow */}
         <div
@@ -254,30 +254,30 @@ export default function DashboardOverview() {
         />
         <div
           className="absolute -bottom-24 -left-24 w-[320px] h-[320px] rounded-full blur-3xl opacity-15 pointer-events-none"
-          style={{ background: 'radial-gradient(closest-side, #C4A052, transparent 70%)' }}
+          style={{ background: 'radial-gradient(closest-side, var(--gold), transparent 70%)' }}
         />
 
         <div className="relative flex items-center justify-between gap-4 flex-wrap">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2FA56B] animate-pulse" />
-              <span className="text-[10px] uppercase tracking-[0.22em] text-[#94A3B8] font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--profit)] animate-pulse" />
+              <span className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--t-sub)] font-medium">
                 Markets open · Hong Kong
               </span>
             </div>
-            <h1 className="text-[26px] sm:text-[32px] font-bold tracking-tight text-white leading-tight">
+            <h1 className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[color:var(--t-hi)] leading-tight">
               Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'},{' '}
               <span className="bg-gradient-to-r from-[#00E88F] via-[#22D3EE] to-[#5B7CFF] bg-clip-text text-transparent">
                 {user?.firstName || 'Trader'}
               </span>
             </h1>
-            <p className="text-[12.5px] text-[#94A3B8] mt-1">
+            <p className="text-[12.5px] text-[color:var(--t-sub)] mt-1">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </p>
           </div>
           <Link
             href="/dashboard/bridge"
-            className="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#C4A052]/[0.10] border border-[#C4A052]/30 hover:bg-[#C4A052]/[0.18] text-[#C4A052] text-[13px] font-semibold transition-all group"
+            className="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[color:color-mix(in_srgb,var(--gold)_10%,transparent)] border border-[color:color-mix(in_srgb,var(--gold)_30%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--gold)_18%,transparent)] text-[color:var(--gold)] text-[13px] font-semibold transition-all group"
           >
             <Globe className="w-3.5 h-3.5" />
             SwiftBridge
@@ -315,15 +315,15 @@ export default function DashboardOverview() {
         <Link
           prefetch={false}
           href="/dashboard/invest"
-          className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors"
+          className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)] p-4 hover:bg-[color:var(--slate)] transition-colors"
         >
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#C4A052]" />
-            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#5C6B80]">Stocks &amp; ETFs</span>
+            <span className="w-2 h-2 rounded-full bg-[color:var(--gold)]" />
+            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[color:var(--t-faint)]">Stocks &amp; ETFs</span>
           </div>
-          <div className="text-[18px] font-semibold text-white tabular-nums">{formatBal(investValue)}</div>
+          <div className="text-[18px] font-semibold text-[color:var(--t-hi)] tabular-nums">{formatBal(investValue)}</div>
           {investValue > 0 ? (
-            <div className={`text-[11px] mt-0.5 tabular-nums ${invest.dayPnl >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+            <div className={`text-[11px] mt-0.5 tabular-nums ${invest.dayPnl >= 0 ? 'text-[color:var(--profit)]' : 'text-[color:var(--loss)]'}`}>
               {invest.dayPnl >= 0 ? '+' : ''}{invest.dayPnl.toFixed(2)} ({invest.dayPnl >= 0 ? '+' : ''}{invest.dayPct.toFixed(2)}%) today
             </div>
           ) : (
@@ -333,15 +333,15 @@ export default function DashboardOverview() {
         <Link
           prefetch={false}
           href="/dashboard/trade/crypto"
-          className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors"
+          className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)] p-4 hover:bg-[color:var(--slate)] transition-colors"
         >
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#C4A052]" />
-            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#5C6B80]">Crypto</span>
+            <span className="w-2 h-2 rounded-full bg-[color:var(--gold)]" />
+            <span className="text-[10.5px] uppercase tracking-[0.18em] text-[color:var(--t-faint)]">Crypto</span>
           </div>
-          <div className="text-[18px] font-semibold text-white tabular-nums">{formatBal(cryptoValue)}</div>
+          <div className="text-[18px] font-semibold text-[color:var(--t-hi)] tabular-nums">{formatBal(cryptoValue)}</div>
           {cryptoValue > 0 ? (
-            <div className={`text-[11px] mt-0.5 tabular-nums ${crypto.dayPnl >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+            <div className={`text-[11px] mt-0.5 tabular-nums ${crypto.dayPnl >= 0 ? 'text-[color:var(--profit)]' : 'text-[color:var(--loss)]'}`}>
               {crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPnl.toFixed(2)} ({crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPct.toFixed(2)}%) total
             </div>
           ) : (
@@ -358,20 +358,20 @@ export default function DashboardOverview() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
       >
         {[
-          { l: 'Deposit',  h: '/dashboard/wallet',                i: CreditCard, c: '#2FA56B', bg: 'from-[#2FA56B]/15 to-transparent' },
-          { l: 'Withdraw', h: '/dashboard/wallet?tab=withdraw',   i: Send,       c: '#8A9BB3', bg: 'from-white/[0.05] to-transparent' },
-          { l: 'Trade',    h: '/dashboard/trade/crypto',          i: TrendingUp, c: '#3B948C', bg: 'from-[#3B948C]/15 to-transparent' },
-          { l: 'Bridge',   h: '/dashboard/bridge',                i: Globe,      c: '#C4A052', bg: 'from-[#C4A052]/15 to-transparent' },
+          { l: 'Deposit',  h: '/dashboard/wallet',                i: CreditCard, c: 'var(--profit)', bg: 'from-[color:color-mix(in_srgb,var(--profit)_15%,transparent)] to-transparent' },
+          { l: 'Withdraw', h: '/dashboard/wallet?tab=withdraw',   i: Send,       c: 'var(--t-sub)', bg: 'from-white/[0.05] to-transparent' },
+          { l: 'Trade',    h: '/dashboard/trade/crypto',          i: TrendingUp, c: 'var(--electric)', bg: 'from-[color:color-mix(in_srgb,var(--electric)_15%,transparent)] to-transparent' },
+          { l: 'Bridge',   h: '/dashboard/bridge',                i: Globe,      c: 'var(--gold)', bg: 'from-[color:color-mix(in_srgb,var(--gold)_15%,transparent)] to-transparent' },
         ].map(a => (
           <Link key={a.l} prefetch={false} href={a.h}
-            className={`group relative overflow-hidden flex flex-col items-center justify-center gap-2 py-5 rounded-2xl border border-white/[0.06] bg-gradient-to-br ${a.bg} bg-[#0F1D33] hover:border-white/[0.12] active:scale-[0.98] transition-all`}>
+            className={`group relative overflow-hidden flex flex-col items-center justify-center gap-2 py-5 rounded-2xl border border-[color:var(--line)] bg-gradient-to-br ${a.bg} bg-[color:var(--panel)] hover:border-[color:var(--line-strong)] active:scale-[0.98] transition-all`}>
             <span
               className="w-9 h-9 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110"
               style={{ borderColor: `${a.c}33`, background: `${a.c}14` }}
             >
               <a.i className="w-[18px] h-[18px]" style={{ color: a.c }} />
             </span>
-            <span className="text-[12.5px] text-white font-medium">{a.l}</span>
+            <span className="text-[12.5px] text-[color:var(--t-hi)] font-medium">{a.l}</span>
           </Link>
         ))}
       </motion.div>
@@ -383,27 +383,27 @@ export default function DashboardOverview() {
         transition={{ duration: 0.25, delay: 0.09 }}
         className="grid grid-cols-2 lg:grid-cols-3 gap-3"
       >
-        <CardLink href="/dashboard/portfolio" className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#5C6B80] mb-1.5">Portfolio</div>
-          <div className="text-[18px] text-white font-semibold tabular-nums">{formatBal(cashBalance + investValue + cryptoValue)}</div>
-          <div className="text-[11px] text-[#2FA56B] mt-0.5 tabular-nums">+0.42% today</div>
+        <CardLink href="/dashboard/portfolio" className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)] p-4 hover:bg-[color:var(--slate)] transition-colors">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--t-faint)] mb-1.5">Portfolio</div>
+          <div className="text-[18px] text-[color:var(--t-hi)] font-semibold tabular-nums">{formatBal(cashBalance + investValue + cryptoValue)}</div>
+          <div className="text-[11px] text-[color:var(--profit)] mt-0.5 tabular-nums">+0.42% today</div>
         </CardLink>
-        <CardLink href="/dashboard/referrals" className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#5C6B80] mb-1.5">Referrals</div>
-          <div className="text-[18px] text-white font-semibold tabular-nums">{(user as any)?.referral_count || 0}</div>
-          <div className="text-[11px] text-[#C4A052] mt-0.5">Invite, earn →</div>
+        <CardLink href="/dashboard/referrals" className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)] p-4 hover:bg-[color:var(--slate)] transition-colors">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--t-faint)] mb-1.5">Referrals</div>
+          <div className="text-[18px] text-[color:var(--t-hi)] font-semibold tabular-nums">{(user as any)?.referral_count || 0}</div>
+          <div className="text-[11px] text-[color:var(--gold)] mt-0.5">Invite, earn →</div>
         </CardLink>
-        <CardLink href="/dashboard/connect-wallet" className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] p-4 hover:bg-[#13243D] transition-colors col-span-2 lg:col-span-1">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#5C6B80] mb-1.5">Self-custody wallet</div>
+        <CardLink href="/dashboard/connect-wallet" className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)] p-4 hover:bg-[color:var(--slate)] transition-colors col-span-2 lg:col-span-1">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--t-faint)] mb-1.5">Self-custody wallet</div>
           {walletConnected ? (
             <>
-              <div className="text-[14px] font-mono text-[#2FA56B] tabular-nums">{walletAddress?.slice(0, 6)}…{walletAddress?.slice(-4)}</div>
-              <div className="text-[11px] text-[#5C6B80] mt-0.5">Connected</div>
+              <div className="text-[14px] font-mono text-[color:var(--profit)] tabular-nums">{walletAddress?.slice(0, 6)}…{walletAddress?.slice(-4)}</div>
+              <div className="text-[11px] text-[color:var(--t-faint)] mt-0.5">Connected</div>
             </>
           ) : (
             <>
-              <div className="text-[16px] text-white font-medium">Not connected</div>
-              <div className="text-[11px] text-[#3B948C] mt-0.5">Connect wallet →</div>
+              <div className="text-[16px] text-[color:var(--t-hi)] font-medium">Not connected</div>
+              <div className="text-[11px] text-[color:var(--electric)] mt-0.5">Connect wallet →</div>
             </>
           )}
         </CardLink>
@@ -416,19 +416,19 @@ export default function DashboardOverview() {
             <p className="text-[10px] uppercase tracking-[0.3em] text-champagne-300/70 font-medium mb-2">
               Markets
             </p>
-            <h2 className="font-app text-2xl text-white font-bold tracking-tight">Three asset classes</h2>
+            <h2 className="font-app text-2xl text-[color:var(--t-hi)] font-bold tracking-tight">Three asset classes</h2>
           </div>
         </div>
         <div className="grid sm:grid-cols-3 gap-3">
           {[
             { name: 'Digital assets', sub: 'BTC · ETH · SOL · 350+ pairs', href: '/dashboard/trade/crypto', icon: Bitcoin, accent: '#F7931A', tint: 'from-[#F7931A]/[0.14]' },
-            { name: 'Foreign exchange', sub: 'EUR/USD · GBP/USD · 60+ pairs', href: '/dashboard/trade/fx', icon: DollarSign, accent: '#3B948C', tint: 'from-[#3B948C]/[0.14]' },
-            { name: 'Equities', sub: 'AAPL · TSLA · NVDA · 5,000+ symbols', href: '/dashboard/invest', icon: BarChart3, accent: '#2FA56B', tint: 'from-[#2FA56B]/[0.14]' },
+            { name: 'Foreign exchange', sub: 'EUR/USD · GBP/USD · 60+ pairs', href: '/dashboard/trade/fx', icon: DollarSign, accent: 'var(--electric)', tint: 'from-[color:color-mix(in_srgb,var(--electric)_14%,transparent)]' },
+            { name: 'Equities', sub: 'AAPL · TSLA · NVDA · 5,000+ symbols', href: '/dashboard/invest', icon: BarChart3, accent: 'var(--profit)', tint: 'from-[color:color-mix(in_srgb,var(--profit)_14%,transparent)]' },
           ].map((m) => (
             <Link
               key={m.name}
               href={m.href}
-              className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0F1D33] bg-gradient-to-br ${m.tint} to-transparent p-5 hover:border-white/[0.14] hover:-translate-y-0.5 transition-all`}
+              className={`group relative overflow-hidden rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)] bg-gradient-to-br ${m.tint} to-transparent p-5 hover:border-[color:var(--line-strong)] hover:-translate-y-0.5 transition-all`}
             >
               <div
                 className="pointer-events-none absolute -top-10 -right-8 w-32 h-32 rounded-full blur-2xl opacity-30 group-hover:opacity-50 transition-opacity"
@@ -441,11 +441,11 @@ export default function DashboardOverview() {
                 >
                   <m.icon className="w-[20px] h-[20px]" strokeWidth={2} style={{ color: m.accent }} />
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-[#5C6B80] group-hover:text-white group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+                <ArrowUpRight className="w-4 h-4 text-[color:var(--t-faint)] group-hover:text-[color:var(--t-hi)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
               </div>
               <div className="relative mt-4">
-                <div className="font-app text-white text-[17px] font-bold tracking-tight">{m.name}</div>
-                <div className="text-[12px] text-[#8A9BB3] mt-1">{m.sub}</div>
+                <div className="font-app text-[color:var(--t-hi)] text-[17px] font-bold tracking-tight">{m.name}</div>
+                <div className="text-[12px] text-[color:var(--t-sub)] mt-1">{m.sub}</div>
               </div>
             </Link>
           ))}
@@ -460,7 +460,7 @@ export default function DashboardOverview() {
             <p className="text-[10px] uppercase tracking-[0.3em] text-champagne-300/70 font-medium mb-3">
               Verification
             </p>
-            <div className="font-app text-2xl text-white font-bold tracking-tight mb-2">
+            <div className="font-app text-2xl text-[color:var(--t-hi)] font-bold tracking-tight mb-2">
               {kycStatus === 'verified' ? 'Verified' : kycStatus === 'pending' ? 'In review' : 'Not verified'}
             </div>
             <p className="text-sm text-pearl-300/60 leading-relaxed mb-5">
@@ -486,7 +486,7 @@ export default function DashboardOverview() {
                 <p className="text-[10px] uppercase tracking-[0.3em] text-champagne-300/70 font-medium mb-1">
                   Activity
                 </p>
-                <div className="font-app text-xl text-white font-bold tracking-tight">Recent</div>
+                <div className="font-app text-xl text-[color:var(--t-hi)] font-bold tracking-tight">Recent</div>
               </div>
               <Link href="/dashboard/history" className="text-[12px] text-pearl-300/60 hover:text-pearl-50 transition-colors flex items-center gap-1">
                 View all <ChevronRight className="w-3 h-3" />

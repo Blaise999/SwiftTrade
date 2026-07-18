@@ -279,8 +279,7 @@ body {
 }
 
 .btn-outline-gold {
-  @apply relative inline-flex items-center justify-center px-6 py-3 font-medium text-gold rounded-full overflow-hidden transition-all duration-300;
-  border: 1px solid rgb(var(--gold) / 0.5);
+  @apply relative inline-flex items-center justify-center px-6 py-3 font-medium text-gold border border-gold/50 rounded-full overflow-hidden transition-all duration-300;
 }
 
 .btn-outline-gold:hover {

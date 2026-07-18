@@ -35,15 +35,15 @@ function Ticker() {
     return () => clearInterval(id);
   }, []);
   return (
-    <div className="relative w-full overflow-hidden border-y border-white/[0.07]" style={{ background: '#08121F' }}>
+    <div className="relative w-full overflow-hidden border-y border-[color:var(--line)]" style={{ background: 'var(--panel-alt)' }}>
       <div className="flex gap-7 py-2.5 whitespace-nowrap" style={{ width: 'max-content', animation: 'st-tk 42s linear infinite' }}>
         {[...rows, ...rows].map((r, i) => {
           const up = r.d >= 0;
           return (
             <span key={i} className="inline-flex items-center gap-2 text-[12.5px]">
-              <span className="text-[#5C6B80] text-[10px] uppercase tracking-wide">{r.m}</span>
-              <span className="text-[#C2CEDD] font-medium">{r.s}</span>
-              <span className="text-white tabular-nums font-semibold">{r.p < 10 ? r.p.toFixed(4) : r.p.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+              <span className="text-[color:var(--t-faint)] text-[10px] uppercase tracking-wide">{r.m}</span>
+              <span className="text-[color:var(--t-body)] font-medium">{r.s}</span>
+              <span className="text-[color:var(--t-hi)] tabular-nums font-semibold">{r.p < 10 ? r.p.toFixed(4) : r.p.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
               <span className="tabular-nums" style={{ color: up ? C.hk : C.ny }}>{up ? '+' : ''}{r.d.toFixed(2)}%</span>
             </span>
           );
@@ -85,13 +85,13 @@ export default function LandingClient() {
 
       {demo && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-black/75 p-5" onClick={() => setDemo(false)}>
-          <div className="relative w-full max-w-2xl rounded-xl border border-white/[0.10] p-7" style={{ background: '#0E1B30' }} onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setDemo(false)} className="absolute top-4 right-4 text-[#94A3B8] hover:text-white"><X className="w-5 h-5" /></button>
-            <div className="aspect-video rounded-lg grid place-items-center border border-white/[0.07]" style={{ background: '#0A1526' }}>
+          <div className="relative w-full max-w-2xl rounded-xl border border-[color:var(--line)] p-7" style={{ background: 'var(--panel)' }} onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setDemo(false)} className="absolute top-4 right-4 text-[color:var(--t-sub)] hover:text-[color:var(--t-hi)]"><X className="w-5 h-5" /></button>
+            <div className="aspect-video rounded-lg grid place-items-center border border-[color:var(--line)]" style={{ background: 'var(--bg)' }}>
               <div className="text-center">
-                <div className="mx-auto w-14 h-14 rounded-full grid place-items-center mb-3" style={{ background: C.gold }}><Play className="w-6 h-6 text-[#0A1526] ml-0.5" /></div>
-                <p className="font-satoshi text-lg font-bold text-white">Product tour: place a trade, then send the proceeds home</p>
-                <p className="text-[13px] text-[#94A3B8] mt-1">Buy NVDA, sell into USD, bridge to HKD. Replace with your real screen capture before launch.</p>
+                <div className="mx-auto w-14 h-14 rounded-full grid place-items-center mb-3" style={{ background: C.gold }}><Play className="w-6 h-6 text-[color:var(--on-accent)] ml-0.5" /></div>
+                <p className="font-satoshi text-lg font-bold text-[color:var(--t-hi)]">Product tour: place a trade, then send the proceeds home</p>
+                <p className="text-[13px] text-[color:var(--t-sub)] mt-1">Buy NVDA, sell into USD, bridge to HKD. Replace with your real screen capture before launch.</p>
               </div>
             </div>
           </div>
@@ -107,10 +107,10 @@ function Hero({ onDemo }: { onDemo: () => void }) {
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 pt-14 sm:pt-20 pb-8">
       <div className="grid lg:grid-cols-[1.08fr_0.92fr] gap-12 items-center">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.10] bg-white/[0.03] px-3 py-1.5 text-[12px] text-[#C2CEDD] mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line)] bg-[color:var(--wash)] px-3 py-1.5 text-[12px] text-[color:var(--t-body)] mb-6">
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: C.hk }} /> Beta, under SEC review
           </div>
-          <h1 className="font-satoshi font-black tracking-[-0.025em] leading-[0.98] text-white text-[clamp(38px,6.6vw,66px)]">
+          <h1 className="font-satoshi font-black tracking-[-0.025em] leading-[0.98] text-[color:var(--t-hi)] text-[clamp(38px,6.6vw,66px)]">
             Trade US stocks, crypto and FX.<br />
             <span className="relative inline-block">
               Free.
@@ -119,34 +119,34 @@ function Hero({ onDemo }: { onDemo: () => void }) {
               </svg>
             </span>
           </h1>
-          <p className="mt-6 text-[17px] leading-[1.6] text-[#D6DEEC] max-w-xl font-medium">
+          <p className="mt-6 text-[17px] leading-[1.6] text-[color:var(--t-body)] max-w-xl font-medium">
             One account for the markets you actually use. And when money needs to cross the Pacific, SwiftBridge moves USD to HKD in about 8 seconds.
           </p>
-          <p className="mt-3 text-[14px] leading-[1.7] text-[#8A9BB3] max-w-lg">
+          <p className="mt-3 text-[14px] leading-[1.7] text-[color:var(--t-sub)] max-w-lg">
             SEC-registered broker-dealer. FINRA member. HK SFC VA platform. HKMA stablecoin issuer.
           </p>
 
           {/* what you trade, at a glance */}
           <div className="mt-6 flex flex-wrap gap-2">
             {['5,000+ US stocks', '350+ crypto pairs', '50+ FX pairs', 'HKEX listings', 'Fractional from $1'].map((x) => (
-              <span key={x} className="text-[12px] px-2.5 py-1 rounded-md border border-white/[0.10] text-[#C2CEDD]" style={{ background: 'rgba(255,255,255,0.03)' }}>{x}</span>
+              <span key={x} className="text-[12px] px-2.5 py-1 rounded-md border border-[color:var(--line)] text-[color:var(--t-body)]" style={{ background: 'var(--wash)' }}>{x}</span>
             ))}
           </div>
 
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
             <div>
               <BtnPrimary href="/auth/signup">Open free account <ArrowRight className="w-4 h-4" /></BtnPrimary>
-              <div className="mt-1.5 text-[12px] text-[#5C6B80] pl-1">90 seconds. No SSN until you fund.</div>
+              <div className="mt-1.5 text-[12px] text-[color:var(--t-faint)] pl-1">90 seconds. No SSN until you fund.</div>
             </div>
-            <button onClick={onDemo} className="inline-flex items-center gap-2 text-[14.5px] font-semibold text-white hover:text-[#D9BE84] transition-colors">
-              <span className="grid place-items-center w-7 h-7 rounded-full border border-white/20"><Play className="w-3 h-3 ml-0.5" /></span>
+            <button onClick={onDemo} className="inline-flex items-center gap-2 text-[14.5px] font-semibold text-[color:var(--t-hi)] hover:text-[color:var(--gold-light)] transition-colors">
+              <span className="grid place-items-center w-7 h-7 rounded-full border border-[color:var(--line-strong)]"><Play className="w-3 h-3 ml-0.5" /></span>
               Watch the 35s tour
             </button>
           </div>
 
-          <div className="mt-8 flex items-center gap-3 text-[12px] text-[#5C6B80]">
-            <span>Partners</span><span className="h-3 w-px bg-white/10" />
-            {['Plaid', 'Circle', 'HKMA FPS'].map((b) => <span key={b} className="text-[#8A9BB3] font-semibold">{b}</span>)}
+          <div className="mt-8 flex items-center gap-3 text-[12px] text-[color:var(--t-faint)]">
+            <span>Partners</span><span className="h-3 w-px bg-[color:var(--wash-strong)]" />
+            {['Plaid', 'Circle', 'HKMA FPS'].map((b) => <span key={b} className="text-[color:var(--t-sub)] font-semibold">{b}</span>)}
           </div>
         </div>
 
@@ -174,10 +174,10 @@ function Stats() {
         {items.map((m, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.04 }}
             className={(m as any).off ? 'lg:translate-y-3' : ''}>
-            <div className="font-satoshi text-[clamp(22px,2.6vw,32px)] font-black text-white leading-none">
+            <div className="font-satoshi text-[clamp(22px,2.6vw,32px)] font-black text-[color:var(--t-hi)] leading-none">
               <CountUp to={m.v} prefix={m.prefix || ''} suffix={m.suffix || ''} decimals={m.dec} />
             </div>
-            <div className="mt-2 text-[12px] text-[#8A9BB3] leading-snug">{m.label}</div>
+            <div className="mt-2 text-[12px] text-[color:var(--t-sub)] leading-snug">{m.label}</div>
             <div className="mt-3 h-px w-9" style={{ background: i % 2 ? C.teal : C.gold }} />
           </motion.div>
         ))}
@@ -205,11 +205,11 @@ function MarketRow({ flip, href, eyebrow, color, title, body, body2, bullets, vi
       <motion.div initial={{ opacity: 0, x: flip ? 24 : -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-70px' }} transition={{ duration: 0.5 }}
         className={flip ? 'lg:order-2' : ''}>
         <Eyebrow color={color}>{eyebrow}</Eyebrow>
-        <h3 className="font-satoshi text-[clamp(26px,3.4vw,42px)] font-bold leading-[1.04] text-white">{title}</h3>
-        <p className="mt-4 text-[15.5px] leading-[1.7] text-[#9DB0CC] max-w-md">{body}</p>
-        {body2 && <p className="mt-3 text-[15.5px] leading-[1.7] text-[#9DB0CC] max-w-md">{body2}</p>}
+        <h3 className="font-satoshi text-[clamp(26px,3.4vw,42px)] font-bold leading-[1.04] text-[color:var(--t-hi)]">{title}</h3>
+        <p className="mt-4 text-[15.5px] leading-[1.7] text-[color:var(--t-sub)] max-w-md">{body}</p>
+        {body2 && <p className="mt-3 text-[15.5px] leading-[1.7] text-[color:var(--t-sub)] max-w-md">{body2}</p>}
         <ul className="mt-5 grid sm:grid-cols-2 gap-x-6 gap-y-2.5">
-          {bullets.map((b) => <li key={b} className="flex items-start gap-2.5 text-[14px] text-[#D6DEEC]"><Check className="w-4 h-4 mt-0.5 shrink-0" style={{ color }} />{b}</li>)}
+          {bullets.map((b) => <li key={b} className="flex items-start gap-2.5 text-[14px] text-[color:var(--t-body)]"><Check className="w-4 h-4 mt-0.5 shrink-0" style={{ color }} />{b}</li>)}
         </ul>
         <Link href={href} className="mt-6 inline-flex items-center gap-1.5 text-[14px] font-semibold group" style={{ color }}>
           Explore {eyebrow} <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -283,7 +283,7 @@ function WhatYouCanTrade() {
     ]},
   ];
   return (
-    <section className="border-y border-white/[0.07]" style={{ background: '#08121F' }}>
+    <section className="border-y border-[color:var(--line)]" style={{ background: 'var(--panel-alt)' }}>
       <div className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-20">
         <SectionHead eyebrow="What you can trade" title="The whole menu, on one page." sub="No digging through help docs to find out what's supported. Here it is." />
         <div className="mt-9"><SpecGrid groups={groups} /></div>
@@ -299,18 +299,18 @@ function Bridge() {
       <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-12 items-center">
         <div>
           <Eyebrow color={C.teal}>SwiftBridge</Eyebrow>
-          <h2 className="font-satoshi text-[clamp(26px,3.6vw,44px)] font-bold leading-[1.04] text-white">And when you need it across borders.</h2>
-          <p className="mt-5 text-[15.5px] leading-[1.7] text-[#9DB0CC] max-w-md">
+          <h2 className="font-satoshi text-[clamp(26px,3.6vw,44px)] font-bold leading-[1.04] text-[color:var(--t-hi)]">And when you need it across borders.</h2>
+          <p className="mt-5 text-[15.5px] leading-[1.7] text-[color:var(--t-sub)] max-w-md">
             Trading is the day-to-day. SwiftBridge is for the moment you want the money somewhere else: send New York to Hong Kong to Singapore on regulated stablecoin rails, roughly 8 seconds, GENIUS Act compliant, with the rate and fee shown before you press send.
           </p>
-          <p className="mt-3 text-[15.5px] leading-[1.7] text-[#9DB0CC] max-w-md">
+          <p className="mt-3 text-[15.5px] leading-[1.7] text-[color:var(--t-sub)] max-w-md">
             Old wires took two days and three banks. This doesn't. But it's one feature in the account, not the whole pitch.
           </p>
           <div className="mt-7 flex gap-3">
-            <Link href="/swiftbridge" className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-[14.5px] font-semibold text-white border border-white/15 hover:bg-white/[0.05] transition-colors">How it works <ArrowRight className="w-4 h-4" /></Link>
+            <Link href="/swiftbridge" className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-[14.5px] font-semibold text-[color:var(--t-hi)] border border-[color:var(--line-strong)] hover:bg-[color:var(--wash-strong)] transition-colors">How it works <ArrowRight className="w-4 h-4" /></Link>
           </div>
         </div>
-        <div className="relative rounded-2xl border border-white/[0.08] overflow-hidden" style={{ background: '#0E1B30' }}>
+        <div className="relative rounded-2xl border border-[color:var(--line)] overflow-hidden" style={{ background: 'var(--panel)' }}>
           <svg viewBox="0 0 600 240" className="w-full">
             {[['New York', 90, 150, C.ny], ['Hong Kong', 330, 90, C.gold], ['Singapore', 500, 170, C.teal]].map(([n, x, y, c]: any, i) => (
               <g key={n}>
@@ -320,15 +320,15 @@ function Bridge() {
                   return (<g><path d={d} stroke={C.gold} strokeWidth="1.5" strokeOpacity="0.45" strokeDasharray="4 5" fill="none" /><motion.circle r="4" fill="#fff" animate={{ offsetDistance: ['0%', '100%'] }} transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }} style={{ offsetPath: `path("${d}")` } as any} /></g>);
                 })()}
                 <circle cx={x} cy={y} r="6" fill={c} />
-                <text x={x} y={y + 24} textAnchor="middle" fill="#C2CEDD" fontSize="13" fontWeight="600">{n}</text>
+                <text x={x} y={y + 24} textAnchor="middle" fill="var(--t-body)" fontSize="13" fontWeight="600">{n}</text>
               </g>
             ))}
           </svg>
-          <div className="grid grid-cols-3 gap-px border-t border-white/[0.07]" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <div className="grid grid-cols-3 gap-px border-t border-[color:var(--line)]" style={{ background: 'var(--wash-strong)' }}>
             {[['~8s', 'typical settle'], ['Upfront', 'fee shown'], ['Mid-market', 'real rate']].map(([k, v]) => (
-              <div key={k} className="px-4 py-4" style={{ background: '#0E1B30' }}>
-                <div className="font-satoshi text-base font-bold text-white">{k}</div>
-                <div className="text-[11px] text-[#5C6B80] mt-0.5">{v}</div>
+              <div key={k} className="px-4 py-4" style={{ background: 'var(--panel)' }}>
+                <div className="font-satoshi text-base font-bold text-[color:var(--t-hi)]">{k}</div>
+                <div className="text-[11px] text-[color:var(--t-faint)] mt-0.5">{v}</div>
               </div>
             ))}
           </div>
@@ -350,12 +350,12 @@ function Security() {
       <SectionHead eyebrow="Security & trust" title="Money apps should be boring about safety." sub="Here is exactly how your account and your assets are protected. No vague badges." />
       <div className="mt-9 grid md:grid-cols-2 gap-5">
         {cards.map((x) => (
-          <div key={x.h} className="rounded-2xl border border-white/[0.08] p-6" style={{ background: '#0E1B30' }}>
-            <div className="w-11 h-11 rounded-xl grid place-items-center mb-4 border border-white/[0.10]" style={{ background: 'rgba(255,255,255,0.03)' }}>
+          <div key={x.h} className="rounded-2xl border border-[color:var(--line)] p-6" style={{ background: 'var(--panel)' }}>
+            <div className="w-11 h-11 rounded-xl grid place-items-center mb-4 border border-[color:var(--line)]" style={{ background: 'var(--wash)' }}>
               <x.i className="w-5 h-5" style={{ color: x.c }} />
             </div>
-            <h3 className="font-satoshi text-[17px] font-bold text-white">{x.h}</h3>
-            <p className="mt-2 text-[14px] leading-[1.7] text-[#8A9BB3]">{x.p}</p>
+            <h3 className="font-satoshi text-[17px] font-bold text-[color:var(--t-hi)]">{x.h}</h3>
+            <p className="mt-2 text-[14px] leading-[1.7] text-[color:var(--t-sub)]">{x.p}</p>
           </div>
         ))}
       </div>
@@ -366,16 +366,16 @@ function Security() {
 /* ── FREE model (replaces pricing tiers) ── */
 function FreeModel() {
   return (
-    <section className="border-y border-white/[0.07]" style={{ background: '#08121F' }}>
+    <section className="border-y border-[color:var(--line)]" style={{ background: 'var(--panel-alt)' }}>
       <div className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-20">
         <div className="grid lg:grid-cols-[1fr_1fr] gap-12 items-start">
           <div>
             <Eyebrow color={C.gold}>Pricing, in one word</Eyebrow>
-            <h2 className="font-satoshi text-[clamp(28px,4vw,48px)] font-black leading-[1.02] text-white">It's free.</h2>
-            <p className="mt-5 text-[15.5px] leading-[1.75] text-[#9DB0CC] max-w-md">
+            <h2 className="font-satoshi text-[clamp(28px,4vw,48px)] font-black leading-[1.02] text-[color:var(--t-hi)]">It's free.</h2>
+            <p className="mt-5 text-[15.5px] leading-[1.75] text-[color:var(--t-sub)] max-w-md">
               No monthly fee. No tiers. No "upgrade to unlock." Open it, hold it, and trade US stocks with zero commission. The whole product is on the table from day one.
             </p>
-            <p className="mt-4 text-[15.5px] leading-[1.75] text-[#9DB0CC] max-w-md">
+            <p className="mt-4 text-[15.5px] leading-[1.75] text-[color:var(--t-sub)] max-w-md">
               Free does not mean we earn nothing, and we would rather state the model plainly than hide it. Here is exactly how the business works.
             </p>
             <div className="mt-7"><BtnPrimary href="/auth/signup">Open free account <ArrowRight className="w-4 h-4" /></BtnPrimary></div>
@@ -389,9 +389,9 @@ function FreeModel() {
               ['Interest', 'we earn on idle cash, the standard brokerage model'],
               ['No PFOF', 'on HK listings, and we tell you where US flow routes'],
             ].map(([k, v]) => (
-              <div key={v} className="flex items-start gap-4 rounded-xl border border-white/[0.08] px-5 py-3.5" style={{ background: '#0E1B30' }}>
-                <span className="font-satoshi font-black text-white shrink-0 w-24" style={{ color: C.gold }}>{k}</span>
-                <span className="text-[14px] text-[#9DB0CC]">{v}</span>
+              <div key={v} className="flex items-start gap-4 rounded-xl border border-[color:var(--line)] px-5 py-3.5" style={{ background: 'var(--panel)' }}>
+                <span className="font-satoshi font-black text-[color:var(--t-hi)] shrink-0 w-24" style={{ color: C.gold }}>{k}</span>
+                <span className="text-[14px] text-[color:var(--t-sub)]">{v}</span>
               </div>
             ))}
           </div>
@@ -414,12 +414,12 @@ function Steps() {
       <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {s.map((x, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
-            <div className="w-12 h-12 rounded-xl grid place-items-center mb-4 border border-white/[0.10]" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            <div className="w-12 h-12 rounded-xl grid place-items-center mb-4 border border-[color:var(--line)]" style={{ background: 'var(--wash)' }}>
               <x.i className="w-5 h-5" style={{ color: x.c }} />
             </div>
             <div className="font-satoshi text-[13px] font-black mb-1" style={{ color: x.c }}>0{i + 1}</div>
-            <h3 className="font-satoshi text-[17px] font-bold text-white">{x.t}</h3>
-            <p className="mt-1.5 text-[14px] text-[#8A9BB3] leading-relaxed">{x.d}</p>
+            <h3 className="font-satoshi text-[17px] font-bold text-[color:var(--t-hi)]">{x.t}</h3>
+            <p className="mt-1.5 text-[14px] text-[color:var(--t-sub)] leading-relaxed">{x.d}</p>
           </motion.div>
         ))}
       </div>
@@ -472,14 +472,14 @@ function Faqs() {
 function Founder() {
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-10">
-      <div className="rounded-2xl border border-white/[0.08] p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-6" style={{ background: '#0E1B30' }}>
-        <span className="w-20 h-20 rounded-xl grid place-items-center font-satoshi text-[22px] font-black shrink-0 border" style={{ background: '#13243d', color: C.goldSoft, borderColor: 'rgba(196,160,82,0.35)' }}>AC</span>
+      <div className="rounded-2xl border border-[color:var(--line)] p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-6" style={{ background: 'var(--panel)' }}>
+        <span className="w-20 h-20 rounded-xl grid place-items-center font-satoshi text-[22px] font-black shrink-0 border" style={{ background: 'var(--slate)', color: C.goldSoft, borderColor: 'color-mix(in srgb, var(--gold) 35%, transparent)' }}>AC</span>
         <div>
           <Eyebrow>Who's building this</Eyebrow>
-          <p className="font-serif-accent text-[19px] sm:text-[22px] leading-snug text-[#E7EEF8]">
+          <p className="font-serif-accent text-[19px] sm:text-[22px] leading-snug text-[color:var(--t-hi)]">
             &ldquo;We built the account we always wanted as traders: US and Hong Kong markets in one place, free to use, with transfers that settle while you watch.&rdquo;
           </p>
-          <div className="mt-3 text-[14px] text-white font-semibold">Alex Chen <span className="text-[#5C6B80] font-normal">· ex-Goldman HK &amp; Robinhood NY</span></div>
+          <div className="mt-3 text-[14px] text-[color:var(--t-hi)] font-semibold">Alex Chen <span className="text-[color:var(--t-faint)] font-normal">· ex-Goldman HK &amp; Robinhood NY</span></div>
           <Link href="/about" className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: C.gold }}>Read our story <ArrowUpRight className="w-3.5 h-3.5" /></Link>
         </div>
       </div>
@@ -496,17 +496,17 @@ function Voices() {
   return (
     <section className="py-14 sm:py-18">
       <div className="max-w-[1180px] mx-auto px-5 sm:px-7">
-        <h2 className="font-satoshi text-[clamp(26px,4vw,42px)] font-black text-white max-w-md">What early users say.</h2>
+        <h2 className="font-satoshi text-[clamp(26px,4vw,42px)] font-black text-[color:var(--t-hi)] max-w-md">What early users say.</h2>
         <div className="mt-9 grid md:grid-cols-3 gap-5">
           {t.map((x, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
-              className={`rounded-2xl border border-white/[0.08] p-6 ${i === 1 ? 'md:translate-y-5' : i === 2 ? 'md:translate-y-2' : ''}`} style={{ background: '#0E1B30' }}>
-              <p className="text-[15px] leading-[1.6] text-[#E2E9F4]">&ldquo;{x.q}&rdquo;</p>
+              className={`rounded-2xl border border-[color:var(--line)] p-6 ${i === 1 ? 'md:translate-y-5' : i === 2 ? 'md:translate-y-2' : ''}`} style={{ background: 'var(--panel)' }}>
+              <p className="text-[15px] leading-[1.6] text-[color:var(--t-hi)]">&ldquo;{x.q}&rdquo;</p>
               <div className="mt-5 flex items-center gap-3">
-                <span className="w-10 h-10 rounded-full grid place-items-center text-[13px] font-bold" style={{ background: '#13243d', color: C.goldSoft, border: '1px solid rgba(255,255,255,0.08)' }}>{x.n.split(' ').map((p) => p[0]).join('')}</span>
+                <span className="w-10 h-10 rounded-full grid place-items-center text-[13px] font-bold" style={{ background: 'var(--slate)', color: C.goldSoft, border: '1px solid var(--line)' }}>{x.n.split(' ').map((p) => p[0]).join('')}</span>
                 <div>
-                  <div className="text-[14px] font-semibold text-white">{x.n}</div>
-                  <div className="text-[12px] text-[#5C6B80]">{x.r} · <span style={{ color: C.teal }}>{x.at}</span></div>
+                  <div className="text-[14px] font-semibold text-[color:var(--t-hi)]">{x.n}</div>
+                  <div className="text-[12px] text-[color:var(--t-faint)]">{x.r} · <span style={{ color: C.teal }}>{x.at}</span></div>
                 </div>
               </div>
             </motion.div>
@@ -520,9 +520,9 @@ function Voices() {
 function CTA() {
   return (
     <section className="max-w-[1180px] mx-auto px-5 sm:px-7 py-16 sm:py-24">
-      <div className="rounded-2xl border border-white/[0.08] px-7 py-14 sm:py-18 text-center" style={{ background: '#0E1B30' }}>
-        <h2 className="font-satoshi text-[clamp(30px,5vw,56px)] font-black leading-[1.02] text-white">Open the account. Trade the markets.</h2>
-        <p className="mt-4 text-[15px] text-[#9DB0CC] max-w-md mx-auto">Free to open, no SSN until you fund, and the whole product unlocked from minute one.</p>
+      <div className="rounded-2xl border border-[color:var(--line)] px-7 py-14 sm:py-18 text-center" style={{ background: 'var(--panel)' }}>
+        <h2 className="font-satoshi text-[clamp(30px,5vw,56px)] font-black leading-[1.02] text-[color:var(--t-hi)]">Open the account. Trade the markets.</h2>
+        <p className="mt-4 text-[15px] text-[color:var(--t-sub)] max-w-md mx-auto">Free to open, no SSN until you fund, and the whole product unlocked from minute one.</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <BtnPrimary href="/auth/signup">Open free account <ArrowRight className="w-4 h-4" /></BtnPrimary>
           <BtnOutline href="/stocks">Browse the markets</BtnOutline>
