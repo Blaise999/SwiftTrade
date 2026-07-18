@@ -37,19 +37,138 @@ html { scroll-behavior: smooth; }
   letter-spacing: -0.02em;
 }
 
-:root {
-  --void: #070612;
-  --obsidian: #0a0918;
-  --charcoal: #11102a;
-  --slate: #1a1838;
+/* ═══════════════════════════════════════════════════════════════
+   Swifttrade theme system — "polished chrome & gold"
+   Dark: deep midnight navy with a metallic sheen.
+   Light: warm pearl paper with the same gold, navy ink.
+   Toggle by adding/removing .dark on <html>.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root,
+html.dark {
+  color-scheme: dark;
+
+  /* legacy single-value tokens */
+  --void: #0A1526;
+  --obsidian: #0C1828;
+  --charcoal: #0F1D33;
+  --slate: #13243D;
   --cream: #f4f1ea;
-  --gold: #5b6dff;
-  --gold-light: #8b97ff;
-  --profit: #3aa978;
-  --loss: #d8493e;
-  --electric: #5b6dff;
-  --cyan: #22D3EE;
+  --gold: #C9A45A;
+  --gold-light: #E4C883;
+  --profit: #2FA56B;
+  --loss: #D9743C;
+  --electric: #3B948C;
+  --cyan: #4FB8AE;
+
+  /* rgb triplets for Tailwind opacity modifiers */
+  --c-void: 10 21 38;
+  --c-obsidian: 12 24 40;
+  --c-charcoal: 15 29 51;
+  --c-slate: 19 36 61;
+  --c-cream: 244 241 234;
+  --c-ink-950: 10 21 38; --c-ink-900: 12 24 40; --c-ink-800: 15 29 51; --c-ink-700: 19 36 61; --c-ink-600: 27 48 80;
+  --c-pearl-50: 253 252 248; --c-pearl-100: 244 241 234; --c-pearl-200: 220 214 200; --c-pearl-300: 168 162 147; --c-pearl-400: 110 106 94;
+
+  /* semantic surface + text tokens */
+  --bg: #0A1526;
+  --bg-deep: #07101E;
+  --bg-raise: #0B1830;
+  --panel: #0F1D33;
+  --panel-alt: #0C1828;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --wash: rgba(255, 255, 255, 0.03);
+  --wash-strong: rgba(255, 255, 255, 0.06);
+  --t-hi: #F2F5FA;
+  --t-body: #C2CEDD;
+  --t-sub: #94A3B8;
+  --t-faint: #5C6B80;
+  --on-accent: #16233A;          /* text sitting on gold, both themes */
+  --specular: rgba(255, 255, 255, 0.10); /* the "shine" top edge on cards */
+  --glow: rgba(201, 164, 90, 0.30);
 }
+
+html:not(.dark) {
+  color-scheme: light;
+
+  --void: #F6F5F1;
+  --obsidian: #FFFFFF;
+  --charcoal: #FFFFFF;
+  --slate: #EEF1F6;
+  --cream: #16233A;
+  --gold: #B08A3E;
+  --gold-light: #C9A45A;
+  --profit: #1E8A56;
+  --loss: #C05F28;
+  --electric: #2E7A73;
+  --cyan: #2E7A73;
+
+  --c-void: 246 245 241;
+  --c-obsidian: 255 255 255;
+  --c-charcoal: 255 255 255;
+  --c-slate: 238 241 246;
+  --c-cream: 22 35 58;
+  --c-ink-950: 246 245 241; --c-ink-900: 251 250 247; --c-ink-800: 255 255 255; --c-ink-700: 238 241 246; --c-ink-600: 226 231 239;
+  --c-pearl-50: 19 31 51; --c-pearl-100: 26 41 66; --c-pearl-200: 51 65 92; --c-pearl-300: 91 107 132; --c-pearl-400: 139 152 172;
+
+  --bg: #F6F5F1;
+  --bg-deep: #EFEDE7;
+  --bg-raise: #FBFAF7;
+  --panel: #FFFFFF;
+  --panel-alt: #FBFAF7;
+  --line: rgba(22, 35, 58, 0.10);
+  --line-strong: rgba(22, 35, 58, 0.18);
+  --wash: rgba(22, 35, 58, 0.035);
+  --wash-strong: rgba(22, 35, 58, 0.07);
+  --t-hi: #131F33;
+  --t-body: #33415C;
+  --t-sub: #5B6B84;
+  --t-faint: #8B98AC;
+  --on-accent: #FFFFFF;
+  --specular: rgba(255, 255, 255, 0.9);
+  --glow: rgba(176, 138, 62, 0.22);
+}
+
+/* ── Shine kit ─────────────────────────────────────────────── */
+
+/* Glossy gold primary — used by landing + dashboard CTAs */
+.btn-shine {
+  background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 52%, color-mix(in srgb, var(--gold) 78%, #000) 100%);
+  color: var(--on-accent);
+  border: 1px solid color-mix(in srgb, var(--gold) 70%, #000);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 10px 24px -10px var(--glow);
+}
+.btn-shine:hover { filter: brightness(1.05); }
+.btn-shine:active { filter: brightness(0.97); }
+
+/* Cards with a specular top edge — the subtle "polished metal" cue */
+.card-sheen {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow:
+    inset 0 1px 0 var(--specular),
+    0 1px 2px rgba(0, 0, 0, 0.18);
+}
+html:not(.dark) .card-sheen {
+  box-shadow:
+    inset 0 1px 0 var(--specular),
+    0 1px 3px rgba(22, 35, 58, 0.08),
+    0 8px 24px -16px rgba(22, 35, 58, 0.18);
+}
+
+/* ── Light-mode safety net for legacy hardcoded utilities ────
+   Deep pages still use text-white / bg-white washes from the
+   dark-only era; remap them so nothing renders white-on-white. */
+html:not(.dark) [class*="text-white"] { color: var(--t-hi); }
+html:not(.dark) [class*="bg-white/"] { background-color: var(--wash-strong); }
+html:not(.dark) [class*="border-white/"] { border-color: var(--line); }
+html:not(.dark) [class*="divide-white/"] > :not([hidden]) ~ :not([hidden]) { border-color: var(--line); }
+/* keep readable text on solid accent chips/buttons */
+html:not(.dark) .btn-shine,
+html:not(.dark) .keep-on-accent { color: var(--on-accent) !important; }
 
 * {
   margin: 0;
@@ -160,7 +279,8 @@ body {
 }
 
 .btn-outline-gold {
-  @apply relative inline-flex items-center justify-center px-6 py-3 font-medium text-gold border border-gold/50 rounded-full overflow-hidden transition-all duration-300;
+  @apply relative inline-flex items-center justify-center px-6 py-3 font-medium text-gold rounded-full overflow-hidden transition-all duration-300;
+  border: 1px solid rgb(var(--gold) / 0.5);
 }
 
 .btn-outline-gold:hover {

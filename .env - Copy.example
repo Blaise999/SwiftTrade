@@ -1,0 +1,19 @@
+# ===========================================
+# SUPABASE (Required)
+# ===========================================
+# Get these from: https://supabase.com/dashboard/project/YOUR_PROJECT/settings/api
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# ===========================================
+# EMAIL (Required for OTP)
+# ===========================================
+# Get from: https://resend.com/api-keys
+RESEND_API_KEY=re_xxxxxxxxxxxx
+
+# ===========================================
+# APP CONFIG
+# ===========================================
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+JWT_SECRET=your-super-secret-jwt-key-min-32-chars
