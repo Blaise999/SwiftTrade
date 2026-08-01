@@ -1022,6 +1022,8 @@ create table if not exists public.positions (
   updated_at      timestamptz default now(),
   unique (user_id, symbol)
 );
+alter table public.positions add column if not exists shield_enabled      boolean default false;
+alter table public.positions add column if not exists shield_activated_at timestamptz;
 alter table public.positions enable row level security;
 do $$ begin
   create policy positions_owner on public.positions for all to authenticated

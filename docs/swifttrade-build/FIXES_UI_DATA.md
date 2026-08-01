@@ -24,3 +24,14 @@ Without these the app falls back to reference prices and empty charts — that's
   and the chart canvas stays dark in light mode. I'm doing this as a careful focused pass
   rather than a blind edit to a huge trading file — it's the one screen most likely to break
   if rushed.
+
+## Pass 2 (this zip)
+- Recolored the dashboard hero gradient, FX page chrome, PortfolioCommandCard, and
+  MobileBottomNav to tokens — kills the remaining dark-in-light patches (chart CANVAS
+  colors in the FX page are set in JS and still dark; that's a separate follow-up).
+- **Portfolio rebuilt**: now lists your actual holdings — Crypto and Stocks/ETFs — with
+  per-position value, P&L, and a **Shield toggle on each holding** (crypto → PATCH
+  /api/portfolio, stock → POST /api/positions/shield). No more portfolio-wide shield.
+  Totals: Net worth = cash + crypto + stocks, from one place.
+- Added `positions.shield_enabled` (+ endpoint) so stocks can be shielded like crypto.
+  The RESET_AND_REBUILD.sql reconcile now creates that column.

@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await sb
       .from('positions')
-      .select('id, symbol, asset_type, quantity, avg_entry_price, market_value')
+      .select('*')
       .eq('user_id', userId);
 
     if (error) {
@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
       return {
         id: p.id,
         symbol: p.symbol,
+        shieldEnabled: !!p.shield_enabled,
         assetType: p.asset_type,
         name: asset?.name || p.symbol,
         quantity: qty,

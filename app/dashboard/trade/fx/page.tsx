@@ -2437,16 +2437,16 @@ function FXTradeInner() {
   const activeCount = sortedTrades.filter(t => t.status === 'active').length;
 
   return (
-    <div className="font-app h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] flex flex-col bg-[#0A1526] text-white overflow-hidden">
+    <div className="font-app h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] flex flex-col bg-[var(--surface)] text-[var(--text)] overflow-hidden">
 
       {/* ═══════ TOP BAR — OlympTrade style ═══════ */}
-      <div className="flex-shrink-0 flex items-center justify-between px-3 sm:px-5 py-2.5 border-b border-white/10 bg-gradient-to-b from-[#13243D] to-[#0F1D33]">
+      <div className="flex-shrink-0 flex items-center justify-between px-3 sm:px-5 py-2.5 border-b border-[var(--border)] bg-gradient-to-b from-[#13243D] to-[#0F1D33]">
         <div className="flex items-center gap-3 min-w-0">
           {/* Pair selector */}
           <div className="flex items-center gap-2 min-w-0">
             <span className="relative flex h-2 w-2 flex-shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2FA56B]/70" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2FA56B]" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00C805]/70" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00C805]" />
             </span>
             <select
               value={asset}
@@ -2471,7 +2471,7 @@ function FXTradeInner() {
 
         <div className="flex items-center gap-2">
           {/* Balance */}
-          <div className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+          <div className="px-3 py-1.5 rounded-full bg-white/5 border border-[var(--border)]">
             <span className="text-xs sm:text-sm font-semibold tabular-nums">${fmt(balance, 2)}</span>
           </div>
 
@@ -2484,9 +2484,9 @@ function FXTradeInner() {
       </div>
 
       {error && (
-        <div className="flex-shrink-0 px-3 py-2 bg-[#D9743C]/10 border-b border-[#D9743C]/20 flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-[#D9743C] flex-shrink-0" />
-          <span className="text-xs text-[#D9743C] truncate">{error}</span>
+        <div className="flex-shrink-0 px-3 py-2 bg-[#FF4D3D]/10 border-b border-[#FF4D3D]/20 flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-[#FF4D3D] flex-shrink-0" />
+          <span className="text-xs text-[#FF4D3D] truncate">{error}</span>
         </div>
       )}
 
@@ -2496,20 +2496,20 @@ function FXTradeInner() {
         {/* CHART AREA */}
         <div className="flex-1 flex flex-col min-h-0 min-w-0">
           {/* Timeframe strip */}
-          <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-white/10 bg-[#0C1828]">
+          <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-[var(--border)] bg-[var(--inset)]">
             <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
               {TIMEFRAMES.map((t) => (
                 <button key={t.value} type="button" onClick={() => setTf(t.value)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition flex-shrink-0 ${
-                    tf === t.value ? 'bg-[#22D3EE] text-[#0A1526]' : 'text-white/50 hover:text-white hover:bg-white/5'
+                    tf === t.value ? 'bg-[#22D3EE] text-[#0A1526]' : 'text-[var(--text)]/50 hover:text-[var(--text)] hover:bg-[var(--inset)]'
                   }`}
                   style={{ WebkitTapHighlightColor: 'transparent' }}>
                   {t.label}
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-white/40 ml-2 flex-shrink-0">
-              {wsOn && <span className="h-1.5 w-1.5 rounded-full bg-[#2FA56B]" />}
+            <div className="flex items-center gap-1.5 text-[10px] text-[var(--text)]/40 ml-2 flex-shrink-0">
+              {wsOn && <span className="h-1.5 w-1.5 rounded-full bg-[#00C805]" />}
               <span>{wsOn ? 'Live' : 'Offline'}</span>
             </div>
           </div>
@@ -2519,7 +2519,7 @@ function FXTradeInner() {
             <div ref={chartWrapRef} className="absolute inset-0" />
             {/* Chart note overlay */}
             {chartNote && (
-              <div className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-black/60 text-[10px] text-white/50 backdrop-blur-sm">
+              <div className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-black/60 text-[10px] text-[var(--text)]/50 backdrop-blur-sm">
                 {chartNote}
               </div>
             )}
@@ -2527,20 +2527,20 @@ function FXTradeInner() {
         </div>
 
         {/* DESKTOP TRADE PANEL — hidden on mobile */}
-        <div className="hidden lg:flex flex-col w-80 xl:w-96 border-l border-white/10 bg-[#0F1D33] overflow-y-auto">
+        <div className="hidden lg:flex flex-col w-80 xl:w-96 border-l border-[var(--border)] bg-[var(--card)] overflow-y-auto">
 
           {/* Direction buttons */}
-          <div className="p-3 border-b border-white/10">
+          <div className="p-3 border-b border-[var(--border)]">
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setDirection('buy')}
                 className={`py-3 rounded-xl font-bold text-sm transition ${
-                  direction === 'buy' ? 'bg-[#2FA56B] text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'
+                  direction === 'buy' ? 'bg-[#00C805] text-[var(--text)]' : 'bg-white/5 text-[var(--text)]/60 hover:bg-white/10'
                 }`} style={{ WebkitTapHighlightColor: 'transparent' }}>
                 <span className="inline-flex items-center gap-1.5"><TrendingUp className="h-4 w-4" /> Buy</span>
               </button>
               <button type="button" onClick={() => setDirection('sell')}
                 className={`py-3 rounded-xl font-bold text-sm transition ${
-                  direction === 'sell' ? 'bg-rose-500 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'
+                  direction === 'sell' ? 'bg-rose-500 text-[var(--text)]' : 'bg-white/5 text-[var(--text)]/60 hover:bg-white/10'
                 }`} style={{ WebkitTapHighlightColor: 'transparent' }}>
                 <span className="inline-flex items-center gap-1.5"><TrendingDown className="h-4 w-4" /> Sell</span>
               </button>
@@ -2550,14 +2550,14 @@ function FXTradeInner() {
           {/* Trade form */}
           <div className="p-3 space-y-3 flex-1">
             <div>
-              <label className="text-[11px] text-white/50 uppercase tracking-wider">Investment</label>
+              <label className="text-[11px] text-[var(--text)]/50 uppercase tracking-wider">Investment</label>
               <div className="mt-1 flex items-center gap-1">
                 <button type="button" onClick={() => setInvestment(String(Math.max(10, clampNum(investment, 0) - 10)))}
                   className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 text-lg">−</button>
                 <div className="flex-1 relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text)]/40 text-sm">$</span>
                   <input value={investment} onChange={(e) => setInvestment(e.target.value)} inputMode="decimal"
-                    className="w-full pl-7 pr-3 py-2 rounded-lg bg-black/30 border border-white/10 outline-none text-center font-mono" />
+                    className="w-full pl-7 pr-3 py-2 rounded-lg bg-black/30 border border-[var(--border)] outline-none text-center font-mono" />
                 </div>
                 <button type="button" onClick={() => setInvestment(String(clampNum(investment, 0) + 10))}
                   className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 text-lg">+</button>
@@ -2566,35 +2566,35 @@ function FXTradeInner() {
                 {[25, 50, 100, 250, 500].map((v) => (
                   <button key={v} type="button" onClick={() => setInvestment(String(v))}
                     className={`flex-1 py-1 text-[10px] rounded-lg transition ${
-                      investment === String(v) ? 'bg-[#22D3EE]/20 text-[#22D3EE] border border-[#22D3EE]/30' : 'bg-white/5 text-white/40 hover:bg-white/10'
+                      investment === String(v) ? 'bg-[#22D3EE]/20 text-[#22D3EE] border border-[#22D3EE]/30' : 'bg-white/5 text-[var(--text)]/40 hover:bg-white/10'
                     }`}>${v}</button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="text-[11px] text-white/50 uppercase tracking-wider">Leverage</label>
+              <label className="text-[11px] text-[var(--text)]/50 uppercase tracking-wider">Leverage</label>
               <select value={multiplier} onChange={(e) => setMultiplier(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 outline-none font-mono">
+                className="mt-1 w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none font-mono">
                 {MULTIPLIERS.map((m) => <option key={m} value={m}>x{m}</option>)}
               </select>
             </div>
 
             <div>
-              <label className="text-[11px] text-white/50 uppercase tracking-wider">Market price</label>
+              <label className="text-[11px] text-[var(--text)]/50 uppercase tracking-wider">Market price</label>
               <input value={marketPrice} onChange={(e) => setMarketPrice(e.target.value)}
                 onFocus={() => { marketEditingRef.current = true; }} onBlur={() => { marketEditingRef.current = false; }}
                 readOnly={rareMode} inputMode="decimal"
-                className="mt-1 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 outline-none font-mono text-sm" placeholder="1.00000" />
+                className="mt-1 w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none font-mono text-sm" placeholder="1.00000" />
             </div>
 
             {/* SL/TP */}
             <div>
-              <label className="text-[11px] text-white/50 uppercase tracking-wider">SL / TP</label>
+              <label className="text-[11px] text-[var(--text)]/50 uppercase tracking-wider">SL / TP</label>
               <div className="grid grid-cols-2 gap-2 mt-1">
                 <div>
                   <input value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} inputMode="decimal"
-                    className="w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 outline-none text-sm focus:border-rose-500/40 transition" placeholder="Stop Loss" />
+                    className="w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none text-sm focus:border-rose-500/40 transition" placeholder="Stop Loss" />
                   <div className="flex gap-0.5 mt-1">
                     {[10, 25, 50, 100].map((pips) => (
                       <button key={`sl-${pips}`} type="button" onClick={() => {
@@ -2606,13 +2606,13 @@ function FXTradeInner() {
                 </div>
                 <div>
                   <input value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} inputMode="decimal"
-                    className="w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 outline-none text-sm focus:border-[#2FA56B]/40 transition" placeholder="Take Profit" />
+                    className="w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none text-sm focus:border-[#00C805]/40 transition" placeholder="Take Profit" />
                   <div className="flex gap-0.5 mt-1">
                     {[10, 25, 50, 100].map((pips) => (
                       <button key={`tp-${pips}`} type="button" onClick={() => {
                         const mp = clampNum(marketPrice, 0);
                         if (mp > 0) { const pipVal = mp < 10 ? 0.0001 : 0.01; const tpPrice = direction === 'buy' ? mp + pips * pipVal : mp - pips * pipVal; setTakeProfit(tpPrice.toFixed(mp < 10 ? 5 : 3)); }
-                      }} className="flex-1 py-0.5 text-[9px] rounded bg-[#2FA56B]/10 text-[#2FA56B]/70 hover:bg-[#2FA56B]/20">{pips}p</button>
+                      }} className="flex-1 py-0.5 text-[9px] rounded bg-[#00C805]/10 text-[#00C805]/70 hover:bg-[#00C805]/20">{pips}p</button>
                     ))}
                   </div>
                 </div>
@@ -2621,54 +2621,54 @@ function FXTradeInner() {
 
             {/* Summary */}
             <div className="rounded-xl bg-white/5 p-3 space-y-1.5">
-              <div className="flex justify-between text-xs"><span className="text-white/50">Notional</span><span className="font-mono">${fmt(notionalPreview, 2)}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-white/50">Pair</span><span>{livePairLabel}</span></div>
+              <div className="flex justify-between text-xs"><span className="text-[var(--text)]/50">Notional</span><span className="font-mono">${fmt(notionalPreview, 2)}</span></div>
+              <div className="flex justify-between text-xs"><span className="text-[var(--text)]/50">Pair</span><span>{livePairLabel}</span></div>
             </div>
 
             <button onClick={openTrade} disabled={loading || !canUseSupabase} type="button"
               className={`w-full py-3.5 rounded-xl font-bold text-base transition ${
-                direction === 'buy' ? 'bg-[#2FA56B] hover:bg-[#2FA56B] text-white' : 'bg-rose-500 hover:bg-rose-600 text-white'
+                direction === 'buy' ? 'bg-[#00C805] hover:bg-[#00C805] text-[var(--text)]' : 'bg-rose-500 hover:bg-rose-600 text-[var(--text)]'
               } disabled:opacity-50`}>
               {direction === 'buy' ? '↑ Open Buy' : '↓ Open Sell'}
             </button>
           </div>
 
           {/* Desktop trades list */}
-          <div className="border-t border-white/10">
+          <div className="border-t border-[var(--border)]">
             <div className="flex items-center justify-between px-3 py-2">
               <div className="flex gap-2">
                 <button type="button" onClick={() => { setMode('active'); void (rareMode ? loadRareMode() : loadNormalTrades()); }}
-                  className={`text-xs font-medium px-2 py-1 rounded-lg ${mode === 'active' ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white'}`}>
+                  className={`text-xs font-medium px-2 py-1 rounded-lg ${mode === 'active' ? 'bg-white/10 text-[var(--text)]' : 'text-[var(--text)]/50 hover:text-[var(--text)]'}`}>
                   Active ({activeCount})
                 </button>
                 <button type="button" onClick={() => { setMode('history'); void (rareMode ? loadRareMode() : loadNormalTrades()); }}
-                  className={`text-xs font-medium px-2 py-1 rounded-lg ${mode === 'history' ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white'}`}>
+                  className={`text-xs font-medium px-2 py-1 rounded-lg ${mode === 'history' ? 'bg-white/10 text-[var(--text)]' : 'text-[var(--text)]/50 hover:text-[var(--text)]'}`}>
                   History
                 </button>
               </div>
               {activeCount > 0 && (
-                <span className={`text-xs font-mono ${activePnl >= 0 ? 'text-[#2FA56B]' : 'text-rose-400'}`}>
+                <span className={`text-xs font-mono ${activePnl >= 0 ? 'text-[#00C805]' : 'text-rose-400'}`}>
                   {activePnl >= 0 ? '+' : ''}${fmt(activePnl, 2)}
                 </span>
               )}
             </div>
             <div className="max-h-48 overflow-y-auto">
               {sortedTrades.length === 0 ? (
-                <div className="px-3 py-6 text-center text-xs text-white/40">{loading ? 'Loading…' : 'No trades yet'}</div>
+                <div className="px-3 py-6 text-center text-xs text-[var(--text)]/40">{loading ? 'Loading…' : 'No trades yet'}</div>
               ) : sortedTrades.map((t) => (
                 <div key={t.id} className="px-3 py-2 border-t border-white/5 flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${t.direction === 'buy' ? 'bg-[#2FA56B]/20 text-[#2FA56B]' : 'bg-rose-500/20 text-rose-400'}`}>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${t.direction === 'buy' ? 'bg-[#00C805]/20 text-[#00C805]' : 'bg-rose-500/20 text-rose-400'}`}>
                         {t.direction.toUpperCase()}
                       </span>
                       <span className="text-xs font-medium">{t.asset}</span>
-                      <span className="text-[10px] text-white/40">x{fmt(t.multiplier, 0)}</span>
+                      <span className="text-[10px] text-[var(--text)]/40">x{fmt(t.multiplier, 0)}</span>
                     </div>
-                    <div className="text-[10px] text-white/40 mt-0.5">${fmt(t.investment, 2)} · {fmt(t.entryPrice || 0, currentDisplayDp)}</div>
+                    <div className="text-[10px] text-[var(--text)]/40 mt-0.5">${fmt(t.investment, 2)} · {fmt(t.entryPrice || 0, currentDisplayDp)}</div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className={`text-xs font-bold ${t.pnl >= 0 ? 'text-[#2FA56B]' : 'text-rose-400'}`}>
+                    <div className={`text-xs font-bold ${t.pnl >= 0 ? 'text-[#00C805]' : 'text-rose-400'}`}>
                       {t.pnl >= 0 ? '+' : ''}${fmt(t.pnl, 2)}
                     </div>
                     {t.status === 'active' && (
@@ -2686,16 +2686,16 @@ function FXTradeInner() {
       </div>
 
       {/* ═══════ MOBILE BOTTOM CONTROLS — OlympTrade-inspired ═══════ */}
-      <div className="lg:hidden flex-shrink-0 border-t border-white/10 bg-[#0F1D33]"
+      <div className="lg:hidden flex-shrink-0 border-t border-[var(--border)] bg-[var(--card)]"
            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 
         {/* Active P&L strip */}
         {activeCount > 0 && (
           <button type="button" onClick={() => setShowMobileTrades(!showMobileTrades)}
-            className="w-full flex items-center justify-between px-4 py-2 border-b border-white/10 bg-white/5 active:bg-white/10"
+            className="w-full flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-white/5 active:bg-white/10"
             style={{ WebkitTapHighlightColor: 'transparent' }}>
-            <span className="text-xs text-white/60">Active Trades ({activeCount})</span>
-            <span className={`text-xs font-bold ${activePnl >= 0 ? 'text-[#2FA56B]' : 'text-rose-400'}`}>
+            <span className="text-xs text-[var(--text)]/60">Active Trades ({activeCount})</span>
+            <span className={`text-xs font-bold ${activePnl >= 0 ? 'text-[#00C805]' : 'text-rose-400'}`}>
               P&amp;L: {activePnl >= 0 ? '+' : ''}${fmt(activePnl, 2)}
             </span>
           </button>
@@ -2703,20 +2703,20 @@ function FXTradeInner() {
 
         {/* Mobile trades drawer */}
         {showMobileTrades && (
-          <div className="max-h-40 overflow-y-auto bg-[#0C1828] border-b border-white/10">
+          <div className="max-h-40 overflow-y-auto bg-[var(--inset)] border-b border-[var(--border)]">
             {sortedTrades.filter(t => t.status === 'active').map((t) => (
               <div key={t.id} className="px-4 py-2 border-b border-white/5 flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${t.direction === 'buy' ? 'bg-[#2FA56B]/20 text-[#2FA56B]' : 'bg-rose-500/20 text-rose-400'}`}>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${t.direction === 'buy' ? 'bg-[#00C805]/20 text-[#00C805]' : 'bg-rose-500/20 text-rose-400'}`}>
                       {t.direction.toUpperCase()}
                     </span>
                     <span className="text-xs font-medium">{t.asset}</span>
                   </div>
-                  <div className="text-[10px] text-white/40 mt-0.5">${fmt(t.investment, 2)} · x{fmt(t.multiplier, 0)}</div>
+                  <div className="text-[10px] text-[var(--text)]/40 mt-0.5">${fmt(t.investment, 2)} · x{fmt(t.multiplier, 0)}</div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-bold ${t.pnl >= 0 ? 'text-[#2FA56B]' : 'text-rose-400'}`}>
+                  <span className={`text-xs font-bold ${t.pnl >= 0 ? 'text-[#00C805]' : 'text-rose-400'}`}>
                     {t.pnl >= 0 ? '+' : ''}${fmt(t.pnl, 2)}
                   </span>
                   <button type="button" onClick={() => closeTrade(t)} disabled={actionLoadingId === t.id}
@@ -2732,25 +2732,25 @@ function FXTradeInner() {
 
         {/* Expandable trade form */}
         {showMobilePanel && (
-          <div className="px-4 py-3 space-y-3 border-b border-white/10 bg-[#0C1828] max-h-[60vh] overflow-y-auto">
+          <div className="px-4 py-3 space-y-3 border-b border-[var(--border)] bg-[var(--inset)] max-h-[60vh] overflow-y-auto">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-white/50 uppercase tracking-wider">Trade Setup</span>
-              <button type="button" onClick={() => setShowMobilePanel(false)} className="text-white/40 hover:text-white p-1">
+              <span className="text-xs text-[var(--text)]/50 uppercase tracking-wider">Trade Setup</span>
+              <button type="button" onClick={() => setShowMobilePanel(false)} className="text-[var(--text)]/40 hover:text-[var(--text)] p-1">
                 <span className="text-lg">×</span>
               </button>
             </div>
 
             {/* Amount with +/- */}
             <div>
-              <label className="text-[11px] text-white/50">Investment</label>
+              <label className="text-[11px] text-[var(--text)]/50">Investment</label>
               <div className="mt-1 flex items-center gap-1">
                 <button type="button" onClick={() => setInvestment(String(Math.max(10, clampNum(investment, 0) - 10)))}
                   className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center active:bg-white/20 text-lg font-bold"
                   style={{ WebkitTapHighlightColor: 'transparent' }}>−</button>
                 <div className="flex-1 relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text)]/40">$</span>
                   <input value={investment} onChange={(e) => setInvestment(e.target.value)} inputMode="decimal"
-                    className="w-full pl-7 pr-3 py-2.5 rounded-xl bg-black/30 border border-white/10 outline-none text-center text-lg font-bold" />
+                    className="w-full pl-7 pr-3 py-2.5 rounded-xl bg-black/30 border border-[var(--border)] outline-none text-center text-lg font-bold" />
                 </div>
                 <button type="button" onClick={() => setInvestment(String(clampNum(investment, 0) + 10))}
                   className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center active:bg-white/20 text-lg font-bold"
@@ -2760,7 +2760,7 @@ function FXTradeInner() {
                 {[25, 50, 100, 250, 500].map((v) => (
                   <button key={v} type="button" onClick={() => setInvestment(String(v))}
                     className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
-                      investment === String(v) ? 'bg-[#22D3EE]/20 text-[#22D3EE] border border-[#22D3EE]/30' : 'bg-white/5 text-white/50 active:bg-white/10'
+                      investment === String(v) ? 'bg-[#22D3EE]/20 text-[#22D3EE] border border-[#22D3EE]/30' : 'bg-white/5 text-[var(--text)]/50 active:bg-white/10'
                     }`} style={{ WebkitTapHighlightColor: 'transparent' }}>${v}</button>
                 ))}
               </div>
@@ -2768,12 +2768,12 @@ function FXTradeInner() {
 
             {/* Leverage */}
             <div>
-              <label className="text-[11px] text-white/50">Leverage</label>
+              <label className="text-[11px] text-[var(--text)]/50">Leverage</label>
               <div className="flex gap-1 mt-1">
                 {MULTIPLIERS.map((m) => (
                   <button key={m} type="button" onClick={() => setMultiplier(m)}
                     className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${
-                      multiplier === m ? 'bg-[#22D3EE]/20 text-[#22D3EE] border border-[#22D3EE]/30' : 'bg-white/5 text-white/50 active:bg-white/10'
+                      multiplier === m ? 'bg-[#22D3EE]/20 text-[#22D3EE] border border-[#22D3EE]/30' : 'bg-white/5 text-[var(--text)]/50 active:bg-white/10'
                     }`} style={{ WebkitTapHighlightColor: 'transparent' }}>x{m}</button>
                 ))}
               </div>
@@ -2784,7 +2784,7 @@ function FXTradeInner() {
               <div>
                 <label className="text-[10px] text-rose-400/70">Stop Loss</label>
                 <input value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} inputMode="decimal"
-                  className="mt-0.5 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 outline-none text-sm" placeholder="optional" />
+                  className="mt-0.5 w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none text-sm" placeholder="optional" />
                 <div className="flex gap-0.5 mt-1">
                   {[20, 50, 100].map((pips) => (
                     <button key={`msl-${pips}`} type="button" onClick={() => {
@@ -2795,15 +2795,15 @@ function FXTradeInner() {
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-[#2FA56B]/70">Take Profit</label>
+                <label className="text-[10px] text-[#00C805]/70">Take Profit</label>
                 <input value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} inputMode="decimal"
-                  className="mt-0.5 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 outline-none text-sm" placeholder="optional" />
+                  className="mt-0.5 w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none text-sm" placeholder="optional" />
                 <div className="flex gap-0.5 mt-1">
                   {[20, 50, 100].map((pips) => (
                     <button key={`mtp-${pips}`} type="button" onClick={() => {
                       const mp = clampNum(marketPrice, 0);
                       if (mp > 0) { const pipVal = mp < 10 ? 0.0001 : 0.01; const tpPrice = direction === 'buy' ? mp + pips * pipVal : mp - pips * pipVal; setTakeProfit(tpPrice.toFixed(mp < 10 ? 5 : 3)); }
-                    }} className="flex-1 py-0.5 text-[9px] rounded bg-[#2FA56B]/10 text-[#2FA56B]/60">{pips}p</button>
+                    }} className="flex-1 py-0.5 text-[9px] rounded bg-[#00C805]/10 text-[#00C805]/60">{pips}p</button>
                   ))}
                 </div>
               </div>
@@ -2811,7 +2811,7 @@ function FXTradeInner() {
 
             {/* Notional summary */}
             <div className="flex justify-between text-xs px-1">
-              <span className="text-white/40">Notional</span>
+              <span className="text-[var(--text)]/40">Notional</span>
               <span className="font-mono">${fmt(notionalPreview, 2)}</span>
             </div>
           </div>
@@ -2823,21 +2823,21 @@ function FXTradeInner() {
           <button type="button" onClick={() => setShowMobilePanel(!showMobilePanel)}
             className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center active:bg-white/20 flex-shrink-0"
             style={{ WebkitTapHighlightColor: 'transparent' }}>
-            <CandlestickChart className="h-5 w-5 text-white/70" />
+            <CandlestickChart className="h-5 w-5 text-[var(--text)]/70" />
           </button>
 
           {/* Amount quick display */}
           <div className="flex-shrink-0 text-center px-2">
-            <div className="text-[10px] text-white/40">Margin</div>
+            <div className="text-[10px] text-[var(--text)]/40">Margin</div>
             <div className="text-sm font-bold">${investment}</div>
-            <div className="text-[10px] text-white/40">x{multiplier}</div>
+            <div className="text-[10px] text-[var(--text)]/40">x{multiplier}</div>
           </div>
 
           {/* BUY / SELL buttons — big OlympTrade style */}
           <button type="button"
             onClick={() => { setDirection('sell'); openTrade(); }}
             disabled={loading || !canUseSupabase}
-            className="flex-1 h-12 rounded-xl bg-rose-500 text-white font-bold text-sm flex items-center justify-center gap-1.5 active:bg-rose-600 disabled:opacity-50 transition"
+            className="flex-1 h-12 rounded-xl bg-rose-500 text-[var(--text)] font-bold text-sm flex items-center justify-center gap-1.5 active:bg-rose-600 disabled:opacity-50 transition"
             style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}>
             Sell <TrendingDown className="h-4 w-4" />
           </button>
@@ -2845,7 +2845,7 @@ function FXTradeInner() {
           <button type="button"
             onClick={() => { setDirection('buy'); openTrade(); }}
             disabled={loading || !canUseSupabase}
-            className="flex-1 h-12 rounded-xl bg-[#2FA56B] text-white font-bold text-sm flex items-center justify-center gap-1.5 active:bg-[#2FA56B] disabled:opacity-50 transition"
+            className="flex-1 h-12 rounded-xl bg-[#00C805] text-[var(--text)] font-bold text-sm flex items-center justify-center gap-1.5 active:bg-[#00C805] disabled:opacity-50 transition"
             style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}>
             Buy <TrendingUp className="h-4 w-4" />
           </button>

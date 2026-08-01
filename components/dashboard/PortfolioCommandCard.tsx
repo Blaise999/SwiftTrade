@@ -49,10 +49,10 @@ export function PortfolioCommandCard({
   ].filter(a => a.value > 0);
   const allocTotal = allocations.reduce((s, a) => s + a.value, 0) || 1;
 
-  const accent = up ? '#2FA56B' : '#D9743C';
+  const accent = up ? '#00C805' : '#FF4D3D';
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0D1324] via-[#0B1020] to-[#080A15] p-5 sm:p-7 lg:p-8">
+    <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-br from-[var(--card)] to-[var(--inset)] p-5 sm:p-7 lg:p-8">
       <div
         className="absolute -top-32 -right-24 w-[420px] h-[420px] rounded-full blur-3xl opacity-25 pointer-events-none"
         style={{ background: `radial-gradient(closest-side, ${accent}, transparent 70%)` }}
@@ -62,10 +62,10 @@ export function PortfolioCommandCard({
         <div className="min-w-0 flex-1">
           <p className="text-[11px] uppercase tracking-[0.2em] text-[#94A3B8]">Portfolio value</p>
           <div className="mt-2 flex items-baseline gap-3 flex-wrap">
-            <h2 className="text-[36px] sm:text-[44px] lg:text-[52px] font-bold text-white tabular-nums leading-none tracking-tight">
+            <h2 className="text-[36px] sm:text-[44px] lg:text-[52px] font-bold text-[var(--text)] tabular-nums leading-none tracking-tight">
               {hide ? '••••••' : fmtUSD(totalAssets)}
             </h2>
-            <span className={`text-[14px] font-medium tabular-nums flex items-center gap-1 ${up ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+            <span className={`text-[14px] font-medium tabular-nums flex items-center gap-1 ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
               {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
               {hide ? '••••' : (
                 <>
@@ -78,7 +78,7 @@ export function PortfolioCommandCard({
         </div>
         <button
           onClick={() => setHide(!hide)}
-          className="w-9 h-9 rounded-full border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] flex items-center justify-center text-[#94A3B8] transition-colors shrink-0"
+          className="w-9 h-9 rounded-full border border-[var(--border)] bg-white/[0.03] hover:bg-white/[0.06] flex items-center justify-center text-[#94A3B8] transition-colors shrink-0"
           aria-label={hide ? 'Show balance' : 'Hide balance'}
         >
           {hide ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -131,8 +131,8 @@ export function PortfolioCommandCard({
             onClick={() => setRange(r)}
             className={`flex-1 h-8 rounded-lg text-[11.5px] font-semibold transition-colors ${
               range === r
-                ? 'bg-white/10 text-white'
-                : 'text-[#64748B] hover:text-[#94A3B8] hover:bg-white/[0.03]'
+                ? 'bg-white/10 text-[var(--text)]'
+                : 'text-[#64748B] hover:text-[#94A3B8] hover:bg-[var(--inset)]'
             }`}
           >
             {r}
@@ -141,7 +141,7 @@ export function PortfolioCommandCard({
       </div>
 
       {allocations.length > 0 && (
-        <div className="mt-5 pt-5 border-t border-white/[0.05]">
+        <div className="mt-5 pt-5 border-t border-[var(--border)]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10.5px] uppercase tracking-[0.2em] text-[#94A3B8]">Holdings</span>
             <span className="text-[11px] text-[#64748B]">{hide ? '••••' : `${allocations.length} asset classes`}</span>
@@ -163,7 +163,7 @@ export function PortfolioCommandCard({
               <div key={a.label} className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full" style={{ background: a.color }} />
                 <span className="text-[12px] text-[#94A3B8]">{a.label}</span>
-                <span className="text-[12px] text-white font-medium tabular-nums">
+                <span className="text-[12px] text-[var(--text)] font-medium tabular-nums">
                   {hide ? '••' : `${((a.value / allocTotal) * 100).toFixed(0)}%`}
                 </span>
               </div>

@@ -245,7 +245,7 @@ export default function DashboardOverview() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl border border-[color:var(--line)] bg-gradient-to-br from-[#0D1324] via-[#0B1020] to-[#080A15] px-5 py-5 sm:px-7 sm:py-6"
+        className="relative overflow-hidden rounded-3xl border border-[color:var(--line)] bg-gradient-to-br from-[var(--card)] to-[var(--inset)] px-5 py-5 sm:px-7 sm:py-6"
       >
         {/* Animated gradient glow */}
         <div
@@ -327,7 +327,7 @@ export default function DashboardOverview() {
               {invest.dayPnl >= 0 ? '+' : ''}{invest.dayPnl.toFixed(2)} ({invest.dayPnl >= 0 ? '+' : ''}{invest.dayPct.toFixed(2)}%) today
             </div>
           ) : (
-            <div className="text-[11px] text-[#4D5B70] mt-0.5">No holdings yet</div>
+            <div className="text-[11px] text-[var(--text-3)] mt-0.5">No holdings yet</div>
           )}
         </Link>
         <Link
@@ -345,7 +345,7 @@ export default function DashboardOverview() {
               {crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPnl.toFixed(2)} ({crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPct.toFixed(2)}%) total
             </div>
           ) : (
-            <div className="text-[11px] text-[#4D5B70] mt-0.5">No holdings yet</div>
+            <div className="text-[11px] text-[var(--text-3)] mt-0.5">No holdings yet</div>
           )}
         </Link>
       </motion.div>
