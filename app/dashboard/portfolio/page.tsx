@@ -103,7 +103,7 @@ const ShieldStatusBadge = ({
       ) : (
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          className="flex items-center gap-1.5 px-2 py-1 bg-white/5 text-slate-400 rounded-lg text-xs font-medium hover:bg-white/10 transition-all border border-white/10"
+          className="flex items-center gap-1.5 px-2 py-1 bg-white/5 text-slate-400 rounded-lg text-xs font-medium hover:bg-white/10 transition-all border border-[var(--border)]"
         >
           <Shield className="w-3.5 h-3.5" />
           Shield
@@ -566,7 +566,7 @@ export default function PortfolioPage() {
 
           {/* Active FX/Stock Trades - compact */}
           {openTrades.length > 0 && (
-            <div className="mb-6 pb-4 border-b border-white/10">
+            <div className="mb-6 pb-4 border-b border-[var(--border)]">
               <h3 className="text-sm font-semibold text-cream mb-3 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-electric" />
                 Active Trades ({openTrades.length})
@@ -664,7 +664,7 @@ export default function PortfolioPage() {
 
           {/* Shield Summary */}
           {shieldSummary.activeShields > 0 && (
-            <div className="mt-6 pt-4 border-t border-white/10">
+            <div className="mt-6 pt-4 border-t border-[var(--border)]">
               <div className="flex items-center gap-2 mb-3">
                 <ShieldCheck className="w-4 h-4 text-blue-400" />
                 <span className="text-sm font-medium text-blue-400">Shield Summary</span>

@@ -212,7 +212,7 @@ const PriceChart = ({ priceHistory }: { priceHistory: number[] }) => {
 
   if (priceHistory.length < 2) {
     return (
-      <div ref={containerRef} className="h-full flex items-center justify-center text-[#5C6B80]">
+      <div ref={containerRef} className="h-full flex items-center justify-center text-[var(--text-3)]">
         <RefreshCw className="w-6 h-6 animate-spin" />
       </div>
     );
@@ -280,7 +280,7 @@ const ShieldBadge = ({ position, onToggle }: { position: SpotPosition; onToggle:
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
         position.shieldEnabled
           ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-          : 'bg-white/5 text-[#8A9BB3] hover:bg-white/10 border border-white/10'
+          : 'bg-white/5 text-[var(--text-2)] hover:bg-white/10 border border-[var(--border)]'
       }`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -290,7 +290,7 @@ const ShieldBadge = ({ position, onToggle }: { position: SpotPosition; onToggle:
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>Protected</span>
           {position.shieldSnapPrice && (
-            <span className={priceChange < 0 ? 'text-[#D9743C]' : 'text-[#2FA56B]'}>
+            <span className={priceChange < 0 ? 'text-[#FF4D3D]' : 'text-[#00C805]'}>
               {priceChange < 0 ? '↓' : '↑'}
               {Math.abs(priceChangePercent).toFixed(1)}%
             </span>
@@ -333,25 +333,25 @@ const PortfolioCard = ({
     <motion.div
       layout
       className={`p-4 rounded-xl border transition-all cursor-pointer ${
-        position.shieldEnabled ? 'bg-blue-500/5 border-blue-500/20' : 'bg-white/5 border-white/5 hover:border-white/10'
+        position.shieldEnabled ? 'bg-blue-500/5 border-blue-500/20' : 'bg-white/5 border-white/5 hover:border-[var(--border)]'
       }`}
       onClick={onSelect}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-white font-bold">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-[var(--text)] font-bold">
             {asset?.icon || position.symbol[0]}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <p className="font-medium text-white">{position.symbol}</p>
+              <p className="font-medium text-[var(--text)]">{position.symbol}</p>
               {position.shieldEnabled && (
                 <span className="flex items-center gap-1 text-xs text-blue-400">
                   <Lock className="w-3 h-3" />
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#5C6B80]">{position.quantity.toFixed(6)} coins</p>
+            <p className="text-xs text-[var(--text-3)]">{position.quantity.toFixed(6)} coins</p>
           </div>
         </div>
         <ShieldBadge position={position} onToggle={onToggleShield} />
@@ -359,15 +359,15 @@ const PortfolioCard = ({
 
       <div className="space-y-2">
         <div className="flex justify-between items-baseline">
-          <span className="text-sm text-[#8A9BB3]">{position.shieldEnabled ? 'Shielded Value' : 'Value'}</span>
-          <span className="text-lg font-semibold text-white">
+          <span className="text-sm text-[var(--text-2)]">{position.shieldEnabled ? 'Shielded Value' : 'Value'}</span>
+          <span className="text-lg font-semibold text-[var(--text)]">
             ${displayValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-xs text-[#5C6B80]">P&L</span>
-          <span className={`text-sm font-medium ${position.displayPnL >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+          <span className="text-xs text-[var(--text-3)]">P&L</span>
+          <span className={`text-sm font-medium ${position.displayPnL >= 0 ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
             {position.displayPnL >= 0 ? '+' : ''}
             {position.displayPnL.toFixed(2)} ({position.displayPnLPercent.toFixed(2)}%)
           </span>
@@ -384,19 +384,19 @@ const PortfolioCard = ({
             </div>
 
             <div className="flex justify-between items-center text-xs">
-              <span className="text-[#5C6B80] flex items-center gap-1">
+              <span className="text-[var(--text-3)] flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
                 Live Price
               </span>
-              <span className={`font-mono ${livePrice >= position.shieldSnapPrice ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+              <span className={`font-mono ${livePrice >= position.shieldSnapPrice ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                 ${livePrice.toLocaleString()}
               </span>
             </div>
 
             {protectionAmount !== 0 && (
               <div className="flex justify-between items-center text-xs mt-2 pt-2 border-t border-white/5">
-                <span className="text-[#8A9BB3]">{protectionAmount > 0 ? '💪 Protected from loss' : '📈 Missed gain'}</span>
-                <span className={protectionAmount > 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}>
+                <span className="text-[var(--text-2)]">{protectionAmount > 0 ? '💪 Protected from loss' : '📈 Missed gain'}</span>
+                <span className={protectionAmount > 0 ? 'text-[#00C805]' : 'text-[#FF4D3D]'}>
                   {protectionAmount > 0 ? '+' : ''}
                   {protectionAmount.toFixed(2)}
                 </span>
@@ -833,8 +833,8 @@ useEffect(() => {
   // ✅ HYDRATION FIX: render loading until client has mounted
  if (!hasMounted || (user?.id && !_hydrated)) {
   return (
-    <div className="min-h-screen bg-[#0A1526] flex items-center justify-center">
-      <div className="animate-pulse text-[#5C6B80] text-sm">Loading crypto trading…</div>
+    <div className="min-h-screen bg-[var(--surface)] flex items-center justify-center">
+      <div className="animate-pulse text-[var(--text-3)] text-sm">Loading crypto trading…</div>
     </div>
   );
 }
@@ -851,27 +851,27 @@ useEffect(() => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
             className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-xl flex items-center gap-2 shadow-xl ${
-              notification.type === 'success' ? 'bg-[#2FA56B]/20 border border-[#2FA56B]/30' : 'bg-[#D9743C]/20 border border-[#D9743C]/30'
+              notification.type === 'success' ? 'bg-[#00C805]/20 border border-[#00C805]/30' : 'bg-[#FF4D3D]/20 border border-[#FF4D3D]/30'
             }`}
           >
             {notification.type === 'success' ? (
-              <CheckCircle className="w-5 h-5 text-[#2FA56B]" />
+              <CheckCircle className="w-5 h-5 text-[#00C805]" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-[#D9743C]" />
+              <AlertCircle className="w-5 h-5 text-[#FF4D3D]" />
             )}
-            <span className={notification.type === 'success' ? 'text-[#2FA56B]' : 'text-[#D9743C]'}>{notification.message}</span>
+            <span className={notification.type === 'success' ? 'text-[#00C805]' : 'text-[#FF4D3D]'}>{notification.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Mobile Tabs */}
-      <div className="lg:hidden flex border-b border-white/10">
+      <div className="lg:hidden flex border-b border-[var(--border)]">
         {(['chart', 'trade', 'portfolio'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setMobileTab(tab)}
             className={`flex-1 py-3 text-sm font-medium transition-all ${
-              mobileTab === tab ? 'text-[#C4A052] border-b-2 border-[#C4A052]' : 'text-[#8A9BB3] hover:text-white'
+              mobileTab === tab ? 'text-[var(--accent-3)] border-b-2 border-[#C4A052]' : 'text-[var(--text-2)] hover:text-[var(--text)]'
             }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -884,7 +884,7 @@ useEffect(() => {
         {/* Left Column - Chart */}
         <div className={`lg:col-span-8 space-y-4 ${mobileTab !== 'chart' ? 'hidden lg:block' : ''}`}>
           {/* Asset Header — hero */}
-          <div className="relative overflow-hidden bg-[#0C1828] rounded-3xl p-5 border border-white/[0.07]">
+          <div className="relative overflow-hidden bg-[var(--inset)] rounded-3xl p-5 border border-white/[0.07]">
             {/* amber crypto glow */}
             <div
               className="pointer-events-none absolute -top-24 -right-10 w-72 h-72 rounded-full blur-[90px] opacity-40"
@@ -895,30 +895,30 @@ useEffect(() => {
                 onClick={() => setShowAssetSelector(true)}
                 className="flex items-center gap-3 hover:bg-white/5 rounded-2xl p-2 -ml-2 transition-all"
               >
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-orange-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-[var(--text)] font-bold text-xl shadow-lg shadow-orange-500/20">
                   {selectedAsset.icon}
                 </div>
                 <div className="text-left">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-white tracking-tight">{selectedSymbol}</h2>
-                    <ChevronDown className="w-4 h-4 text-[#8A9BB3]" />
+                    <h2 className="text-xl font-bold text-[var(--text)] tracking-tight">{selectedSymbol}</h2>
+                    <ChevronDown className="w-4 h-4 text-[var(--text-2)]" />
                   </div>
-                  <p className="text-sm text-[#8A9BB3]">{selectedAsset.name}</p>
+                  <p className="text-sm text-[var(--text-2)]">{selectedAsset.name}</p>
                 </div>
               </button>
 
               <div className="text-right">
                 <div className="flex items-center justify-end gap-1.5 mb-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2FA56B] animate-pulse" />
-                  <span className="text-[10px] uppercase tracking-[0.18em] text-[#2FA56B] font-semibold">Live</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00C805] animate-pulse" />
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-[#00C805] font-semibold">Live</span>
                 </div>
-                <p className="text-[28px] leading-none font-extrabold text-white tabular-nums tracking-tight">
+                <p className="text-[28px] leading-none font-extrabold text-[var(--text)] tabular-nums tracking-tight">
                   ${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <p className={`mt-1 text-sm font-semibold tabular-nums ${liveChange >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+                <p className={`mt-1 text-sm font-semibold tabular-nums ${liveChange >= 0 ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                   {liveChange >= 0 ? '+' : ''}
                   {Number.isFinite(liveChange) ? liveChange.toFixed(2) : selectedAsset.change24h.toFixed(2)}%
-                  <span className="text-[#5C6B80] font-normal"> 24h</span>
+                  <span className="text-[var(--text-3)] font-normal"> 24h</span>
                 </p>
               </div>
             </div>
@@ -930,9 +930,9 @@ useEffect(() => {
           </div>
 
           {/* Portfolio Summary with Shield Info */}
-          <div className="bg-[#0F1D33] rounded-2xl p-4 border border-white/5">
+          <div className="bg-[var(--card)] rounded-2xl p-4 border border-white/5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Your Portfolio</h3>
+              <h3 className="text-lg font-semibold text-[var(--text)]">Your Portfolio</h3>
               {shieldSummary.activeShields > 0 && (
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
                   <ShieldCheck className="w-4 h-4 text-blue-400" />
@@ -946,20 +946,20 @@ useEffect(() => {
             {/* Stats Row — stack on mobile so long numbers don't overlap */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-4">
               <div className="p-3 bg-white/5 rounded-xl min-w-0">
-                <p className="text-[10px] text-[#5C6B80] mb-1 uppercase tracking-wider">Total Value</p>
-                <p className="text-[16px] sm:text-lg font-semibold text-white tabular-nums break-words">
+                <p className="text-[10px] text-[var(--text-3)] mb-1 uppercase tracking-wider">Total Value</p>
+                <p className="text-[16px] sm:text-lg font-semibold text-[var(--text)] tabular-nums break-words">
                   ${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
               <div className="p-3 bg-white/5 rounded-xl min-w-0">
-                <p className="text-[10px] text-[#5C6B80] mb-1 uppercase tracking-wider">Unrealized P&amp;L</p>
-                <p className={`text-[16px] sm:text-lg font-semibold tabular-nums break-words ${totalPnL >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+                <p className="text-[10px] text-[var(--text-3)] mb-1 uppercase tracking-wider">Unrealized P&amp;L</p>
+                <p className={`text-[16px] sm:text-lg font-semibold tabular-nums break-words ${totalPnL >= 0 ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                   {totalPnL >= 0 ? '+' : ''}${Math.abs(totalPnL).toFixed(2)}
                 </p>
               </div>
               <div className="p-3 bg-white/5 rounded-xl min-w-0">
-                <p className="text-[10px] text-[#5C6B80] mb-1 uppercase tracking-wider">Cash Balance</p>
-                <p className="text-[16px] sm:text-lg font-semibold text-white tabular-nums break-words">
+                <p className="text-[10px] text-[var(--text-3)] mb-1 uppercase tracking-wider">Cash Balance</p>
+                <p className="text-[16px] sm:text-lg font-semibold text-[var(--text)] tabular-nums break-words">
                   ${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
@@ -967,7 +967,7 @@ useEffect(() => {
 
             {/* Holdings Grid */}
             {positions.length === 0 ? (
-              <div className="text-center py-12 text-[#5C6B80]">
+              <div className="text-center py-12 text-[var(--text-3)]">
                 <Wallet className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">No holdings yet</p>
                 <p className="text-xs">Buy your first crypto to start</p>
@@ -996,14 +996,14 @@ useEffect(() => {
 
         {/* Right Column - Trade Panel */}
         <div className={`lg:col-span-4 ${mobileTab !== 'trade' ? 'hidden lg:block' : ''}`}>
-          <div className="bg-[#0F1D33] rounded-2xl p-4 border border-white/5 sticky top-4">
+          <div className="bg-[var(--card)] rounded-2xl p-4 border border-white/5 sticky top-4">
             {/* Balance Display */}
             <div className="flex items-center justify-between mb-4 p-3 bg-white/5 rounded-xl">
               <div className="flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-[#C4A052]" />
-                <span className="text-sm text-[#8A9BB3]">Available</span>
+                <Wallet className="w-4 h-4 text-[var(--accent-3)]" />
+                <span className="text-sm text-[var(--text-2)]">Available</span>
               </div>
-              <span className="text-lg font-semibold text-white">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              <span className="text-lg font-semibold text-[var(--text)]">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
             </div>
 
             {/* Buy/Sell Toggle */}
@@ -1011,7 +1011,7 @@ useEffect(() => {
               <button
                 onClick={() => setOrderType('buy')}
                 className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  orderType === 'buy' ? 'bg-[#2FA56B] text-[#0A1526]' : 'bg-white/5 text-[#8A9BB3] hover:bg-white/10'
+                  orderType === 'buy' ? 'bg-[#00C805] text-[#0A1526]' : 'bg-white/5 text-[var(--text-2)] hover:bg-white/10'
                 }`}
               >
                 Buy
@@ -1019,7 +1019,7 @@ useEffect(() => {
               <button
                 onClick={() => setOrderType('sell')}
                 className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  orderType === 'sell' ? 'bg-[#D9743C] text-white' : 'bg-white/5 text-[#8A9BB3] hover:bg-white/10'
+                  orderType === 'sell' ? 'bg-[#FF4D3D] text-[var(--text)]' : 'bg-white/5 text-[var(--text-2)] hover:bg-white/10'
                 }`}
               >
                 Sell
@@ -1028,14 +1028,14 @@ useEffect(() => {
 
             {/* Current Position Info */}
             {currentPosition && (
-              <div className="mb-4 p-3 bg-white/5 rounded-xl border border-white/10">
+              <div className="mb-4 p-3 bg-white/5 rounded-xl border border-[var(--border)]">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-[#5C6B80]">Your {selectedSymbol}</span>
+                  <span className="text-xs text-[var(--text-3)]">Your {selectedSymbol}</span>
                   <ShieldBadge position={currentPosition} onToggle={() => toggleShield(currentPosition.id)} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-white">{currentPosition.quantity.toFixed(6)}</span>
-                  <span className={`text-sm ${currentPosition.displayPnL >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+                  <span className="text-sm text-[var(--text)]">{currentPosition.quantity.toFixed(6)}</span>
+                  <span className={`text-sm ${currentPosition.displayPnL >= 0 ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                     ${currentPosition.displayValue.toFixed(2)}
                   </span>
                 </div>
@@ -1044,9 +1044,9 @@ useEffect(() => {
 
             {/* Amount Input */}
             <div className="mb-4">
-              <label className="text-xs text-[#5C6B80] mb-1 block">Amount (USD)</label>
+              <label className="text-xs text-[var(--text-3)] mb-1 block">Amount (USD)</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5C6B80]">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]">$</span>
                 <input
                   type="number"
                   value={amount}
@@ -1054,7 +1054,7 @@ useEffect(() => {
                     setOrderMode('amount');
                     setAmount(Number(e.target.value));
                   }}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 py-3 text-white text-right font-mono focus:outline-none focus:border-[#C4A052]/50"
+                  className="w-full bg-white/5 border border-[var(--border)] rounded-xl pl-8 pr-4 py-3 text-[var(--text)] text-right font-mono focus:outline-none focus:border-[#C4A052]/50"
                   placeholder="0.00"
                 />
               </div>
@@ -1068,7 +1068,7 @@ useEffect(() => {
                       setOrderMode('amount');
                       setAmount(amt);
                     }}
-                    className="flex-1 py-1.5 text-xs bg-white/5 hover:bg-white/10 text-white rounded-lg transition-all"
+                    className="flex-1 py-1.5 text-xs bg-white/5 hover:bg-white/10 text-[var(--text)] rounded-lg transition-all"
                   >
                     ${amt}
                   </button>
@@ -1079,14 +1079,14 @@ useEffect(() => {
             {/* You Get */}
             <div className="mb-4 p-3 bg-white/5 rounded-xl">
               <div className="flex justify-between items-center">
-                <span className="text-xs text-[#5C6B80]">You {orderType === 'buy' ? 'get' : 'sell'}</span>
-                <span className="text-sm font-mono text-white">
+                <span className="text-xs text-[var(--text-3)]">You {orderType === 'buy' ? 'get' : 'sell'}</span>
+                <span className="text-sm font-mono text-[var(--text)]">
                   {quantity.toFixed(6)} {selectedSymbol}
                 </span>
               </div>
               <div className="flex justify-between items-center mt-1">
-                <span className="text-xs text-[#5C6B80]">Price</span>
-                <span className="text-xs font-mono text-[#8A9BB3]">${currentPrice.toLocaleString()}</span>
+                <span className="text-xs text-[var(--text-3)]">Price</span>
+                <span className="text-xs font-mono text-[var(--text-2)]">${currentPrice.toLocaleString()}</span>
               </div>
             </div>
 
@@ -1095,7 +1095,7 @@ useEffect(() => {
               onClick={orderType === 'buy' ? handleBuy : handleSell}
               disabled={amount <= 0 || isExecuting}
               className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                orderType === 'buy' ? 'bg-[#2FA56B] hover:bg-[#2FA56B]/90 text-[#0A1526]' : 'bg-[#D9743C] hover:bg-[#D9743C]/90 text-white'
+                orderType === 'buy' ? 'bg-[#00C805] hover:bg-[#00C805]/90 text-[#0A1526]' : 'bg-[#FF4D3D] hover:bg-[#FF4D3D]/90 text-[var(--text)]'
               }`}
             >
               {isExecuting ? (
@@ -1130,21 +1130,21 @@ useEffect(() => {
         <div className={`lg:hidden ${mobileTab !== 'portfolio' ? 'hidden' : ''}`}>
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-white">Your Portfolio</h3>
+              <h3 className="text-sm font-medium text-[var(--text)]">Your Portfolio</h3>
               <div className="text-right">
-                <p className="text-xs text-[#5C6B80]">Total: ${totalPortfolioValue.toFixed(2)}</p>
-                <p className={`text-xs ${totalPnL >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+                <p className="text-xs text-[var(--text-3)]">Total: ${totalPortfolioValue.toFixed(2)}</p>
+                <p className={`text-xs ${totalPnL >= 0 ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                   {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
                 </p>
               </div>
             </div>
 
             {positions.length === 0 ? (
-              <div className="text-center py-12 text-[#5C6B80]">
+              <div className="text-center py-12 text-[var(--text-3)]">
                 <Wallet className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">No holdings yet</p>
                 <p className="text-xs mb-4">Buy your first crypto to start</p>
-                <button onClick={() => setMobileTab('trade')} className="px-4 py-2 bg-[#C4A052]/10 text-[#C4A052] text-sm rounded-lg">
+                <button onClick={() => setMobileTab('trade')} className="px-4 py-2 bg-[#C4A052]/10 text-[var(--accent-3)] text-sm rounded-lg">
                   Start Trading
                 </button>
               </div>
@@ -1186,23 +1186,23 @@ useEffect(() => {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full lg:w-[480px] max-h-[80vh] bg-[#0F1D33] rounded-t-3xl lg:rounded-3xl overflow-hidden"
+              className="w-full lg:w-[480px] max-h-[80vh] bg-[var(--card)] rounded-t-3xl lg:rounded-3xl overflow-hidden"
             >
-              <div className="p-4 border-b border-white/10">
+              <div className="p-4 border-b border-[var(--border)]">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-white">Select Crypto</h3>
+                  <h3 className="text-lg font-semibold text-[var(--text)]">Select Crypto</h3>
                   <button onClick={() => setShowAssetSelector(false)} className="p-2 hover:bg-white/10 rounded-lg">
-                    <X className="w-5 h-5 text-[#8A9BB3]" />
+                    <X className="w-5 h-5 text-[var(--text-2)]" />
                   </button>
                 </div>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A9BB3]" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-2)]" />
                   <input
                     type="text"
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#C4A052]/50"
+                    className="w-full bg-white/5 border border-[var(--border)] rounded-xl pl-10 pr-4 py-2.5 text-[var(--text)] text-sm focus:outline-none focus:border-[#C4A052]/50"
                   />
                 </div>
               </div>
@@ -1224,18 +1224,18 @@ useEffect(() => {
                         selectedAsset.id === asset.id ? 'bg-[#C4A052]/10' : 'hover:bg-white/5'
                       }`}
                     >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-[var(--text)] font-bold">
                         {asset.icon}
                       </div>
 
                       <div className="flex-1 text-left">
-                        <p className="font-medium text-white">{sym}</p>
-                        <p className="text-xs text-[#5C6B80]">{asset.name}</p>
+                        <p className="font-medium text-[var(--text)]">{sym}</p>
+                        <p className="text-xs text-[var(--text-3)]">{asset.name}</p>
                       </div>
 
                       <div className="text-right">
-                        <p className="text-sm font-mono text-white">${p.toLocaleString()}</p>
-                        <p className={`text-xs ${c >= 0 ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+                        <p className="text-sm font-mono text-[var(--text)]">${p.toLocaleString()}</p>
+                        <p className={`text-xs ${c >= 0 ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                           {c >= 0 ? '+' : ''}
                           {Number.isFinite(c) ? c.toFixed(2) : asset.change24h.toFixed(2)}%
                         </p>
@@ -1250,7 +1250,7 @@ useEffect(() => {
                       >
                         <Star
                           className={`w-4 h-4 ${
-                            favorites.includes(sym) ? 'text-yellow-500 fill-yellow-500' : 'text-[#5C6B80]'
+                            favorites.includes(sym) ? 'text-yellow-500 fill-yellow-500' : 'text-[var(--text-3)]'
                           }`}
                         />
                       </button>

@@ -140,7 +140,6 @@ html.dark .card {
 
 /* ---------- viewport fit: no zoom-out, ever ---------- */
 html, body { max-width: 100%; overflow-x: hidden; }
-*, *::before, *::after { min-width: 0; }
 img, svg, video, canvas { max-width: 100%; height: auto; }
 .fit { width: 100%; max-width: min(100%, 1120px); margin-inline: auto; padding-inline: clamp(12px, 4vw, 28px); }
 .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }

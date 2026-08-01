@@ -11,21 +11,21 @@ const ORDER: EtfCategory[] = ['sp500', 'nasdaq_100', 'total_market', 'dividend',
 
 export default function ExploreEtfs() {
   return (
-    <div className="min-h-screen bg-[#0A1526] pb-28">
+    <div className="min-h-screen bg-[var(--surface)] pb-28">
       <div className="max-w-2xl mx-auto pt-5">
         <div className="flex items-center gap-3 mb-1">
           <Link href="/dashboard/invest" prefetch={false}
-            className="w-9 h-9 rounded-full bg-[#0F1D33] border border-white/[0.06] flex items-center justify-center hover:bg-[#13243D]">
-            <ArrowLeft className="w-4 h-4 text-[#8A9BB3]" />
+            className="w-9 h-9 rounded-full bg-[var(--card)] border border-[var(--border)] flex items-center justify-center hover:bg-[var(--inset)]">
+            <ArrowLeft className="w-4 h-4 text-[var(--text-2)]" />
           </Link>
-          <h1 className="text-[20px] font-bold text-white">Explore ETFs</h1>
+          <h1 className="text-[20px] font-bold text-[var(--text)]">Explore ETFs</h1>
         </div>
-        <p className="text-[12.5px] text-[#8A9BB3] ml-12 mb-6">
+        <p className="text-[12.5px] text-[var(--text-2)] ml-12 mb-6">
           Curated funds across the most popular long-term investing categories.
         </p>
 
         <section className="mb-8">
-          <h2 className="text-[15px] font-semibold text-white mb-3">Beginner-friendly</h2>
+          <h2 className="text-[15px] font-semibold text-[var(--text)] mb-3">Beginner-friendly</h2>
           <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
             {getBeginnerEtfs().map(e => <EtfCard key={e.symbol} etf={e} />)}
           </div>
@@ -36,7 +36,7 @@ export default function ExploreEtfs() {
           if (!list.length) return null;
           return (
             <section key={cat} className="mb-8">
-              <h2 className="text-[15px] font-semibold text-white mb-3">{CATEGORY_LABELS[cat]}</h2>
+              <h2 className="text-[15px] font-semibold text-[var(--text)] mb-3">{CATEGORY_LABELS[cat]}</h2>
               <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
                 {list.map(e => <EtfCard key={e.symbol} etf={e} />)}
               </div>
@@ -44,7 +44,7 @@ export default function ExploreEtfs() {
           );
         })}
 
-        <p className="mt-6 text-[11px] text-[#4D5B70] leading-relaxed text-center px-4">
+        <p className="mt-6 text-[11px] text-[var(--text-3)] leading-relaxed text-center px-4">
           Investing involves risk, including possible loss of principal. Past performance does not
           guarantee future results.
         </p>

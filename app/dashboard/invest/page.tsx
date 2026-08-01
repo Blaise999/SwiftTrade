@@ -107,52 +107,52 @@ export default function InvestHome() {
 
         {/* ── Header ── */}
         <div className="flex items-center justify-between pt-5 mb-1">
-          <p className="text-[13px] text-[#8A9BB3]">{greeting},{' '}
-            <span className="text-white font-semibold">{user?.firstName || 'Investor'}</span>
+          <p className="text-[13px] text-[var(--text-2)]">{greeting},{' '}
+            <span className="text-[var(--text)] font-semibold">{user?.firstName || 'Investor'}</span>
           </p>
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Search stocks and ETFs"
-            className="w-9 h-9 rounded-full bg-[#0F1D33] border border-white/[0.06] flex items-center justify-center hover:bg-[#13243D] transition-colors active:scale-95"
+            className="w-9 h-9 rounded-full bg-[var(--card)] border border-[var(--border)] flex items-center justify-center hover:bg-[var(--inset)] transition-colors active:scale-95"
           >
-            <Search className="w-4 h-4 text-[#8A9BB3]" />
+            <Search className="w-4 h-4 text-[var(--text-2)]" />
           </button>
         </div>
 
         {/* ── HERO BALANCE CARD ── */}
         <motion.div
           variants={section} initial="hidden" animate="show" custom={0}
-          className="relative mt-3 overflow-hidden rounded-3xl border border-white/[0.07] bg-[#0C1828] p-5"
+          className="relative mt-3 overflow-hidden rounded-3xl border border-white/[0.07] bg-[var(--inset)] p-5"
         >
           {/* ambient glow */}
           <div
-            className={`pointer-events-none absolute -top-24 -right-10 w-72 h-72 rounded-full blur-[90px] opacity-40 ${up ? 'bg-[#2FA56B]/30' : 'bg-[#D9743C]/25'}`}
+            className={`pointer-events-none absolute -top-24 -right-10 w-72 h-72 rounded-full blur-[90px] opacity-40 ${up ? 'bg-[#00C805]/30' : 'bg-[#FF4D3D]/25'}`}
           />
           <div className="relative">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] uppercase tracking-[0.24em] text-[#5C6B80]">Stock balance</span>
-              <button onClick={() => setHide(!hide)} className="text-[#5C6B80] hover:text-[#8A9BB3] transition-colors">
+              <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-3)]">Stock balance</span>
+              <button onClick={() => setHide(!hide)} className="text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors">
                 {hide ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
               {anyLive && (
-                <span className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-medium text-[#2FA56B]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2FA56B] animate-pulse" /> LIVE
+                <span className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-medium text-[#00C805]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00C805] animate-pulse" /> LIVE
                 </span>
               )}
             </div>
 
-            <div className="mt-1.5 text-[clamp(34px,11vw,48px)] leading-none font-extrabold text-white tracking-tight tabular-nums">
+            <div className="mt-1.5 text-[clamp(34px,11vw,48px)] leading-none font-extrabold text-[var(--text)] tracking-tight tabular-nums">
               {hide ? '••••••' : fmtUSD(stockBalance)}
             </div>
 
             {stockBalance > 0 ? (
-              <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums ${up ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+              <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                 {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                 {hide ? '••••' : <>{up ? '+' : '−'}{fmtUSD(Math.abs(dayPnl))}</>}
-                <span className="text-[#5C6B80] font-normal">({fmtPct(dayPct)}) today</span>
+                <span className="text-[var(--text-3)] font-normal">({fmtPct(dayPct)}) today</span>
               </div>
             ) : (
-              <div className="mt-2 text-[13px] text-[#5C6B80]">
+              <div className="mt-2 text-[13px] text-[var(--text-3)]">
                 No stock holdings yet — pick one below to start
               </div>
             )}
@@ -170,19 +170,19 @@ export default function InvestHome() {
           className="mt-4 grid grid-cols-3 gap-2.5"
         >
           <Link href="/dashboard/deposit" prefetch={false}
-            className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-[#2FA56B]/10 border border-[#2FA56B]/20 hover:bg-[#2FA56B]/15 transition-all active:scale-[0.97]">
-            <ArrowDownLeft className="w-[18px] h-[18px] text-[#2FA56B]" />
-            <span className="text-[12px] text-white font-medium">Add cash</span>
+            className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-[#00C805]/10 border border-[#00C805]/20 hover:bg-[#00C805]/15 transition-all active:scale-[0.97]">
+            <ArrowDownLeft className="w-[18px] h-[18px] text-[#00C805]" />
+            <span className="text-[12px] text-[var(--text)] font-medium">Add cash</span>
           </Link>
           <Link href="/dashboard/invest/etfs" prefetch={false}
             className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-[#3B948C]/10 border border-[#3B948C]/20 hover:bg-[#3B948C]/15 transition-all active:scale-[0.97]">
-            <LineChart className="w-[18px] h-[18px] text-[#3B948C]" />
-            <span className="text-[12px] text-white font-medium">ETFs</span>
+            <LineChart className="w-[18px] h-[18px] text-[var(--accent-2)]" />
+            <span className="text-[12px] text-[var(--text)] font-medium">ETFs</span>
           </Link>
           <button onClick={() => setSearchOpen(true)}
-            className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-[#0F1D33] border border-white/[0.06] hover:bg-[#13243D] transition-all active:scale-[0.97]">
-            <Search className="w-[18px] h-[18px] text-[#8A9BB3]" />
-            <span className="text-[12px] text-white font-medium">Search</span>
+            className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--inset)] transition-all active:scale-[0.97]">
+            <Search className="w-[18px] h-[18px] text-[var(--text-2)]" />
+            <span className="text-[12px] text-[var(--text)] font-medium">Search</span>
           </button>
         </motion.div>
 
@@ -190,10 +190,10 @@ export default function InvestHome() {
         {holdings.length > 0 && (
           <motion.section variants={section} initial="hidden" animate="show" custom={2} className="mt-8">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[16px] font-bold text-white tracking-tight">Your holdings</h2>
-              <span className="text-[11px] text-[#5C6B80]">{holdings.length} position{holdings.length !== 1 ? 's' : ''}</span>
+              <h2 className="text-[16px] font-bold text-[var(--text)] tracking-tight">Your holdings</h2>
+              <span className="text-[11px] text-[var(--text-3)]">{holdings.length} position{holdings.length !== 1 ? 's' : ''}</span>
             </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] overflow-hidden divide-y divide-white/[0.05]">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden divide-y divide-white/[0.05]">
               {holdings.map((p: any) => {
                 const sym = String(p.symbol).toUpperCase();
                 const lq = live[sym];
@@ -205,24 +205,24 @@ export default function InvestHome() {
                     key={p.id}
                     href={`/dashboard/invest/asset/${p.symbol}`}
                     prefetch={false}
-                    className="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-white/[0.03] transition-colors"
+                    className="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-[var(--inset)] transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3B948C]/20 to-[#C4A052]/10 border border-white/[0.06] flex items-center justify-center shrink-0">
-                        <span className="text-[11.5px] font-bold text-white">{sym.slice(0, 4)}</span>
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3B948C]/20 to-[#C4A052]/10 border border-[var(--border)] flex items-center justify-center shrink-0">
+                        <span className="text-[11.5px] font-bold text-[var(--text)]">{sym.slice(0, 4)}</span>
                       </div>
                       <div className="min-w-0">
-                        <div className="text-[14px] font-semibold text-white truncate">{sym}</div>
-                        <div className="text-[11px] text-[#5C6B80] truncate">
+                        <div className="text-[14px] font-semibold text-[var(--text)] truncate">{sym}</div>
+                        <div className="text-[11px] text-[var(--text-3)] truncate">
                           {Number(p.quantity).toFixed(4)} @ ${Number(p.avgPrice).toFixed(2)}
                         </div>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-[14px] font-semibold text-white tabular-nums">
+                      <div className="text-[14px] font-semibold text-[var(--text)] tabular-nums">
                         ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
-                      <div className={`text-[12px] tabular-nums ${gain ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+                      <div className={`text-[12px] tabular-nums ${gain ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                         {gain ? '+' : ''}{pct.toFixed(2)}% {lq ? 'today' : '24h'}
                       </div>
                     </div>
@@ -255,10 +255,10 @@ export default function InvestHome() {
         <motion.section variants={section} initial="hidden" animate="show" custom={5} className="mt-8">
           <div className="rounded-2xl border border-[#C4A052]/15 bg-gradient-to-br from-[#C4A052]/[0.07] to-transparent p-4 mb-3">
             <div className="flex items-center gap-2 mb-1.5">
-              <Sparkles className="w-4 h-4 text-[#C4A052]" />
-              <h2 className="text-[16px] font-bold text-white tracking-tight">Invest in the S&P 500</h2>
+              <Sparkles className="w-4 h-4 text-[var(--accent-3)]" />
+              <h2 className="text-[16px] font-bold text-[var(--text)] tracking-tight">Invest in the S&P 500</h2>
             </div>
-            <p className="text-[12.5px] text-[#8A9BB3] leading-relaxed">
+            <p className="text-[12.5px] text-[var(--text-2)] leading-relaxed">
               The S&P 500 tracks around 500 of the largest publicly traded companies in the United
               States. You can&apos;t buy the index directly, but you can invest through ETFs that track it.
             </p>
@@ -303,7 +303,7 @@ export default function InvestHome() {
           );
         })}
 
-        <p className="mt-10 text-[11px] text-[#4D5B70] leading-relaxed text-center px-4">
+        <p className="mt-10 text-[11px] text-[var(--text-3)] leading-relaxed text-center px-4">
           Investing involves risk, including possible loss of principal. Past performance does not
           guarantee future results. Live prices shown where available; otherwise reference values.
         </p>
@@ -311,27 +311,27 @@ export default function InvestHome() {
 
       {/* ── INLINE SEARCH SHEET ── */}
       {searchOpen && (
-        <div className="fixed inset-0 z-[60] flex flex-col bg-[#0A1526]/95 backdrop-blur-md">
+        <div className="fixed inset-0 z-[60] flex flex-col bg-[var(--surface)]/95 backdrop-blur-md">
           <div className="w-full max-w-2xl mx-auto px-4 pt-5 flex flex-col h-full">
             <div className="flex items-center gap-2.5">
-              <div className="flex-1 flex items-center gap-2.5 px-4 h-12 rounded-2xl bg-[#0F1D33] border border-white/[0.08]">
-                <Search className="w-4 h-4 text-[#5C6B80] shrink-0" />
+              <div className="flex-1 flex items-center gap-2.5 px-4 h-12 rounded-2xl bg-[var(--card)] border border-[var(--border)]">
+                <Search className="w-4 h-4 text-[var(--text-3)] shrink-0" />
                 <input
                   ref={searchRef}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search stocks & ETFs…"
-                  className="flex-1 bg-transparent outline-none text-[15px] text-white placeholder:text-[#4D5B70]"
+                  className="flex-1 bg-transparent outline-none text-[15px] text-[var(--text)] placeholder:text-[var(--text-3)]"
                 />
                 {query && (
-                  <button onClick={() => setQuery('')} className="text-[#5C6B80] hover:text-white">
+                  <button onClick={() => setQuery('')} className="text-[var(--text-3)] hover:text-[var(--text)]">
                     <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
               <button
                 onClick={() => { setSearchOpen(false); setQuery(''); }}
-                className="text-[14px] text-[#8A9BB3] hover:text-white px-1"
+                className="text-[14px] text-[var(--text-2)] hover:text-[var(--text)] px-1"
               >
                 Cancel
               </button>
@@ -339,11 +339,11 @@ export default function InvestHome() {
 
             <div className="mt-4 flex-1 overflow-y-auto pb-10">
               {!query.trim() ? (
-                <p className="text-[13px] text-[#5C6B80] px-1">Start typing a ticker or company name.</p>
+                <p className="text-[13px] text-[var(--text-3)] px-1">Start typing a ticker or company name.</p>
               ) : results.length === 0 ? (
-                <p className="text-[13px] text-[#5C6B80] px-1">No matches for “{query}”.</p>
+                <p className="text-[13px] text-[var(--text-3)] px-1">No matches for “{query}”.</p>
               ) : (
-                <div className="rounded-2xl border border-white/[0.06] bg-[#0F1D33] overflow-hidden divide-y divide-white/[0.05]">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden divide-y divide-white/[0.05]">
                   {results.map((a) => {
                     const lq = live[a.symbol];
                     const pct = lq ? lq.changePercent24h : a.seedChangePct;
@@ -355,20 +355,20 @@ export default function InvestHome() {
                         href={`/dashboard/invest/asset/${a.symbol}`}
                         prefetch={false}
                         onClick={() => setSearchOpen(false)}
-                        className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
+                        className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[var(--inset)] transition-colors"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3B948C]/20 to-[#C4A052]/10 border border-white/[0.06] flex items-center justify-center shrink-0">
-                            <span className="text-[10.5px] font-bold text-white">{a.symbol.slice(0, 4)}</span>
+                          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3B948C]/20 to-[#C4A052]/10 border border-[var(--border)] flex items-center justify-center shrink-0">
+                            <span className="text-[10.5px] font-bold text-[var(--text)]">{a.symbol.slice(0, 4)}</span>
                           </div>
                           <div className="min-w-0">
-                            <div className="text-[14px] font-semibold text-white truncate">{a.symbol}</div>
-                            <div className="text-[11px] text-[#5C6B80] truncate max-w-[200px]">{a.name}</div>
+                            <div className="text-[14px] font-semibold text-[var(--text)] truncate">{a.symbol}</div>
+                            <div className="text-[11px] text-[var(--text-3)] truncate max-w-[200px]">{a.name}</div>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="text-[13px] font-semibold text-white tabular-nums">${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                          <div className={`text-[11.5px] tabular-nums ${gain ? 'text-[#2FA56B]' : 'text-[#D9743C]'}`}>
+                          <div className="text-[13px] font-semibold text-[var(--text)] tabular-nums">${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                          <div className={`text-[11.5px] tabular-nums ${gain ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                             {gain ? '+' : ''}{pct.toFixed(2)}%
                           </div>
                         </div>
@@ -398,7 +398,7 @@ function Rail({
   return (
     <motion.section variants={section} initial="hidden" animate="show" custom={custom} className="mt-8">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[16px] font-bold text-white tracking-tight">{title}</h2>
+        <h2 className="text-[16px] font-bold text-[var(--text)] tracking-tight">{title}</h2>
         {right}
       </div>
       <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1 snap-x">
@@ -417,7 +417,7 @@ function Rail({
 
 function SeeAllLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} prefetch={false} className="text-[12px] text-[#3B948C] hover:text-[#5FB3AA] flex items-center gap-0.5 transition-colors">
+    <Link href={href} prefetch={false} className="text-[12px] text-[var(--accent-2)] hover:text-[#5FB3AA] flex items-center gap-0.5 transition-colors">
       {label} <ChevronRight className="w-3 h-3" />
     </Link>
   );
@@ -425,7 +425,7 @@ function SeeAllLink({ href, label }: { href: string; label: string }) {
 
 function SeeAll({ onClick, label }: { onClick: () => void; label: string }) {
   return (
-    <button onClick={onClick} className="text-[12px] text-[#3B948C] hover:text-[#5FB3AA] flex items-center gap-0.5 transition-colors">
+    <button onClick={onClick} className="text-[12px] text-[var(--accent-2)] hover:text-[#5FB3AA] flex items-center gap-0.5 transition-colors">
       {label} <ChevronRight className="w-3 h-3" />
     </button>
   );
