@@ -4,40 +4,39 @@ import { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 
 /**
- * Dark / light switch.
- * The initial class is set by an inline script in app/layout.tsx before paint,
- * so this component only needs to read + flip it.
+ * ThemeToggle — flips the `.dark` class on <html> and remembers the choice.
+ * Pair with the no-flash script in your <head> (see DROP7_NOTES.md) so the page
+ * paints in the right theme immediately, with no white flash on load.
  */
-export default function ThemeToggle({ className = '' }: { className?: string }) {
-  const [mounted, setMounted] = useState(false);
-  const [dark, setDark] = useState(true);
+export function ThemeToggle({ className }: { className?: string }) {
+  const [dark, setDark] = useState<boolean>(false);
 
   useEffect(() => {
-    setMounted(true);
-    setDark(document.documentElement.classList.contains('dark'));
+    const stored = localStorage.getItem('st-theme');
+    const prefers = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    const isDark = stored ? stored === 'dark' : !!prefers;
+    setDark(isDark);
+    document.documentElement.classList.toggle('dark', isDark);
   }, []);
 
-  const flip = () => {
+  const toggle = () => {
     const next = !dark;
     setDark(next);
-    const root = document.documentElement;
-    root.classList.toggle('dark', next);
-    try {
-      localStorage.setItem('st-theme', next ? 'dark' : 'light');
-    } catch {}
+    document.documentElement.classList.toggle('dark', next);
+    try { localStorage.setItem('st-theme', next ? 'dark' : 'light'); } catch {}
   };
 
-  // render a stable placeholder pre-hydration to avoid mismatch
   return (
     <button
-      type="button"
-      onClick={flip}
-      aria-label={mounted && !dark ? 'Switch to dark mode' : 'Switch to light mode'}
-      title={mounted && !dark ? 'Dark mode' : 'Light mode'}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${className}`}
-      style={{ borderColor: 'var(--line)', color: 'var(--t-sub)', background: 'var(--wash)' }}
+      onClick={toggle}
+      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className={`inline-flex items-center justify-center h-9 w-9 rounded-full border transition
+        border-[var(--border)] bg-[var(--card)] text-[var(--text-2)]
+        hover:text-[var(--text)] hover:border-[var(--border-strong)] ${className || ''}`}
     >
-      {mounted && !dark ? <Moon className="h-[17px] w-[17px]" /> : <Sun className="h-[17px] w-[17px]" />}
+      {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
   );
 }
+
+export default ThemeToggle;

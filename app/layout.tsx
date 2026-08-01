@@ -1,4 +1,5 @@
 import './globals.css';
+import '../styles/theme.css';
 import { Providers } from './providers';
 import CookieConsent from '@/components/CookieConsent';
 

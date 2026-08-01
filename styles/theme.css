@@ -1,0 +1,150 @@
+/* ============================================================================
+   SwiftTrade — dual-mode theme (light + dark), cooler & screenshottable.
+   Fonts: Space Grotesk (display) · Inter (UI) · JetBrains Mono (numbers).
+
+   Import AFTER globals.css:
+       import './globals.css';
+       import '../styles/theme.css';
+
+   Toggling: this themes off the `.dark` class on <html> (see ThemeToggle.tsx).
+   Overriding the tokens recolors the token-based shell + dashboard in BOTH modes.
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ---------- LIGHT (default) ---------- */
+:root,
+html:not(.dark) {
+  color-scheme: light;
+
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* page + stock-screen tokens */
+  --surface: #F6F7F9;
+  --card:    #FFFFFF;
+  --inset:   #EEF0F4;
+  --border:  rgba(12,18,28,0.08);
+  --border-strong: rgba(12,18,28,0.15);
+  --text:    #0B0D12;
+  --text-2:  #5A6474;
+  --text-3:  #97A0AF;
+  --accent:   #00C805;   /* green   */
+  --accent-2: #7C5CFC;   /* violet  */
+  --accent-3: #2E7DFF;   /* blue    */
+  --loss:     #FF4D3D;
+
+  /* legacy tokens the shell + dashboard already use */
+  --void: #F6F7F9; --obsidian: #FFFFFF; --charcoal: #FFFFFF; --slate: #EEF0F4;
+  --c-void: 246 247 249; --c-obsidian: 255 255 255; --c-charcoal: 255 255 255;
+  --c-slate: 238 240 244; --c-cream: 11 13 18;
+  --bg: #F6F7F9; --bg-deep: #EDEFF3; --bg-raise: #FFFFFF; --panel: #FFFFFF; --panel-alt: #F6F7F9;
+  --gold: #00C805; --gold-light: #33D64B; --c-gold: 0 200 5; --c-gold-light: 51 214 75;
+  --profit: #00C805; --electric: #7C5CFC; --cyan: #2E7DFF;
+  --line: rgba(12,18,28,0.08); --line-strong: rgba(12,18,28,0.15);
+  --wash: rgba(12,18,28,0.025); --wash-strong: rgba(12,18,28,0.045);
+  --t-hi: #0B0D12; --t-body: #384150; --t-sub: #5A6474; --t-faint: #97A0AF;
+  --on-accent: #FFFFFF; --specular: rgba(255,255,255,0.9); --glow: rgba(0,200,5,0.20);
+
+  --aurora-1: rgba(124,92,252,0.10);
+  --aurora-2: rgba(0,200,5,0.08);
+  --card-shadow: 0 10px 34px -20px rgba(12,18,28,0.30);
+}
+
+/* ---------- DARK ---------- */
+html.dark {
+  color-scheme: dark;
+
+  --surface: #0A0C12;
+  --card:    #141824;
+  --inset:   #1C2130;
+  --border:  rgba(255,255,255,0.09);
+  --border-strong: rgba(255,255,255,0.18);
+  --text:    #F4F7FB;
+  --text-2:  #9AA6B8;
+  --text-3:  #616E86;
+  --accent:   #00E676;   /* brighter green pops on dark */
+  --accent-2: #9B7CFF;
+  --accent-3: #5B9BFF;
+  --loss:     #FF5A47;
+
+  --void: #0A0C12; --obsidian: #141824; --charcoal: #141824; --slate: #1C2130;
+  --c-void: 10 12 18; --c-obsidian: 20 24 36; --c-charcoal: 20 24 36;
+  --c-slate: 28 33 48; --c-cream: 244 247 251;
+  --bg: #0A0C12; --bg-deep: #07080D; --bg-raise: #141824; --panel: #141824; --panel-alt: #10131C;
+  --gold: #00E676; --gold-light: #5BFF9E; --c-gold: 0 230 118; --c-gold-light: 91 255 158;
+  --profit: #00E676; --electric: #9B7CFF; --cyan: #5B9BFF;
+  --line: rgba(255,255,255,0.09); --line-strong: rgba(255,255,255,0.18);
+  --wash: rgba(255,255,255,0.035); --wash-strong: rgba(255,255,255,0.06);
+  --t-hi: #F4F7FB; --t-body: #C6D0DE; --t-sub: #9AA6B8; --t-faint: #616E86;
+  --on-accent: #04140A; --specular: rgba(255,255,255,0.14); --glow: rgba(0,230,118,0.30);
+
+  --aurora-1: rgba(155,124,255,0.16);
+  --aurora-2: rgba(0,230,118,0.12);
+  --card-shadow: 0 24px 60px -34px rgba(0,0,0,0.85);
+}
+
+/* ---------- base ---------- */
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background:
+    radial-gradient(1200px 560px at 85% -12%, var(--aurora-1), transparent 60%),
+    radial-gradient(900px 480px at -8% 8%, var(--aurora-2), transparent 55%),
+    var(--surface);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+.font-mono, .num { font-family: var(--font-mono); }
+.num, .tnum { font-feature-settings: 'tnum' 1, 'zero' 1; font-variant-numeric: tabular-nums; }
+
+/* ---------- screenshottable building blocks ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+}
+html.dark .card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012));
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.06) inset, var(--card-shadow);
+}
+
+.gradient-text {
+  background: linear-gradient(100deg, var(--accent), var(--accent-2) 70%, var(--accent-3));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.glow { box-shadow: 0 10px 30px -10px var(--glow); }
+
+.pill-btn {
+  background: var(--accent); color: var(--on-accent); font-weight: 700;
+  border-radius: 999px; box-shadow: 0 8px 22px -10px var(--glow);
+  transition: filter .15s ease, transform .1s ease;
+}
+.pill-btn:hover { filter: brightness(1.05); }
+.pill-btn:active { transform: translateY(1px); }
+
+/* category tags (work in both modes via rgba over the accent) */
+.tag-stock  { color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent-2) 26%, transparent); }
+.tag-etf    { color: var(--accent-3); background: color-mix(in srgb, var(--accent-3) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent-3) 26%, transparent); }
+.tag-crypto { color: #F7931A; background: rgba(247,147,26,.12); border: 1px solid rgba(247,147,26,.26); }
+
+/* sticky action bar that adapts to the theme */
+.sticky-bar { background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+
+/* ---------- viewport fit: no zoom-out, ever ---------- */
+html, body { max-width: 100%; overflow-x: hidden; }
+*, *::before, *::after { min-width: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+.fit { width: 100%; max-width: min(100%, 1120px); margin-inline: auto; padding-inline: clamp(12px, 4vw, 28px); }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ---------- quality floor ---------- */
+:where(a,button,input,select,[tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration:.001ms !important; transition-duration:.001ms !important; } }
