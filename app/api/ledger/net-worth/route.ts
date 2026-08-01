@@ -56,14 +56,11 @@ export async function GET(req: NextRequest) {
 
   const positions: Position[] = [];
 
-  // crypto — select('*') so we tolerate avg_buy_price OR average_price
-  const { data: cryptoRows } = await sb.from('crypto_positions').select('*').eq('user_id', userId);
-  for (const r of cryptoRows || []) {
+  // crypto — from user_trading_data.spot_crypto_state (where the app stores it)
+  const { data: utd } = await sb.from('user_trading_data').select('spot_crypto_state').eq('user_id', userId).maybeSingle();
+  for (const r of ((utd?.spot_crypto_state as any)?.positions) || []) {
     const qty = n(r.quantity); if (qty <= 0) continue;
-    positions.push({
-      symbol: String(r.symbol).toUpperCase(), assetClass: 'crypto', qty,
-      avgPrice: n(r.avg_buy_price ?? r.average_price),
-    });
+    positions.push({ symbol: String(r.symbol).toUpperCase(), assetClass: 'crypto', qty, avgPrice: n(r.avgBuyPrice ?? r.average_price) });
   }
 
   // equities — ignore error if the table doesn't exist

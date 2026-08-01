@@ -34,19 +34,24 @@ export default function PortfolioPage() {
     if (!userId) return;
     setLoading(true);
     try {
-      const [pRes, iRes] = await Promise.all([
-        fetch(`/api/portfolio?userId=${userId}`, { cache: 'no-store' }).then(r => r.json()).catch(() => null),
+      const [hRes, iRes, sRes] = await Promise.all([
+        // crypto holdings derived from the trades table (where buys ACTUALLY land)
+        fetch(`/api/holdings?userId=${userId}&market=crypto`, { cache: 'no-store' }).then(r => r.json()).catch(() => null),
         fetch(`/api/invest/positions?userId=${userId}`, { cache: 'no-store' }).then(r => r.json()).catch(() => null),
+        // crypto_positions shield flags (if any), merged in by symbol
+        fetch(`/api/portfolio?userId=${userId}`, { cache: 'no-store' }).then(r => r.json()).catch(() => null),
       ]);
 
-      const cr: Holding[] = ((pRes?.positions) || []).map((p: any) => {
+      const shieldBySymbol: Record<string, boolean> = {};
+      for (const p of (sRes?.positions || [])) shieldBySymbol[String(p.symbol).toUpperCase()] = !!p.shieldEnabled;
+
+      const cr: Holding[] = ((hRes?.holdings) || []).map((p: any) => {
         const qty = num(p.quantity);
-        const price = num(p.currentPrice ?? p.price ?? p.averagePrice);
+        const price = num(p.avgPrice);
         return {
           symbol: String(p.symbol).toUpperCase(), kind: 'crypto', quantity: qty,
-          price, value: num(p.value ?? qty * price),
-          pnl: p.pnl != null ? num(p.pnl) : null, pnlPct: p.pnlPct != null ? num(p.pnlPct) : null,
-          shieldEnabled: !!p.shieldEnabled,
+          price, value: num(qty * price), pnl: null, pnlPct: null,
+          shieldEnabled: !!shieldBySymbol[String(p.symbol).toUpperCase()],
         };
       }).filter((h: Holding) => h.quantity > 0);
 

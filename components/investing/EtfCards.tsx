@@ -1,5 +1,6 @@
 'use client';
 
+import { AssetLogo } from '@/components/AssetLogo';
 import Link from 'next/link';
 import { memo } from 'react';
 import { TrendingUp, TrendingDown, Star, Plus, Repeat } from 'lucide-react';
@@ -112,12 +113,15 @@ export const EtfCard = memo(function EtfCard({
       className="group relative shrink-0 min-w-[200px] w-[200px] sm:w-[220px] rounded-2xl border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--inset)] border-[var(--border-strong)] transition-all p-4 active:scale-[0.98]"
     >
       <div className="flex items-start justify-between mb-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex items-center gap-2.5">
+          <AssetLogo symbol={etf.symbol} kind={(etf as any).assetType === 'stock' ? 'stock' : 'etf'} size={34} />
+          <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <div className="text-[15px] font-semibold text-[var(--text)] tracking-tight truncate">{etf.symbol}</div>
             {live && <span className="w-1.5 h-1.5 rounded-full bg-[#00C805] animate-pulse" title="Live price" />}
           </div>
           <div className="text-[11px] text-[var(--text-3)] truncate max-w-[120px] mt-0.5">{etf.name}</div>
+          </div>
         </div>
         <span className={`shrink-0 text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 ${
           (etf as any).assetType === 'stock'
