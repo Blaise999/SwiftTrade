@@ -22,15 +22,21 @@ export function AssetLogo({
   size?: number;
   className?: string;
 }) {
-  const [failed, setFailed] = useState(false);
+  const [stage, setStage] = useState(0);
   const sym = (symbol || '').toUpperCase();
 
-  const src =
-    kind === 'crypto'
-      ? `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`
-      : `https://assets.parqet.com/logos/symbol/${sym}?format=png`;
+  // ordered source chain per asset type; fall through on error, then letter badge
+  const sources = kind === 'crypto'
+    ? [
+        `https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@master/128/color/${sym.toLowerCase()}.png`,
+        `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`,
+      ]
+    : [
+        `https://assets.parqet.com/logos/symbol/${sym}?format=png`,
+        `https://logo.clearbit.com/${sym.toLowerCase()}.com`,
+      ];
 
-  if (failed || !sym) {
+  if (stage >= sources.length || !sym) {
     return (
       <div
         className={`rounded-xl bg-[var(--inset)] border border-[var(--border)] flex items-center justify-center ${className}`}
@@ -46,12 +52,12 @@ export function AssetLogo({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={sources[stage]}
       alt={sym}
       width={size}
       height={size}
-      onError={() => setFailed(true)}
-      className={`rounded-xl bg-white object-contain ${className}`}
+      onError={() => setStage((s) => s + 1)}
+      className={`rounded-xl ${kind === 'crypto' ? '' : 'bg-white'} object-contain ${className}`}
       style={{ width: size, height: size }}
       loading="lazy"
     />

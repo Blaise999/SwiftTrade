@@ -44,7 +44,7 @@ const navigation = [
     name: 'Trade',
     icon: LineChart,
     children: [
-      { name: 'Cryptocurrency', href: '/dashboard/trade/crypto', icon: Bitcoin },
+      { name: 'Cryptocurrency', href: '/dashboard/crypto', icon: Bitcoin },
       { name: 'Forex', href: '/dashboard/trade/fx', icon: DollarSign },
       { name: 'Stocks', href: '/dashboard/trade/stocks', icon: BarChart3 },
     ],

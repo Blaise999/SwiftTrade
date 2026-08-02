@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { AssetLogo } from '@/components/AssetLogo';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp,
@@ -339,9 +340,7 @@ const PortfolioCard = ({
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-[var(--text)] font-bold">
-            {asset?.icon || position.symbol[0]}
-          </div>
+          <AssetLogo symbol={position.symbol} kind="crypto" size={40} className="rounded-full" />
           <div>
             <div className="flex items-center gap-2">
               <p className="font-medium text-[var(--text)]">{position.symbol}</p>
@@ -895,9 +894,7 @@ useEffect(() => {
                 onClick={() => setShowAssetSelector(true)}
                 className="flex items-center gap-3 hover:bg-white/5 rounded-2xl p-2 -ml-2 transition-all"
               >
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-[var(--text)] font-bold text-xl shadow-lg shadow-orange-500/20">
-                  {selectedAsset.icon}
-                </div>
+                <AssetLogo symbol={selectedAsset.symbol} kind="crypto" size={48} className="rounded-2xl shadow-lg shadow-orange-500/10" />
                 <div className="text-left">
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl font-bold text-[var(--text)] tracking-tight">{selectedSymbol}</h2>
@@ -1224,9 +1221,7 @@ useEffect(() => {
                         selectedAsset.id === asset.id ? 'bg-[#C4A052]/10' : 'hover:bg-white/5'
                       }`}
                     >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-[var(--text)] font-bold">
-                        {asset.icon}
-                      </div>
+                      <AssetLogo symbol={asset.symbol} kind="crypto" size={40} className="rounded-full" />
 
                       <div className="flex-1 text-left">
                         <p className="font-medium text-[var(--text)]">{sym}</p>

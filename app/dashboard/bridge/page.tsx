@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -148,17 +148,22 @@ export default function SwiftBridgePage() {
   const staticFxRate = country ? FX[country.currency] || 1 : 1;
   const localAmt = parseFloat(amount.replace(/,/g, '')) || 0;
 
-  // live conversion (fiat -> USD -> crypto) via /api/convert, with static fallback
+  // live conversion (fiat -> USD -> crypto). Stable: race-safe, keeps last good
+  // value while re-fetching, only clears when inputs are empty — no twitching.
   const [conv, setConv] = useState<{ usd: number; crypto: number; fx_rate: number; crypto_price: number } | null>(null);
+  const convReqRef = useRef(0);
   useEffect(() => {
     if (!country || !asset?.code || localAmt <= 0) { setConv(null); return; }
-    const ctl = setTimeout(async () => {
+    const reqId = ++convReqRef.current;
+    const t = setTimeout(async () => {
       try {
         const j = await (await fetch(`/api/convert?amount=${localAmt}&from=${country.currency}&to=${asset.code}`, { cache: 'no-store' })).json();
-        if (j?.usd != null) setConv({ usd: j.usd, crypto: j.crypto, fx_rate: j.fx_rate, crypto_price: j.crypto_price });
-      } catch { setConv(null); }
-    }, 350);
-    return () => clearTimeout(ctl);
+        if (reqId !== convReqRef.current) return;           // ignore stale responses
+        if (j?.usd != null && j.usd > 0) setConv({ usd: j.usd, crypto: j.crypto, fx_rate: j.fx_rate, crypto_price: j.crypto_price });
+        // on failure: keep the previous value instead of flipping to null
+      } catch { /* keep last good value */ }
+    }, 450);
+    return () => clearTimeout(t);
   }, [localAmt, country?.currency, asset?.code]);
 
   const fxRate = conv?.fx_rate && conv.fx_rate > 0 ? conv.fx_rate : staticFxRate;

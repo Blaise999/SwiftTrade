@@ -113,7 +113,7 @@ export default function InvestHome() {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden pb-28">
-      <div className="w-full max-w-2xl mx-auto px-1">
+      <div className="w-full max-w-2xl mx-auto px-3 sm:px-4">
 
         {/* ── Header ── */}
         <div className="flex items-center justify-between pt-5 mb-1">
