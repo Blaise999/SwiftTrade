@@ -30,6 +30,11 @@ type BridgeRequest = {
   target_asset: string;
   target_network?: string;
   estimated_credit_usd?: number;
+  estimated_target?: number;
+  final_credit_target?: number;
+  credited_amount?: number;
+  credited_amount_usd?: number;
+  credited_asset?: string;
   fx_rate?: number;
   admin_payment_details?: any;
   admin_responded_at?: string;
@@ -89,6 +94,7 @@ export default function SwiftBridgePage() {
   const [search, setSearch] = useState('');
   const [amount, setAmount] = useState('');
   const [asset, setAsset] = useState(ASSETS[0]);
+  const [receiveMode, setReceiveMode] = useState<'crypto' | 'usd'>('crypto');
   const [network, setNetwork] = useState(ASSETS[0].networks[0]);
   const [openAsset, setOpenAsset] = useState(false);
 
@@ -157,14 +163,14 @@ export default function SwiftBridgePage() {
     const reqId = ++convReqRef.current;
     const t = setTimeout(async () => {
       try {
-        const j = await (await fetch(`/api/convert?amount=${localAmt}&from=${country.currency}&to=${asset.code}`, { cache: 'no-store' })).json();
+        const j = await (await fetch(`/api/convert?amount=${localAmt}&from=${country.currency}&to=${receiveMode === 'usd' ? 'USD' : asset.code}`, { cache: 'no-store' })).json();
         if (reqId !== convReqRef.current) return;           // ignore stale responses
         if (j?.usd != null && j.usd > 0) setConv({ usd: j.usd, crypto: j.crypto, fx_rate: j.fx_rate, crypto_price: j.crypto_price });
         // on failure: keep the previous value instead of flipping to null
       } catch { /* keep last good value */ }
     }, 450);
     return () => clearTimeout(t);
-  }, [localAmt, country?.currency, asset?.code]);
+  }, [localAmt, country?.currency, asset?.code, receiveMode]);
 
   const fxRate = conv?.fx_rate && conv.fx_rate > 0 ? conv.fx_rate : staticFxRate;
   const usdEstimate = conv?.usd ?? (country ? localAmt / staticFxRate : 0);
@@ -198,7 +204,7 @@ export default function SwiftBridgePage() {
           country_name: country.name,
           local_currency: country.currency,
           local_amount: localAmt,
-          target_asset: asset.code,
+          target_asset: receiveMode === 'usd' ? 'USD' : asset.code,
           target_network: network,
           fx_rate: fxRate,
           estimated_credit_usd: usdEstimate,
@@ -348,14 +354,25 @@ export default function SwiftBridgePage() {
                   </div>
                 </div>
 
+                {/* Receive as */}
+                <label className="text-[11px] uppercase tracking-wider text-cream/50 font-medium">Receive as</label>
+                <div className="mt-1 mb-4 flex bg-white/5 rounded-xl p-1">
+                  {(['crypto','usd'] as const).map((m) => (
+                    <button key={m} type="button" onClick={() => setReceiveMode(m)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${receiveMode===m ? 'bg-electric text-void' : 'text-cream/60'}`}>
+                      {m === 'crypto' ? 'Crypto coin' : 'USD balance'}
+                    </button>
+                  ))}
+                </div>
+
                 {/* You receive (estimated) */}
                 <label className="text-[11px] uppercase tracking-wider text-cream/50 font-medium">You receive (estimated)</label>
                 <div className="mt-1 mb-4 flex items-center gap-2 p-3.5 bg-electric/5 border border-electric/30 rounded-xl">
                   <span className="text-electric-light text-lg">≈</span>
                   <span className="flex-1 font-mono text-2xl font-bold text-electric-light">
-                    {cryptoEstimate > 0 ? fmtNum(cryptoEstimate, 6) : fmtNum(usdEstimate, 2)}
+                    {receiveMode === 'usd' ? fmtNum(usdEstimate, 2) : (cryptoEstimate > 0 ? fmtNum(cryptoEstimate, 6) : fmtNum(usdEstimate, 2))}
                   </span>
-                  <span className="text-electric-light/70 text-sm">{cryptoEstimate > 0 ? asset.code : 'USD'}</span>
+                  <span className="text-electric-light/70 text-sm">{receiveMode === 'usd' ? 'USD' : (cryptoEstimate > 0 ? asset.code : 'USD')}</span>
                 </div>
                 {cryptoEstimate > 0 && (
                   <div className="-mt-3 mb-4 text-[11px] text-cream/45">
@@ -477,7 +494,7 @@ export default function SwiftBridgePage() {
                       <div className="font-display font-semibold text-cream">
                         {fmtNum(r.local_amount, 0)} {r.local_currency}
                         <span className="text-cream/40 text-xs mx-2">→</span>
-                        <span className="text-electric-light">{r.estimated_credit_usd ? fmtNum(r.estimated_credit_usd, 2) : '—'} {r.target_asset}</span>
+                        <span className="text-electric-light">{r.estimated_target ? fmtNum(r.estimated_target, 6) : (r.estimated_credit_usd ? '$'+fmtNum(r.estimated_credit_usd,2) : '—')} {r.estimated_target ? r.target_asset : ''}</span>
                       </div>
                       <div className="text-xs text-cream/50 mt-0.5">
                         {new Date(r.created_at).toLocaleString()} · {r.country_name}
@@ -681,7 +698,7 @@ function BridgeDetail({
             </div>
             <div className="flex items-center justify-between text-sm mt-2">
               <div className="text-cream/60">You receive (est.)</div>
-              <div className="text-electric-light font-mono font-semibold">≈ {fmtNum(request.estimated_credit_usd || 0, 2)} {request.target_asset}</div>
+              <div className="text-electric-light font-mono font-semibold">≈ {fmtNum(request.estimated_target || 0, 6)} {request.target_asset}{request.estimated_credit_usd ? ` (~$${fmtNum(request.estimated_credit_usd,2)})` : ''}</div>
             </div>
             <div className="flex items-center justify-between text-sm mt-2">
               <div className="text-cream/60">Country</div>
@@ -782,7 +799,7 @@ function BridgeDetail({
               <CheckCircle2 className="w-10 h-10 text-profit mx-auto mb-3" />
               <h4 className="font-display font-semibold text-cream">Completed!</h4>
               <p className="text-sm text-cream/60 mt-2">
-                Credited <span className="text-cream font-mono">{fmtNum(request.credited_amount_usd || 0, 2)}</span> {request.credited_asset || request.target_asset} to your platform balance.
+                Credited <span className="text-cream font-mono">{fmtNum(request.final_credit_target || request.credited_amount || request.estimated_target || 0, 6)}</span> {request.credited_asset || request.target_asset} to your crypto holdings.
               </p>
             </div>
           )}

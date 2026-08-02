@@ -1,5 +1,6 @@
 'use client';
 
+import { AssetLogo } from '@/components/AssetLogo';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Shield, ShieldCheck, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { useStore } from '@/lib/supabase/store-supabase';
@@ -107,16 +108,19 @@ export default function PortfolioPage() {
 
   return (
     <div className="min-h-screen bg-[var(--surface)] text-[var(--text)]">
-      <div className="mx-auto max-w-4xl px-4 lg:px-6 pt-6 pb-28">
+      <div className="mx-auto max-w-2xl px-3 sm:px-4 pt-6 pb-28">
 
         {/* Header / totals */}
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6">
-          <div className="text-[12px] uppercase tracking-wide text-[var(--text-3)]">Total net worth</div>
-          <div className="mt-1 text-[38px] leading-none font-bold gradient-text num">{usd(total)}</div>
-          <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
-            <Tile label="Cash" value={usd(cash)} icon={<Wallet className="w-4 h-4" />} />
-            <Tile label="Crypto" value={usd(cryptoValue)} />
-            <Tile label="Stocks" value={usd(stockValue)} />
+        <div className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-[var(--inset)] p-6">
+          <div className="pointer-events-none absolute -top-24 -right-10 w-72 h-72 rounded-full blur-[90px] opacity-40 bg-[#00C805]/25" />
+          <div className="relative">
+          <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-3)]">Total net worth</div>
+          <div className="mt-1.5 text-[clamp(32px,10vw,44px)] leading-none font-extrabold text-[var(--text)] tracking-tight tabular-nums">{usd(total)}</div>
+          <div className="mt-5 grid grid-cols-3 gap-2.5 text-sm">
+            <Tile label="Cash" value={usd(cash)} tone="#00C805" />
+            <Tile label="Crypto" value={usd(cryptoValue)} tone="#9B7CFF" />
+            <Tile label="Stocks" value={usd(stockValue)} tone="#5B9BFF" />
+          </div>
           </div>
           {shieldCount > 0 && (
             <div className="mt-4 inline-flex items-center gap-1.5 text-[12px] text-[var(--accent-2)]">
@@ -148,11 +152,13 @@ export default function PortfolioPage() {
   );
 }
 
-function Tile({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+function Tile({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-xl bg-[var(--inset)] p-3">
-      <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-3)]">{icon}{label}</div>
-      <div className="mt-1 font-semibold text-[var(--text)] num">{value}</div>
+    <div className="rounded-xl bg-[var(--card)] border border-[var(--border)] p-3">
+      <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-3)]">
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: tone || 'var(--text-3)' }} />{label}
+      </div>
+      <div className="mt-1 font-semibold text-[var(--text)] num tabular-nums">{value}</div>
     </div>
   );
 }
@@ -170,9 +176,7 @@ function Section({
           return (
             <div key={h.symbol}
               className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? 'border-t border-[var(--border)]' : ''}`}>
-              <div className="w-10 h-10 rounded-xl bg-[var(--inset)] border border-[var(--border)] flex items-center justify-center shrink-0">
-                <span className="text-[12px] font-bold text-[var(--text)]">{h.symbol.slice(0, 3)}</span>
-              </div>
+              <AssetLogo symbol={h.symbol} kind={h.kind === 'crypto' ? 'crypto' : 'stock'} size={40} className={h.kind === 'crypto' ? 'rounded-full shrink-0' : 'shrink-0'} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="font-semibold text-[var(--text)] truncate">{h.symbol}</span>

@@ -15,11 +15,11 @@ import {
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useStore } from '@/lib/supabase/store-supabase';
 
-type ActivityKind = 'trade' | 'deposit' | 'withdrawal' | 'tier' | 'bonus' | 'referral' | 'all';
+type ActivityKind = 'trade' | 'deposit' | 'withdrawal' | 'tier' | 'bonus' | 'referral' | 'bridge' | 'all';
 
 type ActivityItem = {
   id: string;
-  kind: 'trade' | 'deposit' | 'withdrawal' | 'tier' | 'bonus' | 'referral';
+  kind: 'trade' | 'deposit' | 'withdrawal' | 'tier' | 'bonus' | 'referral' | 'bridge';
   label: string;
   sublabel: string;
   amount: number;
@@ -305,6 +305,32 @@ export default function FullActivityHistoryPage() {
           pnl: r.reward_paid ? Number(r.reward_amount ?? 0) : 0,
           status: r.reward_paid ? 'completed' : 'pending',
           created_at: r.created_at,
+        });
+      });
+
+      // ── SwiftBridge ──
+      let bridgeQuery = supabase
+        .from('bridge_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (dateFilter) bridgeQuery = bridgeQuery.gte('created_at', dateFilter.toISOString());
+      const { data: bridges } = await bridgeQuery;
+
+      (bridges || []).forEach((b: any) => {
+        const gotCrypto = b.target_asset && b.target_asset !== 'USD';
+        items.push({
+          id: `bridge-${b.id}`,
+          kind: 'bridge',
+          label: 'SwiftBridge',
+          sublabel: `${Number(b.local_amount || 0).toLocaleString()} ${b.local_currency || ''} → ${
+            gotCrypto ? `${Number(b.final_credit_target ?? b.estimated_target ?? 0)} ${b.target_asset}` : 'USD balance'
+          } · ${String(b.status || '').replace(/_/g, ' ')}`,
+          amount: Number(b.final_credit_usd ?? b.estimated_credit_usd ?? b.estimated_usd ?? 0),
+          pnl: 0,
+          status: b.status,
+          created_at: b.created_at,
         });
       });
 

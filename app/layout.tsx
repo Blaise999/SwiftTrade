@@ -8,6 +8,14 @@ export const metadata = {
   description: 'US stocks, crypto and FX in one account, with instant USD to HKD on stablecoin rails via SwiftBridge. Built in New York and Hong Kong.',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover' as const,
+};
+
 // Runs before paint so the saved theme applies with no flash.
 const themeInit = `(function(){try{var t=localStorage.getItem('st-theme');var d=t?t==='dark':true;document.documentElement.classList.toggle('dark',d);}catch(e){document.documentElement.classList.add('dark');}})();`;
 
