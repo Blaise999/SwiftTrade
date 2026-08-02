@@ -19,6 +19,14 @@ const CG_IDS: Record<string, string> = {
   BNB: 'binancecoin', SOL: 'solana', TRX: 'tron', XRP: 'ripple',
 };
 const STABLE = new Set(['USDT', 'USDC', 'DAI', 'USD']);
+// fallback USD prices per coin, used when the live feed is unavailable.
+// Without this, a failed price lookup made crypto = USD amount (e.g. "2256 BTC").
+const SEED_USD: Record<string, number> = {
+  BTC: 67234, ETH: 3456, SOL: 145, BNB: 567, XRP: 0.52, ADA: 0.46, AVAX: 35.7,
+  DOT: 7.9, TRX: 0.12, DOGE: 0.082, SHIB: 0.0000234, PEPE: 0.0000098, WIF: 2.34,
+  LINK: 14.6, UNI: 12.3, AAVE: 98, MKR: 2456, LDO: 1.87, MATIC: 0.57, LTC: 95.7,
+  ATOM: 9.45, NEAR: 6.78, CRO: 0.12, OKB: 45.6, IMX: 2.11, SAND: 0.46, AXS: 6.23, MANA: 0.41,
+};
 const num = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 
 function admin() {
@@ -50,15 +58,19 @@ async function usdPerCrypto(asset: string): Promise<number> {
   const a = asset.toUpperCase();
   if (STABLE.has(a)) return 1;
   const id = CG_IDS[a];
-  if (!id) return 0;
-  try {
-    const key = process.env.COINGECKO_API_KEY;
-    const base = key
-      ? `https://pro-api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&x_cg_pro_api_key=${key}`
-      : `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`;
-    const j = await (await fetch(base, { cache: 'no-store' })).json();
-    return num(j?.[id]?.usd);
-  } catch { return 0; }
+  if (id) {
+    try {
+      const key = process.env.COINGECKO_API_KEY;
+      const base = key
+        ? `https://pro-api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&x_cg_pro_api_key=${key}`
+        : `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`;
+      const j = await (await fetch(base, { cache: 'no-store' })).json();
+      const live = num(j?.[id]?.usd);
+      if (live > 0) return live;
+    } catch {}
+  }
+  // fall back to a seed price so we never treat 1 coin as $1
+  return SEED_USD[a] || 0;
 }
 
 export async function GET(req: NextRequest) {

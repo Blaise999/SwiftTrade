@@ -182,7 +182,7 @@ export default function CryptoHome() {
                 const pct = cost > 0 ? (pnl / cost) * 100 : 0;
                 const gain = pnl >= 0;
                 return (
-                  <Link key={sym} href="/dashboard/trade/crypto" prefetch={false}
+                  <Link key={sym} href={`/dashboard/crypto/${sym}`} prefetch={false}
                     className="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-[var(--inset)] transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       <AssetLogo symbol={sym} kind="crypto" size={40} className="rounded-full" />
@@ -205,7 +205,7 @@ export default function CryptoHome() {
         )}
 
         <CryptoRail custom={3} title="Top movers" items={topMovers} right={<SeeAll onClick={() => setSearchOpen(true)} label="Search" />} />
-        <CryptoRail custom={4} title="Popular crypto" items={popular} right={<SeeAllLink href="/dashboard/trade/crypto" label="Trade" />} />
+        <CryptoRail custom={4} title="Popular crypto" items={popular} right={<span />} />
 
         {/* Buy Bitcoin highlight (mirrors the S&P 500 block) */}
         <motion.section variants={section} initial="hidden" animate="show" custom={5} className="mt-8">
@@ -228,7 +228,7 @@ export default function CryptoHome() {
         {catRows.map((cat, i) => {
           const list = byCat(cat);
           if (!list.length) return null;
-          return <CryptoRail key={cat} custom={7 + i} title={CAT_LABELS[cat]} items={list} right={<SeeAllLink href="/dashboard/trade/crypto" label="Trade" />} />;
+          return <CryptoRail key={cat} custom={7 + i} title={CAT_LABELS[cat]} items={list} right={<span />} />;
         })}
 
         <div className="h-10" />
@@ -248,7 +248,7 @@ export default function CryptoHome() {
             </div>
             <div className="mt-4 space-y-1.5">
               {results.map(c => (
-                <Link key={c.symbol} href="/dashboard/trade/crypto" onClick={() => setSearchOpen(false)}
+                <Link key={c.symbol} href={`/dashboard/crypto/${c.symbol}`} onClick={() => setSearchOpen(false)}
                   className="flex items-center justify-between gap-3 rounded-xl bg-[var(--card)] border border-[var(--border)] px-4 py-3 hover:bg-[var(--inset)]">
                   <div className="flex items-center gap-3">
                     <AssetLogo symbol={c.symbol} kind="crypto" size={36} className="rounded-full" />
@@ -271,7 +271,7 @@ export default function CryptoHome() {
 function CryptoCard({ coin }: { coin: Coin }) {
   const up = coin.change >= 0;
   return (
-    <Link href="/dashboard/trade/crypto" prefetch={false}
+    <Link href={`/dashboard/crypto/${coin.symbol}`} prefetch={false}
       className="group relative shrink-0 snap-start min-w-[200px] w-[200px] sm:w-[220px] min-h-[152px] flex flex-col justify-between rounded-2xl border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--inset)] hover:border-[var(--border-strong)] transition-all p-4 active:scale-[0.98]">
       <div className="flex items-center justify-between mb-3">
         <AssetLogo symbol={coin.symbol} kind="crypto" size={38} className="rounded-full" />
@@ -295,7 +295,7 @@ function CryptoCard({ coin }: { coin: Coin }) {
 function CryptoWideCard({ coin }: { coin: Coin }) {
   const up = coin.change >= 0;
   return (
-    <Link href="/dashboard/trade/crypto" prefetch={false}
+    <Link href={`/dashboard/crypto/${coin.symbol}`} prefetch={false}
       className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3.5 hover:bg-[var(--inset)] transition-colors">
       <div className="flex items-center gap-3 min-w-0">
         <AssetLogo symbol={coin.symbol} kind="crypto" size={44} className="rounded-full" />
