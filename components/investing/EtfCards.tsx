@@ -110,7 +110,7 @@ export const EtfCard = memo(function EtfCard({
     <Link
       href={`/dashboard/invest/asset/${etf.symbol}`}
       prefetch={false}
-      className="group relative shrink-0 min-w-[200px] w-[200px] sm:w-[220px] rounded-2xl border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--inset)] border-[var(--border-strong)] transition-all p-4 active:scale-[0.98]"
+      className="group relative shrink-0 snap-start min-w-[200px] w-[200px] sm:w-[220px] min-h-[152px] flex flex-col justify-between rounded-2xl border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--inset)] hover:border-[var(--border-strong)] transition-all p-4 active:scale-[0.98]"
     >
       {/* top: logo + tag */}
       <div className="flex items-center justify-between mb-3">

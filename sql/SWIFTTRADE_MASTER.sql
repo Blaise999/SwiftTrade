@@ -2879,6 +2879,88 @@ drop trigger if exists trg_trade_notify on public.trades;
 create trigger trg_trade_notify after insert on public.trades
 for each row execute function public.tg_trade_notify();
 
+-- ===== notify_bridge_deposit_withdraw.sql =====
+-- =====================================================================
+-- NOTIFICATIONS for step-by-step events: SwiftBridge (every stage),
+-- deposits (submitted/approved/rejected), withdrawals (requested/processed).
+-- These are STATUS UPDATES, so they need their own triggers (insert + status change).
+-- Fires into public.notifications, which the bell + recent activity read.
+-- =====================================================================
+
+-- ── SwiftBridge: every step ──
+create or replace function public.tg_bridge_notify()
+returns trigger language plpgsql security definer as $$
+declare v_label text; v_msg text;
+begin
+  if tg_op='UPDATE' and old.status is not distinct from new.status then return new; end if;
+  v_label := case new.status
+    when 'awaiting_admin'        then 'SwiftBridge — request received'
+    when 'awaiting_payment'      then 'SwiftBridge — payment details ready'
+    when 'awaiting_verification' then 'SwiftBridge — verifying your payment'
+    when 'completed'             then 'SwiftBridge — completed'
+    when 'rejected'              then 'SwiftBridge — request rejected'
+    when 'expired'               then 'SwiftBridge — request expired'
+    when 'cancelled'             then 'SwiftBridge — request cancelled'
+    else 'SwiftBridge — update' end;
+  v_msg := trim(coalesce(new.local_amount::text,'') || ' ' || coalesce(new.local_currency,'')
+    || case when new.status='completed' and new.final_credit_usd is not null
+            then ' -> $' || new.final_credit_usd::text || ' credited' else '' end);
+  insert into public.notifications (user_id, type, title, message, metadata)
+  values (new.user_id, 'bridge', v_label, v_msg,
+          jsonb_build_object('request_id', new.id, 'status', new.status, 'source','bridge'));
+  return new;
+exception when others then return new;
+end; $$;
+drop trigger if exists trg_bridge_notify on public.bridge_requests;
+create trigger trg_bridge_notify after insert or update on public.bridge_requests
+for each row execute function public.tg_bridge_notify();
+
+-- ── Deposits (skip 'approved' — the credit transaction already notifies) ──
+create or replace function public.tg_deposit_notify()
+returns trigger language plpgsql security definer as $$
+declare v_label text;
+begin
+  if tg_op='UPDATE' and old.status is not distinct from new.status then return new; end if;
+  if new.status = 'approved' then return new; end if;
+  v_label := case new.status
+    when 'pending'  then 'Deposit submitted'
+    when 'rejected' then 'Deposit rejected'
+    else 'Deposit update' end;
+  insert into public.notifications (user_id, type, title, message, metadata)
+  values (new.user_id, 'deposit', v_label,
+          trim('$' || coalesce(new.amount::text,'') || ' ' || coalesce(new.currency,'USD')),
+          jsonb_build_object('deposit_id', new.id, 'status', new.status, 'source','deposit'));
+  return new;
+exception when others then return new;
+end; $$;
+drop trigger if exists trg_deposit_notify on public.deposits;
+create trigger trg_deposit_notify after insert or update on public.deposits
+for each row execute function public.tg_deposit_notify();
+
+-- ── Withdrawals (every step) ──
+create or replace function public.tg_withdrawal_notify()
+returns trigger language plpgsql security definer as $$
+declare v_label text;
+begin
+  if tg_op='UPDATE' and old.status is not distinct from new.status then return new; end if;
+  v_label := case new.status
+    when 'pending'    then 'Withdrawal requested'
+    when 'approved'   then 'Withdrawal approved'
+    when 'processing' then 'Withdrawal processing'
+    when 'completed'  then 'Withdrawal completed'
+    when 'rejected'   then 'Withdrawal rejected'
+    else 'Withdrawal update' end;
+  insert into public.notifications (user_id, type, title, message, metadata)
+  values (new.user_id, 'withdrawal', v_label,
+          trim('$' || coalesce(new.amount::text,'') || ' ' || coalesce(new.currency,'USD')),
+          jsonb_build_object('withdrawal_id', new.id, 'status', new.status, 'source','withdrawal'));
+  return new;
+exception when others then return new;
+end; $$;
+drop trigger if exists trg_withdrawal_notify on public.withdrawals;
+create trigger trg_withdrawal_notify after insert or update on public.withdrawals
+for each row execute function public.tg_withdrawal_notify();
+
 -- ===== 99_completion.sql =====
 
 -- =====================================================================

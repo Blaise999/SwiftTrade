@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         .from('notifications')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .is('read_at', null);
+        .eq('read', false);
 
       return NextResponse.json({ unreadCount: count || 0 });
     }
@@ -73,10 +73,11 @@ export async function GET(req: NextRequest) {
       .from('notifications')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .is('read_at', null);
+      .eq('read', false);
 
+    const mapped = (data || []).map((r: any) => ({ ...r, read_at: r.read ? r.created_at : null }));
     return NextResponse.json({
-      data: data || [],
+      data: mapped,
       total: count || 0,
       unreadCount: unreadCount || 0,
       page,
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
       type: type || 'info',
       title,
       message: message || '',
-      data: notifData || null,
+      metadata: notifData || null,
     }).select().single();
 
     if (error) throw error;
@@ -129,16 +130,16 @@ export async function PATCH(req: NextRequest) {
     if (markAllRead) {
       await supabaseAdmin
         .from('notifications')
-        .update({ read_at: now })
+        .update({ read: true })
         .eq('user_id', userId)
-        .is('read_at', null);
+        .eq('read', false);
       return NextResponse.json({ success: true });
     }
 
     if (id) {
       await supabaseAdmin
         .from('notifications')
-        .update({ read_at: now })
+        .update({ read: true })
         .eq('id', id)
         .eq('user_id', userId);
       return NextResponse.json({ success: true });
