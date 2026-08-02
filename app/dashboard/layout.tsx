@@ -430,7 +430,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       {/* ─────────── MAIN ─────────── */}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-[76px]'}`}>
+      <div className={`flex-1 min-w-0 max-w-full overflow-x-hidden flex flex-col min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-[76px]'}`}>
         <header className="h-[68px] bg-void/70 backdrop-blur-2xl border-b border-pearl-100/[0.05] flex items-center justify-between px-5 lg:px-8 sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <button onClick={toggleMobileMenu} className="lg:hidden p-2 text-pearl-300/70">
@@ -543,7 +543,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className={`flex-1 ${pathname?.startsWith('/dashboard/trade/fx') ? 'overflow-hidden' : 'px-4 sm:px-6 lg:px-10 py-8 pb-28 lg:pb-8'}`}>{children}</main>
+        <main className={`flex-1 min-w-0 max-w-full ${pathname?.startsWith('/dashboard/trade/fx') ? 'overflow-hidden' : 'px-4 sm:px-6 lg:px-10 py-8 pb-28 lg:pb-8 overflow-x-hidden'}`}>{children}</main>
       </div>
 
       <SupportWidget />

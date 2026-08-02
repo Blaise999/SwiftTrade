@@ -27,6 +27,12 @@ const SEED_USD: Record<string, number> = {
   LINK: 14.6, UNI: 12.3, AAVE: 98, MKR: 2456, LDO: 1.87, MATIC: 0.57, LTC: 95.7,
   ATOM: 9.45, NEAR: 6.78, CRO: 0.12, OKB: 45.6, IMX: 2.11, SAND: 0.46, AXS: 6.23, MANA: 0.41,
 };
+// 1 USD = X local — fallback when no live/admin rate is available.
+const FIAT_SEED: Record<string, number> = {
+  NGN: 1600, PHP: 56, GHS: 15, KES: 129, ZAR: 18.3, GBP: 0.79, EUR: 0.92,
+  INR: 83, CAD: 1.36, AUD: 1.52, JPY: 157, CNY: 7.2, BRL: 5.4, MXN: 17,
+  EGP: 48, KRW: 1350, IDR: 15800, VND: 25000, TZS: 2600, UGX: 3800, XOF: 605, XAF: 605,
+};
 const num = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 
 function admin() {
@@ -45,18 +51,34 @@ async function fiatPerUsd(currency: string): Promise<number> {
     const { data } = await sb.from('bridge_countries').select('usd_rate').eq('currency', cur).maybeSingle();
     if (data && num((data as any).usd_rate) > 0) return num((data as any).usd_rate);
   }
-  // live fallback
+  // open.er-api.com — free, no key
+  try {
+    const j = await (await fetch('https://open.er-api.com/v6/latest/USD', { cache: 'no-store' })).json();
+    const r = num(j?.rates?.[cur]);
+    if (r > 0) return r;
+  } catch {}
+  // exchangerate.host fallback
   try {
     const j = await (await fetch(`https://api.exchangerate.host/latest?base=USD&symbols=${cur}`, { cache: 'no-store' })).json();
     const r = num(j?.rates?.[cur]);
     if (r > 0) return r;
   } catch {}
-  return 0;
+  // seed rate
+  return FIAT_SEED[cur] || 0;
 }
 
 async function usdPerCrypto(asset: string): Promise<number> {
   const a = asset.toUpperCase();
   if (STABLE.has(a)) return 1;
+
+  // Binance public ticker — free, no key, very reliable (SYMBOL + USDT pair)
+  try {
+    const j = await (await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${a}USDT`, { cache: 'no-store' })).json();
+    const p = num(j?.price);
+    if (p > 0) return p;
+  } catch {}
+
+  // CoinGecko fallback
   const id = CG_IDS[a];
   if (id) {
     try {
@@ -69,7 +91,8 @@ async function usdPerCrypto(asset: string): Promise<number> {
       if (live > 0) return live;
     } catch {}
   }
-  // fall back to a seed price so we never treat 1 coin as $1
+
+  // seed price so we never treat 1 coin as $1
   return SEED_USD[a] || 0;
 }
 
