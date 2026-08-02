@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Star, Share2, TrendingUp, TrendingDown, Info, X, Check, Repeat,
 } from 'lucide-react';
+import { AssetLogo } from '@/components/AssetLogo';
 import { getEtf } from '@/lib/etf-data';
 import { Sparkline } from '@/components/investing/EtfCards';
 import { useStore } from '@/lib/supabase/store-supabase';
@@ -32,6 +33,21 @@ export default function EtfDetail() {
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [position, setPosition] = useState<any>(null);
+
+  // load the user's holding for THIS symbol (if any)
+  useEffect(() => {
+    const uid = (user as any)?.id;
+    if (!uid || !symbol) return;
+    (async () => {
+      try {
+        const r = await fetch(`/api/invest/positions?userId=${uid}`, { cache: 'no-store' });
+        const j = await r.json().catch(() => ({}));
+        const mine = (j?.positions || []).find((p: any) => String(p.symbol).toUpperCase() === symbol);
+        if (mine && Number(mine.quantity) > 0) setPosition(mine);
+      } catch {}
+    })();
+  }, [(user as any)?.id, symbol, done]);
 
   if (!etf) {
     return (
@@ -247,6 +263,35 @@ export default function EtfDetail() {
                 </div>
               </div>
             </div>
+
+            {/* Your position (only if owned) */}
+            {position && (
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <AssetLogo symbol={etf.symbol} kind={etf.assetType === 'stock' ? 'stock' : 'etf'} size={38} />
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wide text-[var(--text-3)]">Your position</div>
+                      <div className="text-[15px] font-semibold text-[var(--text)]">
+                        {Number(position.quantity).toLocaleString(undefined, { maximumFractionDigits: 6 })} shares
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[17px] font-bold text-[var(--text)] tabular-nums">
+                      ${Number(position.value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                    <div className={`text-[12px] font-medium tabular-nums ${Number(position.pnl) >= 0 ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
+                      {Number(position.pnl) >= 0 ? '+' : ''}${Math.abs(Number(position.pnl)).toFixed(2)} ({Number(position.pnl) >= 0 ? '+' : ''}{Number(position.pnlPct).toFixed(2)}%)
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-[var(--border)] grid grid-cols-2 gap-3 text-[12px]">
+                  <div><span className="text-[var(--text-3)]">Avg cost</span> <span className="text-[var(--text)] font-medium float-right">${Number(position.avgPrice).toFixed(2)}</span></div>
+                  <div><span className="text-[var(--text-3)]">Market price</span> <span className="text-[var(--text)] font-medium float-right">${Number(position.price).toFixed(2)}</span></div>
+                </div>
+              </div>
+            )}
 
             {/* Chart */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">

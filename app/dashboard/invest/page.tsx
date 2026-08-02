@@ -1,5 +1,6 @@
 'use client';
 
+import { AssetLogo } from '@/components/AssetLogo';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -74,13 +75,15 @@ export default function InvestHome() {
     () => n((user as any)?.balance_available) || n((user as any)?.balanceAvailable) || n((user as any)?.balance),
     [user]
   );
-  const stockBalance = invest?.totalValue || 0;
+  // derive from the SAME holdings the rows render, so the card always tallies
+  const stockBalance = useMemo(() => holdings.reduce((s, h: any) => s + n(h.value), 0), [holdings]);
+  const totalCostAll = useMemo(() => holdings.reduce((s, h: any) => s + n(h.costBasis ?? (n(h.quantity) * n(h.avgPrice))), 0), [holdings]);
+  const totalPnl = stockBalance - totalCostAll;
+  const totalPct = totalCostAll > 0 ? (totalPnl / totalCostAll) * 100 : 0;
+  const totalUp = totalPnl >= 0;
   const dayPnl = invest?.totalDayGain || 0;
   const dayPct = invest?.totalDayGainPct || 0;
   const up = dayPnl >= 0;
-  const totalPnl = invest?.totalPnl || 0;
-  const totalPct = invest?.totalPnlPct || 0;
-  const totalUp = totalPnl >= 0;
 
   const sp500 = getSP500Etfs();
   const beginnerEtfs = getBeginnerEtfs();
@@ -223,9 +226,7 @@ export default function InvestHome() {
                     className="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-[var(--inset)] transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3B948C]/20 to-[#C4A052]/10 border border-[var(--border)] flex items-center justify-center shrink-0">
-                        <span className="text-[11.5px] font-bold text-[var(--text)]">{sym.slice(0, 4)}</span>
-                      </div>
+                      <AssetLogo symbol={sym} kind={p.assetType === 'stock' ? 'stock' : 'etf'} size={40} />
                       <div className="min-w-0">
                         <div className="text-[14px] font-semibold text-[var(--text)] truncate">{sym}</div>
                         <div className="text-[11px] text-[var(--text-3)] truncate">
