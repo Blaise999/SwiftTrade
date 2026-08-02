@@ -112,29 +112,31 @@ export const EtfCard = memo(function EtfCard({
       prefetch={false}
       className="group relative shrink-0 min-w-[200px] w-[200px] sm:w-[220px] rounded-2xl border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--inset)] border-[var(--border-strong)] transition-all p-4 active:scale-[0.98]"
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="min-w-0 flex items-center gap-2.5">
-          <AssetLogo symbol={etf.symbol} kind={(etf as any).assetType === 'stock' ? 'stock' : 'etf'} size={34} />
-          <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <div className="text-[15px] font-semibold text-[var(--text)] tracking-tight truncate">{etf.symbol}</div>
-            {live && <span className="w-1.5 h-1.5 rounded-full bg-[#00C805] animate-pulse" title="Live price" />}
-          </div>
-          <div className="text-[11px] text-[var(--text-3)] truncate max-w-[120px] mt-0.5">{etf.name}</div>
-          </div>
-        </div>
+      {/* top: logo + tag */}
+      <div className="flex items-center justify-between mb-3">
+        <AssetLogo symbol={etf.symbol} kind={(etf as any).assetType === 'stock' ? 'stock' : 'etf'} size={38} />
         <span className={`shrink-0 text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 ${
-          (etf as any).assetType === 'stock'
-            ? 'tag-stock'
-            : 'tag-etf'
+          (etf as any).assetType === 'stock' ? 'tag-stock' : 'tag-etf'
         }`}>
           {(etf as any).assetType === 'stock' ? 'STOCK' : 'ETF'}
         </span>
       </div>
-      <div className="mb-3"><Sparkline seed={etf.seedPrice} up={up} w={168} h={40} /></div>
+
+      {/* symbol + name */}
+      <div className="mb-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[15px] font-semibold text-[var(--text)] tracking-tight truncate">{etf.symbol}</span>
+          {live && <span className="w-1.5 h-1.5 rounded-full bg-[#00C805] animate-pulse shrink-0" title="Live price" />}
+        </div>
+        <div className="text-[11px] text-[var(--text-3)] truncate">{etf.name}</div>
+      </div>
+
+      {/* price today + percent */}
       <div className="flex items-end justify-between">
-        <div className="text-[17px] font-semibold text-[var(--text)] tabular-nums">${fmtPrice(price)}</div>
-        <div className={`flex items-center gap-1 text-[12px] font-medium tabular-nums ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
+        <div className="text-[20px] font-bold text-[var(--text)] tabular-nums leading-none">${fmtPrice(price)}</div>
+        <div className={`flex items-center gap-0.5 text-[12px] font-semibold tabular-nums px-1.5 py-0.5 rounded-md ${
+          up ? 'text-[#00C805] bg-[#00C805]/10' : 'text-[#FF4D3D] bg-[#FF4D3D]/10'
+        }`}>
           {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
           {up ? '+' : ''}{changePct.toFixed(2)}%
         </div>

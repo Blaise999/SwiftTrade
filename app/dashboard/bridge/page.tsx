@@ -210,6 +210,18 @@ export default function SwiftBridgePage() {
     return json;
   };
 
+  const markPaid = async (request: BridgeRequest) => {
+    if (!user?.id) return;
+    const res = await fetch('/api/bridge/mark-paid', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+      body: JSON.stringify({ request_id: request.id }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Failed to submit');
+    return json;
+  };
+
   return (
     <div className="min-h-full">
       {/* HEADER */}
@@ -559,6 +571,7 @@ export default function SwiftBridgePage() {
             request={selected}
             onClose={() => setSelected(null)}
             onUpload={uploadProof}
+            onMarkPaid={markPaid}
           />
         )}
       </AnimatePresence>
@@ -570,11 +583,12 @@ export default function SwiftBridgePage() {
 // Detail drawer with payment instructions + proof upload
 // ─────────────────────────────────────────────────────────
 function BridgeDetail({
-  request, onClose, onUpload,
+  request, onClose, onUpload, onMarkPaid,
 }: {
   request: BridgeRequest;
   onClose: () => void;
   onUpload: (f: File, r: BridgeRequest) => Promise<any>;
+  onMarkPaid: (r: BridgeRequest) => Promise<any>;
 }) {
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState('');
@@ -706,6 +720,20 @@ function BridgeDetail({
                   <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFile} />
                 </label>
                 {err && <div className="mt-2 text-xs text-loss">{err}</div>}
+
+                <button
+                  onClick={async () => {
+                    setUploading(true); setErr('');
+                    try { await onMarkPaid(request); onClose(); }
+                    catch (e: any) { setErr(e?.message || 'Failed to submit'); }
+                    finally { setUploading(false); }
+                  }}
+                  disabled={uploading}
+                  className="mt-3 w-full py-2.5 rounded-xl border border-white/15 text-cream/70 text-sm font-medium hover:bg-white/5 hover:text-cream transition disabled:opacity-50"
+                >
+                  I&apos;ve already paid — submit without receipt
+                </button>
+                <p className="mt-2 text-[11px] text-cream/40 text-center">You can upload the receipt later; our desk will verify your payment.</p>
               </div>
             </>
           )}

@@ -36,7 +36,7 @@ export default function InvestHome() {
   const searchRef = useRef<HTMLInputElement | null>(null);
 
   // Live invest holdings for total-asset display
-  const [invest, setInvest] = useState<{ totalValue: number; totalDayGain: number; totalDayGainPct: number } | null>(null);
+  const [invest, setInvest] = useState<{ totalValue: number; totalCost: number; totalPnl: number; totalPnlPct: number; totalDayGain: number; totalDayGainPct: number } | null>(null);
   const [holdings, setHoldings] = useState<any[]>([]);
 
   useEffect(() => {
@@ -54,6 +54,9 @@ export default function InvestHome() {
         if (j?.ok) {
           setInvest({
             totalValue: n(j.totalValue),
+            totalCost: n(j.totalCost),
+            totalPnl: n(j.totalPnl),
+            totalPnlPct: n(j.totalPnlPct),
             totalDayGain: n(j.totalDayGain),
             totalDayGainPct: n(j.totalDayGainPct),
           });
@@ -75,6 +78,9 @@ export default function InvestHome() {
   const dayPnl = invest?.totalDayGain || 0;
   const dayPct = invest?.totalDayGainPct || 0;
   const up = dayPnl >= 0;
+  const totalPnl = invest?.totalPnl || 0;
+  const totalPct = invest?.totalPnlPct || 0;
+  const totalUp = totalPnl >= 0;
 
   const sp500 = getSP500Etfs();
   const beginnerEtfs = getBeginnerEtfs();
@@ -146,11 +152,17 @@ export default function InvestHome() {
             </div>
 
             {stockBalance > 0 ? (
-              <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
-                {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                {hide ? '••••' : <>{up ? '+' : '−'}{fmtUSD(Math.abs(dayPnl))}</>}
-                <span className="text-[var(--text-3)] font-normal">({fmtPct(dayPct)}) today</span>
-              </div>
+              <>
+                <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
+                  {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                  {hide ? '••••' : <>{up ? '+' : '−'}{fmtUSD(Math.abs(dayPnl))}</>}
+                  <span className="text-[var(--text-3)] font-normal">({fmtPct(dayPct)}) today</span>
+                </div>
+                <div className={`mt-1 flex items-center gap-1.5 text-[12.5px] font-medium tabular-nums ${totalUp ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
+                  {hide ? '••••' : <>{totalUp ? '▲ +' : '▼ −'}{fmtUSD(Math.abs(totalPnl))}</>}
+                  <span className="text-[var(--text-3)] font-normal">({totalUp ? '+' : ''}{totalPct.toFixed(2)}%) all-time P&L</span>
+                </div>
+              </>
             ) : (
               <div className="mt-2 text-[13px] text-[var(--text-3)]">
                 No stock holdings yet — pick one below to start
@@ -197,9 +209,12 @@ export default function InvestHome() {
               {holdings.map((p: any) => {
                 const sym = String(p.symbol).toUpperCase();
                 const lq = live[sym];
-                const pct = lq ? lq.changePercent24h : Number(p.dayGainPct ?? p.pnlPct ?? 0);
-                const gain = pct >= 0;
                 const value = lq && Number(p.quantity) ? lq.price * Number(p.quantity) : Number(p.value);
+                // total profit/loss vs cost basis (what you're up or down on this holding)
+                const cost = Number(p.costBasis ?? (Number(p.quantity) * Number(p.avgPrice)));
+                const pnl = value - cost;
+                const pct = cost > 0 ? (pnl / cost) * 100 : 0;
+                const gain = pnl >= 0;
                 return (
                   <Link
                     key={p.id}
@@ -222,8 +237,8 @@ export default function InvestHome() {
                       <div className="text-[14px] font-semibold text-[var(--text)] tabular-nums">
                         ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
-                      <div className={`text-[12px] tabular-nums ${gain ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
-                        {gain ? '+' : ''}{pct.toFixed(2)}% {lq ? 'today' : '24h'}
+                      <div className={`text-[12px] tabular-nums font-medium ${gain ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
+                        {gain ? '+' : ''}${Math.abs(pnl).toFixed(2)} ({gain ? '+' : ''}{pct.toFixed(2)}%)
                       </div>
                     </div>
                   </Link>
