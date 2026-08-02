@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       target_network,
       fx_rate,
       estimated_credit_usd,
+      estimated_target,
     } = body || {};
 
     // Basic validation
@@ -89,6 +90,8 @@ export async function POST(req: NextRequest) {
         target_network: target_network || null,
         fx_rate: fx_rate ? Number(fx_rate) : null,
         estimated_credit_usd: estimated_credit_usd ? Number(estimated_credit_usd) : null,
+        estimated_usd: estimated_credit_usd ? Number(estimated_credit_usd) : null,
+        estimated_target: estimated_target ? Number(estimated_target) : null,
         status: 'awaiting_admin',
       })
       .select('*')

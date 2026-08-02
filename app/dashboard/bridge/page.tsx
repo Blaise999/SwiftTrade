@@ -145,9 +145,25 @@ export default function SwiftBridgePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const fxRate = country ? FX[country.currency] || 1 : 1;
+  const staticFxRate = country ? FX[country.currency] || 1 : 1;
   const localAmt = parseFloat(amount.replace(/,/g, '')) || 0;
-  const usdEstimate = country ? localAmt / fxRate : 0;
+
+  // live conversion (fiat -> USD -> crypto) via /api/convert, with static fallback
+  const [conv, setConv] = useState<{ usd: number; crypto: number; fx_rate: number; crypto_price: number } | null>(null);
+  useEffect(() => {
+    if (!country || !asset?.code || localAmt <= 0) { setConv(null); return; }
+    const ctl = setTimeout(async () => {
+      try {
+        const j = await (await fetch(`/api/convert?amount=${localAmt}&from=${country.currency}&to=${asset.code}`, { cache: 'no-store' })).json();
+        if (j?.usd != null) setConv({ usd: j.usd, crypto: j.crypto, fx_rate: j.fx_rate, crypto_price: j.crypto_price });
+      } catch { setConv(null); }
+    }, 350);
+    return () => clearTimeout(ctl);
+  }, [localAmt, country?.currency, asset?.code]);
+
+  const fxRate = conv?.fx_rate && conv.fx_rate > 0 ? conv.fx_rate : staticFxRate;
+  const usdEstimate = conv?.usd ?? (country ? localAmt / staticFxRate : 0);
+  const cryptoEstimate = conv?.crypto ?? 0;
 
   const validAmount = country
     ? localAmt >= (country.min_local || 0) && localAmt <= (country.max_local || Infinity)
@@ -181,6 +197,7 @@ export default function SwiftBridgePage() {
           target_network: network,
           fx_rate: fxRate,
           estimated_credit_usd: usdEstimate,
+          estimated_target: cryptoEstimate,
         }),
       });
       const json = await res.json();
@@ -330,9 +347,16 @@ export default function SwiftBridgePage() {
                 <label className="text-[11px] uppercase tracking-wider text-cream/50 font-medium">You receive (estimated)</label>
                 <div className="mt-1 mb-4 flex items-center gap-2 p-3.5 bg-electric/5 border border-electric/30 rounded-xl">
                   <span className="text-electric-light text-lg">≈</span>
-                  <span className="flex-1 font-mono text-2xl font-bold text-electric-light">{fmtNum(usdEstimate, 2)}</span>
-                  <span className="text-electric-light/70 text-sm">USD value</span>
+                  <span className="flex-1 font-mono text-2xl font-bold text-electric-light">
+                    {cryptoEstimate > 0 ? fmtNum(cryptoEstimate, 6) : fmtNum(usdEstimate, 2)}
+                  </span>
+                  <span className="text-electric-light/70 text-sm">{cryptoEstimate > 0 ? asset.code : 'USD'}</span>
                 </div>
+                {cryptoEstimate > 0 && (
+                  <div className="-mt-3 mb-4 text-[11px] text-cream/45">
+                    ≈ ${fmtNum(usdEstimate, 2)} · rate 1 {asset.code} = ${fmtNum(conv?.crypto_price || 0, 2)}
+                  </div>
+                )}
 
                 {/* Asset & network */}
                 <label className="text-[11px] uppercase tracking-wider text-cream/50 font-medium">Receive in</label>
