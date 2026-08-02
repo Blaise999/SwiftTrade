@@ -56,33 +56,33 @@ html:not(.dark) {
 html.dark {
   color-scheme: dark;
 
-  --surface: #0A0C12;
-  --card:    #141824;
-  --inset:   #1C2130;
-  --border:  rgba(255,255,255,0.09);
-  --border-strong: rgba(255,255,255,0.18);
-  --text:    #F4F7FB;
-  --text-2:  #9AA6B8;
-  --text-3:  #616E86;
-  --accent:   #00E676;   /* brighter green pops on dark */
+  --surface: #06070E;
+  --card:    #10131E;
+  --inset:   #171B29;
+  --border:  rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.16);
+  --text:    #F5F8FC;
+  --text-2:  #98A4B6;
+  --text-3:  #5E6B82;
+  --accent:   #00E676;   /* brighter green pops on near-black */
   --accent-2: #9B7CFF;
   --accent-3: #5B9BFF;
   --loss:     #FF5A47;
 
-  --void: #0A0C12; --obsidian: #141824; --charcoal: #141824; --slate: #1C2130;
-  --c-void: 10 12 18; --c-obsidian: 20 24 36; --c-charcoal: 20 24 36;
-  --c-slate: 28 33 48; --c-cream: 244 247 251;
-  --bg: #0A0C12; --bg-deep: #07080D; --bg-raise: #141824; --panel: #141824; --panel-alt: #10131C;
+  --void: #06070E; --obsidian: #10131E; --charcoal: #10131E; --slate: #171B29;
+  --c-void: 6 7 14; --c-obsidian: 16 19 30; --c-charcoal: 16 19 30;
+  --c-slate: 23 27 41; --c-cream: 245 248 252;
+  --bg: #06070E; --bg-deep: #030409; --bg-raise: #10131E; --panel: #10131E; --panel-alt: #0C0F17;
   --gold: #00E676; --gold-light: #5BFF9E; --c-gold: 0 230 118; --c-gold-light: 91 255 158;
   --profit: #00E676; --electric: #9B7CFF; --cyan: #5B9BFF;
-  --line: rgba(255,255,255,0.09); --line-strong: rgba(255,255,255,0.18);
-  --wash: rgba(255,255,255,0.035); --wash-strong: rgba(255,255,255,0.06);
-  --t-hi: #F4F7FB; --t-body: #C6D0DE; --t-sub: #9AA6B8; --t-faint: #616E86;
-  --on-accent: #04140A; --specular: rgba(255,255,255,0.14); --glow: rgba(0,230,118,0.30);
+  --line: rgba(255,255,255,0.07); --line-strong: rgba(255,255,255,0.16);
+  --wash: rgba(255,255,255,0.03); --wash-strong: rgba(255,255,255,0.055);
+  --t-hi: #F5F8FC; --t-body: #C6D0DE; --t-sub: #98A4B6; --t-faint: #5E6B82;
+  --on-accent: #04140A; --specular: rgba(255,255,255,0.14); --glow: rgba(0,230,118,0.38);
 
-  --aurora-1: rgba(155,124,255,0.16);
-  --aurora-2: rgba(0,230,118,0.12);
-  --card-shadow: 0 24px 60px -34px rgba(0,0,0,0.85);
+  --aurora-1: rgba(155,124,255,0.14);
+  --aurora-2: rgba(0,230,118,0.10);
+  --card-shadow: 0 24px 64px -32px rgba(0,0,0,0.92);
 }
 
 /* ---------- base ---------- */
@@ -112,9 +112,18 @@ h1, h2, h3, h4, .font-display {
   box-shadow: var(--card-shadow);
 }
 html.dark .card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012));
-  box-shadow: 0 1px 0 0 rgba(255,255,255,0.06) inset, var(--card-shadow);
+  background: linear-gradient(180deg, rgba(255,255,255,0.038), rgba(255,255,255,0.008));
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 1px 0 0 rgba(255,255,255,0.06) inset,
+    var(--card-shadow);
 }
+
+/* OlympTrade-style glow for action elements on near-black */
+.glow-up   { box-shadow: 0 10px 34px -10px rgba(0,230,118,0.55), 0 0 0 1px rgba(0,230,118,0.25) inset; }
+.glow-down { box-shadow: 0 10px 34px -10px rgba(255,90,71,0.55), 0 0 0 1px rgba(255,90,71,0.25) inset; }
+.glow-accent { box-shadow: 0 10px 34px -10px var(--glow); }
+html.dark .glow-soft { box-shadow: 0 0 44px -24px var(--glow); }
 
 .gradient-text {
   background: linear-gradient(100deg, var(--accent), var(--accent-2) 70%, var(--accent-3));

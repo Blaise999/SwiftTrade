@@ -2,6 +2,7 @@
 'use client';
 
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react';
+import { TakeProfitStopLoss } from '@/components/trade/TakeProfitStopLoss';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useStore } from '@/lib/supabase/store-supabase';
 import {
@@ -1001,6 +1002,7 @@ function FXTradeInner() {
   const [takeProfit, setTakeProfit] = useState<string>('');
 
   const [showMobilePanel, setShowMobilePanel] = useState(false);
+  const [showSLTP, setShowSLTP] = useState(false);
   const [showMobileTrades, setShowMobileTrades] = useState(false);
 
   const [tf, setTf] = useState<TF>('5m');
@@ -1522,19 +1524,19 @@ function FXTradeInner() {
     const chart = createChart(el, {
       width: w,
       height: h,
-      layout: { background: { color: 'transparent' }, textColor: 'rgba(255,255,255,0.88)' },
+      layout: { background: { color: 'transparent' }, textColor: 'rgba(255,255,255,0.65)', fontFamily: 'inherit' },
       grid: {
-        vertLines: { color: 'rgba(255,255,255,0.06)' },
-        horzLines: { color: 'rgba(255,255,255,0.06)' },
+        vertLines: { color: 'rgba(255,255,255,0.035)' },
+        horzLines: { color: 'rgba(255,255,255,0.035)' },
       },
-      rightPriceScale: { borderColor: 'rgba(255,255,255,0.14)' },
+      rightPriceScale: { borderColor: 'rgba(255,255,255,0.07)' },
       timeScale: {
-        borderColor: 'rgba(255,255,255,0.14)',
+        borderColor: 'rgba(255,255,255,0.07)',
         timeVisible: true,
         secondsVisible: false,
         lockVisibleTimeRangeOnResize: true,
-        barSpacing: 14,
-        minBarSpacing: 6,
+        barSpacing: 9,
+        minBarSpacing: 4,
         rightOffset: 8,
       },
       crosshair: { mode: CrosshairMode?.Normal ?? 0 },
@@ -1544,21 +1546,21 @@ function FXTradeInner() {
 
     if (typeof chart.addCandlestickSeries === 'function') {
       series = chart.addCandlestickSeries({
-        upColor: '#22c55e',
-        downColor: '#f43f5e',
-        borderUpColor: '#22c55e',
-        borderDownColor: '#f43f5e',
-        wickUpColor: '#22c55e',
-        wickDownColor: '#f43f5e',
+        upColor: '#00E676',
+        downColor: '#FF4D5E',
+        borderUpColor: '#00E676',
+        borderDownColor: '#FF4D5E',
+        wickUpColor: 'rgba(0,230,118,0.85)',
+        wickDownColor: 'rgba(255,77,94,0.85)',
       });
     } else if (typeof chart.addSeries === 'function' && CandlestickSeries) {
       series = chart.addSeries(CandlestickSeries, {
-        upColor: '#22c55e',
-        downColor: '#f43f5e',
-        borderUpColor: '#22c55e',
-        borderDownColor: '#f43f5e',
-        wickUpColor: '#22c55e',
-        wickDownColor: '#f43f5e',
+        upColor: '#00E676',
+        downColor: '#FF4D5E',
+        borderUpColor: '#00E676',
+        borderDownColor: '#FF4D5E',
+        wickUpColor: 'rgba(0,230,118,0.85)',
+        wickDownColor: 'rgba(255,77,94,0.85)',
       });
     } else {
       throw new Error(
@@ -2438,6 +2440,22 @@ function FXTradeInner() {
 
   return (
     <div className="font-app h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] flex flex-col bg-[var(--surface)] text-[var(--text)] overflow-hidden">
+      {showSLTP && (
+        <TakeProfitStopLoss
+          entryPrice={clampNum(marketPrice, 0)}
+          investment={clampNum(investment, 0)}
+          multiplier={multiplier}
+          direction={direction}
+          initialTp={takeProfit}
+          initialSl={stopLoss}
+          onConfirm={(tp, sl) => {
+            setTakeProfit(tp != null ? String(Number(tp.toFixed(5))) : '');
+            setStopLoss(sl != null ? String(Number(sl.toFixed(5))) : '');
+            setShowSLTP(false);
+          }}
+          onClose={() => setShowSLTP(false)}
+        />
+      )}
 
       {/* ═══════ TOP BAR — OlympTrade style ═══════ */}
       <div className="flex-shrink-0 flex items-center justify-between px-3 sm:px-5 py-2.5 border-b border-[var(--border)] bg-gradient-to-b from-[#13243D] to-[#0F1D33]">
@@ -2588,36 +2606,15 @@ function FXTradeInner() {
                 className="mt-1 w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none font-mono text-sm" placeholder="1.00000" />
             </div>
 
-            {/* SL/TP */}
-            <div>
-              <label className="text-[11px] text-[var(--text)]/50 uppercase tracking-wider">SL / TP</label>
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                <div>
-                  <input value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} inputMode="decimal"
-                    className="w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none text-sm focus:border-rose-500/40 transition" placeholder="Stop Loss" />
-                  <div className="flex gap-0.5 mt-1">
-                    {[10, 25, 50, 100].map((pips) => (
-                      <button key={`sl-${pips}`} type="button" onClick={() => {
-                        const mp = clampNum(marketPrice, 0);
-                        if (mp > 0) { const pipVal = mp < 10 ? 0.0001 : 0.01; const slPrice = direction === 'buy' ? mp - pips * pipVal : mp + pips * pipVal; setStopLoss(slPrice.toFixed(mp < 10 ? 5 : 3)); }
-                      }} className="flex-1 py-0.5 text-[9px] rounded bg-rose-500/10 text-rose-400/70 hover:bg-rose-500/20">{pips}p</button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <input value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} inputMode="decimal"
-                    className="w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none text-sm focus:border-[#00C805]/40 transition" placeholder="Take Profit" />
-                  <div className="flex gap-0.5 mt-1">
-                    {[10, 25, 50, 100].map((pips) => (
-                      <button key={`tp-${pips}`} type="button" onClick={() => {
-                        const mp = clampNum(marketPrice, 0);
-                        if (mp > 0) { const pipVal = mp < 10 ? 0.0001 : 0.01; const tpPrice = direction === 'buy' ? mp + pips * pipVal : mp - pips * pipVal; setTakeProfit(tpPrice.toFixed(mp < 10 ? 5 : 3)); }
-                      }} className="flex-1 py-0.5 text-[9px] rounded bg-[#00C805]/10 text-[#00C805]/70 hover:bg-[#00C805]/20">{pips}p</button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Take Profit & Stop Loss — sleek bar (opens the sheet) */}
+            <button type="button" onClick={() => setShowSLTP(true)}
+              className="w-full rounded-xl bg-[var(--inset)] border border-[var(--border)] px-4 py-3 flex items-center justify-between hover:border-[var(--border-strong)] transition">
+              <span className="text-[13px] font-medium text-[var(--text)]">Take Profit &amp; Stop Loss</span>
+              <span className="text-[12px] tabular-nums flex items-center gap-3">
+                {takeProfit ? <span className="text-[#00E676]">TP {takeProfit}</span> : <span className="text-[var(--text-3)]">TP —</span>}
+                {stopLoss ? <span className="text-[#FF4D5E]">SL {stopLoss}</span> : <span className="text-[var(--text-3)]">SL —</span>}
+              </span>
+            </button>
 
             {/* Summary */}
             <div className="rounded-xl bg-white/5 p-3 space-y-1.5">
@@ -2779,35 +2776,15 @@ function FXTradeInner() {
               </div>
             </div>
 
-            {/* SL/TP compact */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] text-rose-400/70">Stop Loss</label>
-                <input value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} inputMode="decimal"
-                  className="mt-0.5 w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none text-sm" placeholder="optional" />
-                <div className="flex gap-0.5 mt-1">
-                  {[20, 50, 100].map((pips) => (
-                    <button key={`msl-${pips}`} type="button" onClick={() => {
-                      const mp = clampNum(marketPrice, 0);
-                      if (mp > 0) { const pipVal = mp < 10 ? 0.0001 : 0.01; const slPrice = direction === 'buy' ? mp - pips * pipVal : mp + pips * pipVal; setStopLoss(slPrice.toFixed(mp < 10 ? 5 : 3)); }
-                    }} className="flex-1 py-0.5 text-[9px] rounded bg-rose-500/10 text-rose-400/60">{pips}p</button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-[10px] text-[#00C805]/70">Take Profit</label>
-                <input value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} inputMode="decimal"
-                  className="mt-0.5 w-full rounded-lg bg-black/30 border border-[var(--border)] px-3 py-2 outline-none text-sm" placeholder="optional" />
-                <div className="flex gap-0.5 mt-1">
-                  {[20, 50, 100].map((pips) => (
-                    <button key={`mtp-${pips}`} type="button" onClick={() => {
-                      const mp = clampNum(marketPrice, 0);
-                      if (mp > 0) { const pipVal = mp < 10 ? 0.0001 : 0.01; const tpPrice = direction === 'buy' ? mp + pips * pipVal : mp - pips * pipVal; setTakeProfit(tpPrice.toFixed(mp < 10 ? 5 : 3)); }
-                    }} className="flex-1 py-0.5 text-[9px] rounded bg-[#00C805]/10 text-[#00C805]/60">{pips}p</button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* Take Profit & Stop Loss — sleek bar (opens the sheet) */}
+            <button type="button" onClick={() => setShowSLTP(true)}
+              className="w-full rounded-xl bg-[var(--card)] border border-[var(--border)] px-4 py-3 flex items-center justify-between active:bg-[var(--inset)]">
+              <span className="text-[13px] font-medium text-[var(--text)]">Take Profit &amp; Stop Loss</span>
+              <span className="text-[12px] tabular-nums flex items-center gap-3">
+                {takeProfit ? <span className="text-[#00E676]">TP {takeProfit}</span> : <span className="text-[var(--text-3)]">TP —</span>}
+                {stopLoss ? <span className="text-[#FF4D5E]">SL {stopLoss}</span> : <span className="text-[var(--text-3)]">SL —</span>}
+              </span>
+            </button>
 
             {/* Notional summary */}
             <div className="flex justify-between text-xs px-1">
