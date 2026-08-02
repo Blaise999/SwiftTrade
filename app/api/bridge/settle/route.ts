@@ -59,7 +59,8 @@ async function complete(sb: SupabaseClient, r: any) {
     .update({ status: 'completed', final_credit_usd: credit, completed_at: new Date().toISOString() })
     .eq('id', r.id)
     .neq('status', 'completed');
-  if (credit > 0) await creditUserUsd(sb, r.user_id, credit);
+  // Bridge credits CRYPTO now (tg_bridge_credit_crypto trigger fires on status='completed').
+  // No USD credit here.
   return credit;
 }
 

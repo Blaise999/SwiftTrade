@@ -39,6 +39,7 @@ export default function InvestHome() {
   // Live invest holdings for total-asset display
   const [invest, setInvest] = useState<{ totalValue: number; totalCost: number; totalPnl: number; totalPnlPct: number; totalDayGain: number; totalDayGainPct: number } | null>(null);
   const [holdings, setHoldings] = useState<any[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -63,7 +64,7 @@ export default function InvestHome() {
           });
           if (Array.isArray(j.positions)) setHoldings(j.positions);
         }
-      } catch {}
+      } catch {} finally { setReady(true); }
     })();
   }, [user?.id]);
 
@@ -151,10 +152,12 @@ export default function InvestHome() {
             </div>
 
             <div className="mt-1.5 text-[clamp(34px,11vw,48px)] leading-none font-extrabold text-[var(--text)] tracking-tight tabular-nums">
-              {hide ? '••••••' : fmtUSD(stockBalance)}
+              {hide ? '••••••' : !ready ? <span className="inline-block h-8 w-44 rounded-lg bg-[var(--inset)] animate-pulse align-middle" /> : fmtUSD(stockBalance)}
             </div>
 
-            {stockBalance > 0 ? (
+            {!ready ? (
+              <div className="mt-2 h-4 w-36 rounded bg-[var(--inset)] animate-pulse" />
+            ) : stockBalance > 0 ? (
               <>
                 <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
                   {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}

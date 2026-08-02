@@ -74,16 +74,29 @@ export default function DashboardOverview() {
     if (!user?.id || !isSupabaseConfigured()) return;
 
     try {
-      const [{ data: trades }, { data: deposits }, { data: bonuses }, { data: withdrawals }, { data: referrals }] =
+      const [{ data: trades }, { data: deposits }, { data: bonuses }, { data: withdrawals }, { data: referrals }, { data: bridges }] =
         await Promise.all([
           supabase.from('trades').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
           supabase.from('deposits').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
           supabase.from('transactions').select('*').eq('user_id', user.id).in('type', ['bonus', 'deposit']).order('created_at', { ascending: false }).limit(3),
           supabase.from('withdrawals').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
           supabase.from('referrals').select('*').eq('referrer_id', user.id).order('created_at', { ascending: false }).limit(3),
+          supabase.from('bridge_requests').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
         ]);
 
       const items: any[] = [];
+
+      (bridges || []).forEach((b: any) => {
+        items.push({
+          id: `bridge-${b.id}`,
+          kind: 'bridge',
+          label: `SwiftBridge → ${b.target_asset || 'crypto'}`,
+          sublabel: `${b.local_amount || ''} ${b.local_currency || ''} • ${String(b.status || '').replace(/_/g, ' ')}`,
+          amount: Number(b.final_credit_usd ?? b.estimated_usd ?? 0),
+          status: b.status,
+          created_at: b.created_at,
+        });
+      });
 
       (trades || []).forEach((t: any) => {
         items.push({

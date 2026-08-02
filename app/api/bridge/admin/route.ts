@@ -129,24 +129,10 @@ export async function POST(req: NextRequest) {
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-      // Credit the user balance
-      const { error: balErr } = await supabaseAdmin.rpc('credit_user_usd', {
-        p_user: request.user_id,
-        p_amount: credit_usd,
-      });
-
-      if (balErr) {
-        // Fallback: direct update if RPC missing
-        await supabaseAdmin
-          .from('users')
-          .update({
-            balance_available: (
-              await supabaseAdmin.from('users').select('balance_available').eq('id', request.user_id).maybeSingle()
-            ).data?.balance_available + credit_usd,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', request.user_id);
-      }
+      // SwiftBridge now credits CRYPTO (the chosen target_asset), not USD.
+      // The tg_bridge_credit_crypto DB trigger adds it to the user's crypto
+      // holdings when status becomes 'completed', which tops their dashboard.
+      const balErr = null;
 
       // Notify user
       await supabaseAdmin.from('user_notifications').insert({
