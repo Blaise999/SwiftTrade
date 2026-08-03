@@ -53,6 +53,15 @@ const ASSETS = [
   { code: 'ETH',  name: 'Ethereum',   networks: ['ERC20'] },
   { code: 'SOL',  name: 'Solana',     networks: ['SOL'] },
   { code: 'BNB',  name: 'BNB',        networks: ['BEP20'] },
+  { code: 'XRP',  name: 'XRP',        networks: ['XRP'] },
+  { code: 'ADA',  name: 'Cardano',    networks: ['ADA'] },
+  { code: 'AVAX', name: 'Avalanche',  networks: ['AVAX-C', 'ERC20'] },
+  { code: 'MATIC', name: 'Polygon',   networks: ['Polygon', 'ERC20'] },
+  { code: 'DOGE', name: 'Dogecoin',   networks: ['DOGE'] },
+  { code: 'TRX',  name: 'TRON',       networks: ['TRC20'] },
+  { code: 'LINK', name: 'Chainlink',  networks: ['ERC20'] },
+  { code: 'LTC',  name: 'Litecoin',   networks: ['LTC'] },
+  { code: 'DOT',  name: 'Polkadot',   networks: ['DOT'] },
 ];
 
 // Approximate FX (in real app pull from exchangerate API). 1 USD = ?
@@ -130,7 +139,7 @@ export default function SwiftBridgePage() {
               schema: 'public',
               table: 'bridge_requests',
               filter: `user_id=eq.${user.id}`,
-            }, (payload) => {
+            }, (payload: any) => {
               const newRow = payload.new as BridgeRequest;
               setRequests((prev) => {
                 const exists = prev.find((r) => r.id === newRow.id);
