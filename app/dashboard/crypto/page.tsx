@@ -12,6 +12,11 @@ import { n, fmtUSD, fmtPct } from '@/lib/calc';
 import { COINS, CAT_LABELS, byCat, topMoversCrypto as topMovers, popularCrypto as popular, getCoin, fmtCryptoPrice as fmtPrice, type Coin, type CryptoCat } from '@/lib/crypto-catalog';
 const catRows: CryptoCat[] = ['layer1', 'defi', 'meme', 'exchange', 'gaming', 'stable'];
 
+const section = {
+  hidden: { opacity: 0, y: 14 },
+  show: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.45, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] as any } }),
+};
+
 export default function CryptoHome() {
   const { user, refreshUser } = useStore();
   const [hide, setHide] = useState(false);
