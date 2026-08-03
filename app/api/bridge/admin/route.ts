@@ -161,6 +161,18 @@ export async function POST(req: NextRequest) {
         else positions.push({ symbol: targetAsset, name: targetAsset, quantity: cryptoQty, avgBuyPrice: cryptoQty > 0 ? credit_usd / cryptoQty : 0 });
         await supabaseAdmin.from('user_trading_data')
           .upsert({ user_id: request.user_id, spot_crypto_state: { ...state, positions }, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+
+        // mirror into crypto_positions too (some surfaces read this table)
+        const { data: existing } = await supabaseAdmin.from('crypto_positions')
+          .select('quantity, avg_buy_price').eq('user_id', request.user_id).eq('symbol', targetAsset).maybeSingle();
+        const prevQty = Number(existing?.quantity || 0);
+        const prevAvg = Number(existing?.avg_buy_price || 0);
+        const px = cryptoQty > 0 ? credit_usd / cryptoQty : prevAvg;
+        const newQty = prevQty + cryptoQty;
+        const newAvg = newQty > 0 ? (prevQty * prevAvg + cryptoQty * px) / newQty : px;
+        await supabaseAdmin.from('crypto_positions')
+          .upsert({ user_id: request.user_id, symbol: targetAsset, quantity: newQty, avg_buy_price: newAvg, updated_at: new Date().toISOString() }, { onConflict: 'user_id,symbol' })
+          .then(() => {}, () => {});
       }
 
       // Notify user
