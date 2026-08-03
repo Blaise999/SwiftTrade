@@ -80,8 +80,9 @@ export default function CryptoHome() {
           // enrich each holding with a live-ish price from the catalog for valuation
           const withVal = j.holdings.map((h: any) => {
             const meta = COINS.find(c => c.symbol === String(h.symbol).toUpperCase());
-            const price = n(h.avgPrice) || meta?.price || 0;
-            return { ...h, price, value: n(h.quantity) * price };
+            const price = meta?.price || n(h.avgPrice) || 0;   // MARKET price for value
+            const avg = n(h.avgPrice) || price;                // cost basis price
+            return { ...h, price, avgPrice: avg, change: meta?.change ?? 0, value: n(h.quantity) * price };
           });
           setHoldings(withVal);
         }
@@ -92,10 +93,13 @@ export default function CryptoHome() {
   useEffect(() => { if (searchOpen) setTimeout(() => searchRef.current?.focus(), 60); }, [searchOpen]);
 
   const cryptoBalance = useMemo(() => holdings.reduce((s, h: any) => s + n(h.value), 0), [holdings]);
-  const totalCost = useMemo(() => holdings.reduce((s, h: any) => s + n(h.costBasis ?? n(h.quantity) * n(h.avgPrice)), 0), [holdings]);
+  const totalCost = useMemo(() => holdings.reduce((s, h: any) => s + n(h.quantity) * n(h.avgPrice), 0), [holdings]);
+  const dayPnl = useMemo(() => holdings.reduce((s, h: any) => { const v = n(h.value); const c = n(h.change); return s + (v - v / (1 + c / 100)); }, 0), [holdings]);
   const totalPnl = cryptoBalance - totalCost;
   const totalPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
+  const dayPct = (cryptoBalance - dayPnl) > 0 ? (dayPnl / (cryptoBalance - dayPnl)) * 100 : 0;
   const up = totalPnl >= 0;
+  const dayUp = dayPnl >= 0;
 
   const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const results = useMemo(() => {
@@ -136,11 +140,17 @@ export default function CryptoHome() {
             {!ready ? (
               <div className="mt-2 h-4 w-36 rounded bg-[var(--card)] animate-pulse" />
             ) : cryptoBalance > 0 ? (
-              <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
-                {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                {hide ? '••••' : <>{up ? '+' : '−'}{fmtUSD(Math.abs(totalPnl))}</>}
-                <span className="text-[var(--text-3)] font-normal">({up ? '+' : ''}{totalPct.toFixed(2)}%) all-time P&L</span>
-              </div>
+              <>
+                <div className={`mt-2 flex items-center gap-1.5 text-[14px] font-semibold tabular-nums ${dayUp ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
+                  {dayUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                  {hide ? '••••' : <>{dayUp ? '+' : '−'}{fmtUSD(Math.abs(dayPnl))}</>}
+                  <span className="text-[var(--text-3)] font-normal">({dayUp ? '+' : ''}{dayPct.toFixed(2)}%) today</span>
+                </div>
+                <div className={`mt-1 flex items-center gap-1.5 text-[12.5px] font-medium tabular-nums ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
+                  {hide ? '••••' : <>{up ? '▲ +' : '▼ −'}{fmtUSD(Math.abs(totalPnl))}</>}
+                  <span className="text-[var(--text-3)] font-normal">({up ? '+' : ''}{totalPct.toFixed(2)}%) all-time P&L</span>
+                </div>
+              </>
             ) : (
               <div className="mt-2 text-[13px] text-[var(--text-3)]">No crypto yet — buy a coin below or use SwiftBridge</div>
             )}

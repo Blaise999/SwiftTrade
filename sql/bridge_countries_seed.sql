@@ -1,0 +1,52 @@
+-- =====================================================================
+-- SwiftBridge countries seed (40 countries). Idempotent upsert.
+-- usd_rate = 1 USD in local currency (the converter uses live rates first,
+-- this as fallback). Safe to re-run.
+-- =====================================================================
+insert into public.bridge_countries (code, name, currency, currency_symbol, flag_emoji, min_local, max_local, active, display_order, usd_rate)
+values
+('NG','Nigeria','NGN','₦','🇳🇬',5000,50000000,true,0,1600),
+('GH','Ghana','GHS','₵','🇬🇭',50,500000,true,1,15),
+('KE','Kenya','KES','KSh','🇰🇪',500,5000000,true,2,129),
+('ZA','South Africa','ZAR','R','🇿🇦',100,2000000,true,3,18.3),
+('UG','Uganda','UGX','USh','🇺🇬',20000,200000000,true,4,3800),
+('TZ','Tanzania','TZS','TSh','🇹🇿',10000,100000000,true,5,2600),
+('EG','Egypt','EGP','E£','🇪🇬',200,2000000,true,6,48),
+('MA','Morocco','MAD','DH','🇲🇦',50,1000000,true,7,10),
+('CM','Cameroon','XAF','FCFA','🇨🇲',3000,50000000,true,8,605),
+('CI','Côte d''Ivoire','XOF','CFA','🇨🇮',3000,50000000,true,9,605),
+('PH','Philippines','PHP','₱','🇵🇭',300,3000000,true,10,56),
+('IN','India','INR','₹','🇮🇳',500,5000000,true,11,83),
+('ID','Indonesia','IDR','Rp','🇮🇩',80000,800000000,true,12,15800),
+('VN','Vietnam','VND','₫','🇻🇳',130000,1000000000,true,13,25000),
+('TH','Thailand','THB','฿','🇹🇭',200,2000000,true,14,36.5),
+('MY','Malaysia','MYR','RM','🇲🇾',20,500000,true,15,4.45),
+('SG','Singapore','SGD','S$','🇸🇬',10,300000,true,16,1.36),
+('HK','Hong Kong','HKD','HK$','🇭🇰',50,2000000,true,17,7.81),
+('CN','China','CNY','¥','🇨🇳',50,1500000,true,18,7.24),
+('JP','Japan','JPY','¥','🇯🇵',1000,30000000,true,19,154),
+('KR','South Korea','KRW','₩','🇰🇷',10000,200000000,true,20,1350),
+('PK','Pakistan','PKR','₨','🇵🇰',2000,50000000,true,21,278),
+('BD','Bangladesh','BDT','৳','🇧🇩',1000,20000000,true,22,117),
+('AE','United Arab Emirates','AED','د.إ','🇦🇪',30,1000000,true,23,3.67),
+('SA','Saudi Arabia','SAR','﷼','🇸🇦',30,1000000,true,24,3.75),
+('TR','Turkey','TRY','₺','🇹🇷',300,5000000,true,25,38.5),
+('GB','United Kingdom','GBP','£','🇬🇧',10,500000,true,26,0.79),
+('EU','Eurozone','EUR','€','🇪🇺',10,500000,true,27,0.92),
+('US','United States','USD','$','🇺🇸',10,500000,true,28,1),
+('CA','Canada','CAD','C$','🇨🇦',10,500000,true,29,1.36),
+('AU','Australia','AUD','A$','🇦🇺',10,500000,true,30,1.52),
+('NZ','New Zealand','NZD','NZ$','🇳🇿',10,500000,true,31,1.66),
+('MX','Mexico','MXN','$','🇲🇽',100,2000000,true,32,17),
+('BR','Brazil','BRL','R$','🇧🇷',30,1000000,true,33,5.4),
+('AR','Argentina','ARS','$','🇦🇷',5000,50000000,true,34,1000),
+('CO','Colombia','COP','$','🇨🇴',20000,200000000,true,35,4100),
+('CL','Chile','CLP','$','🇨🇱',5000,50000000,true,36,950),
+('PE','Peru','PEN','S/','🇵🇪',20,500000,true,37,3.75),
+('RU','Russia','RUB','₽','🇷🇺',500,5000000,true,38,92),
+('UA','Ukraine','UAH','₴','🇺🇦',200,3000000,true,39,41),
+('PL','Poland','PLN','zł','🇵🇱',20,500000,true,40,4)
+on conflict (code) do update set
+  name=excluded.name, currency=excluded.currency, currency_symbol=excluded.currency_symbol,
+  flag_emoji=excluded.flag_emoji, min_local=excluded.min_local, max_local=excluded.max_local,
+  active=true, display_order=excluded.display_order, usd_rate=excluded.usd_rate;

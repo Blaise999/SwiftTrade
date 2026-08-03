@@ -1,6 +1,7 @@
 // app/dashboard/page.tsx  (or wherever your DashboardOverview lives)
 'use client';
 
+import { getCoin } from '@/lib/crypto-catalog';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -195,7 +196,7 @@ export default function DashboardOverview() {
   const walletAddress = liveAddress || user?.walletAddress;
 
   // ─── Stock + crypto breakdown (live values + day P&L) ───────────────
-  const [invest, setInvest] = useState({ value: 0, dayPnl: 0, dayPct: 0 });
+  const [invest, setInvest] = useState({ value: 0, dayPnl: 0, dayPct: 0, totalPnl: 0, totalPct: 0 });
 
   // Crypto value comes from the spot-trading Zustand store (same source the
   // crypto trade page uses, so dashboard numbers match exactly).
@@ -208,23 +209,44 @@ export default function DashboardOverview() {
     loadSpotFromSupabase(user.id).catch(() => {/* silent */});
   }, [user?.id, spotHydrated, loadSpotFromSupabase]);
 
+  // crypto from the merged /api/holdings (same fresh source as the portfolio,
+  // so a bridge credit shows here immediately — not the cached spot store).
+  const [cryptoHoldings, setCryptoHoldings] = useState<any[]>([]);
+  useEffect(() => {
+    if (!user?.id) return;
+    fetch(`/api/holdings?userId=${user.id}&market=crypto`, { cache: 'no-store' })
+      .then((r) => r.json()).then((j) => { if (Array.isArray(j?.holdings)) setCryptoHoldings(j.holdings); })
+      .catch(() => {});
+  }, [user?.id]);
+
   const crypto = useMemo(() => {
-    let value = 0, pnl = 0, costBasis = 0;
-    for (const p of spotPositions || []) {
-      const v = Number((p as any).displayValue ?? (p as any).marketValue ?? 0);
-      const pl = Number((p as any).displayPnL ?? (p as any).unrealizedPnL ?? 0);
-      const qty = Number((p as any).quantity ?? 0);
-      const avg = Number((p as any).averageBuyPrice ?? (p as any).averagePrice ?? 0);
+    let value = 0, costBasis = 0, dayPnl = 0;
+    for (const h of cryptoHoldings) {
+      const qty = Number(h.quantity || 0);
+      const avg = Number(h.avgPrice || 0);
+      const coin = getCoin(h.symbol);
+      const price = coin?.price ?? avg;         // live-ish catalog price, else cost
+      const change24h = coin?.change ?? 0;       // 24h % change
+      const v = qty * price;
       value += v;
-      pnl += pl;
       costBasis += qty * avg;
+      dayPnl += v - v / (1 + change24h / 100);   // today's portion of the value
     }
-    const pct = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
-    return { value, dayPnl: pnl, dayPct: pct };
-  }, [spotPositions]);
+    const totalPnl = value - costBasis;
+    const totalPct = costBasis > 0 ? (totalPnl / costBasis) * 100 : 0;
+    const dayPct = (value - dayPnl) > 0 ? (dayPnl / (value - dayPnl)) * 100 : 0;
+    return { value, dayPnl, dayPct, totalPnl, totalPct };
+  }, [cryptoHoldings]);
 
   const investValue = invest.value;
   const cryptoValue = crypto.value;
+  // whole-balance P&L (today + all-time), so people see gain/loss % everywhere
+  const todayPnlAll = invest.dayPnl + crypto.dayPnl;
+  const totalPnlAll = invest.totalPnl + crypto.totalPnl;
+  const netWorthAll = cashBalance + investValue + cryptoValue;
+  const todayPctAll = (netWorthAll - todayPnlAll) > 0 ? (todayPnlAll / (netWorthAll - todayPnlAll)) * 100 : 0;
+  const costAll = (investValue - invest.totalPnl) + (cryptoValue - crypto.totalPnl);
+  const totalPctAll = costAll > 0 ? (totalPnlAll / costAll) * 100 : 0;
 
   useEffect(() => {
     if (!user?.id) return;
@@ -237,6 +259,8 @@ export default function DashboardOverview() {
             value: Number(j.totalValue) || 0,
             dayPnl: Number(j.totalDayGain) || 0,
             dayPct: Number(j.totalDayGainPct) || 0,
+            totalPnl: Number(j.totalPnl) || 0,
+            totalPct: Number(j.totalPnlPct) || 0,
           });
         }
       } catch {/* silent */}
@@ -312,7 +336,7 @@ export default function DashboardOverview() {
           dayPnl={invest.dayPnl + crypto.dayPnl}
           dayPct={
             (cashBalance + investValue + cryptoValue) > 0
-              ? ((invest.dayPnl + crypto.dayPnl) / (cashBalance + investValue + cryptoValue)) * 100
+              ? ((invest.dayPnl + crypto.dayPnl) / Math.max(1, (cashBalance + investValue + cryptoValue) - (invest.dayPnl + crypto.dayPnl))) * 100
               : 0
           }
         />
@@ -336,9 +360,14 @@ export default function DashboardOverview() {
           </div>
           <div className="text-[18px] font-semibold text-[color:var(--t-hi)] tabular-nums">{formatBal(investValue)}</div>
           {investValue > 0 ? (
-            <div className={`text-[11px] mt-0.5 tabular-nums ${invest.dayPnl >= 0 ? 'text-[color:var(--profit)]' : 'text-[color:var(--loss)]'}`}>
-              {invest.dayPnl >= 0 ? '+' : ''}{invest.dayPnl.toFixed(2)} ({invest.dayPnl >= 0 ? '+' : ''}{invest.dayPct.toFixed(2)}%) today
-            </div>
+            <>
+              <div className={`text-[11px] mt-0.5 tabular-nums ${invest.dayPnl >= 0 ? 'text-[color:var(--profit)]' : 'text-[color:var(--loss)]'}`}>
+                {invest.dayPnl >= 0 ? '+' : ''}${Math.abs(invest.dayPnl).toFixed(2)} ({invest.dayPnl >= 0 ? '+' : ''}{invest.dayPct.toFixed(2)}%) today
+              </div>
+              <div className={`text-[10.5px] tabular-nums ${invest.totalPnl >= 0 ? 'text-[color:var(--profit)]' : 'text-[color:var(--loss)]'}`}>
+                {invest.totalPnl >= 0 ? '+' : ''}{invest.totalPct.toFixed(2)}% all-time
+              </div>
+            </>
           ) : (
             <div className="text-[11px] text-[var(--text-3)] mt-0.5">No holdings yet</div>
           )}
@@ -354,9 +383,14 @@ export default function DashboardOverview() {
           </div>
           <div className="text-[18px] font-semibold text-[color:var(--t-hi)] tabular-nums">{formatBal(cryptoValue)}</div>
           {cryptoValue > 0 ? (
-            <div className={`text-[11px] mt-0.5 tabular-nums ${crypto.dayPnl >= 0 ? 'text-[color:var(--profit)]' : 'text-[color:var(--loss)]'}`}>
-              {crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPnl.toFixed(2)} ({crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPct.toFixed(2)}%) total
-            </div>
+            <>
+              <div className={`text-[11px] mt-0.5 tabular-nums ${crypto.dayPnl >= 0 ? 'text-[color:var(--profit)]' : 'text-[color:var(--loss)]'}`}>
+                {crypto.dayPnl >= 0 ? '+' : ''}${Math.abs(crypto.dayPnl).toFixed(2)} ({crypto.dayPnl >= 0 ? '+' : ''}{crypto.dayPct.toFixed(2)}%) today
+              </div>
+              <div className={`text-[10.5px] tabular-nums ${crypto.totalPnl >= 0 ? 'text-[color:var(--profit)]' : 'text-[color:var(--loss)]'}`}>
+                {crypto.totalPnl >= 0 ? '+' : ''}{crypto.totalPct.toFixed(2)}% all-time
+              </div>
+            </>
           ) : (
             <div className="text-[11px] text-[var(--text-3)] mt-0.5">No holdings yet</div>
           )}
@@ -399,7 +433,7 @@ export default function DashboardOverview() {
         <CardLink href="/dashboard/portfolio" className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)] p-4 hover:bg-[color:var(--slate)] transition-colors">
           <div className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--t-faint)] mb-1.5">Portfolio</div>
           <div className="text-[18px] text-[color:var(--t-hi)] font-semibold tabular-nums">{formatBal(cashBalance + investValue + cryptoValue)}</div>
-          <div className="text-[11px] text-[color:var(--profit)] mt-0.5 tabular-nums">+0.42% today</div>
+          <div className={`text-[11px] mt-0.5 tabular-nums ${todayPnlAll >= 0 ? 'text-[color:var(--profit)]' : 'text-[color:var(--loss)]'}`}>{todayPnlAll >= 0 ? '+' : ''}{todayPctAll.toFixed(2)}% today · {totalPnlAll >= 0 ? '+' : ''}{totalPctAll.toFixed(2)}% all-time</div>
         </CardLink>
         <CardLink href="/dashboard/referrals" className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)] p-4 hover:bg-[color:var(--slate)] transition-colors">
           <div className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--t-faint)] mb-1.5">Referrals</div>
