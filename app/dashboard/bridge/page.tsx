@@ -40,6 +40,8 @@ type BridgeRequest = {
   admin_responded_at?: string;
   proof_url?: string;
   proof_uploaded_at?: string;
+  credited_amount_usd?: number;
+  credited_asset?: string;
   status: 'awaiting_admin' | 'awaiting_payment' | 'awaiting_verification' | 'completed' | 'rejected' | 'expired' | 'cancelled';
   admin_notes?: string;
   created_at: string;
@@ -53,6 +55,15 @@ const ASSETS = [
   { code: 'ETH',  name: 'Ethereum',   networks: ['ERC20'] },
   { code: 'SOL',  name: 'Solana',     networks: ['SOL'] },
   { code: 'BNB',  name: 'BNB',        networks: ['BEP20'] },
+  { code: 'XRP',  name: 'XRP',        networks: ['XRP'] },
+  { code: 'ADA',  name: 'Cardano',    networks: ['ADA'] },
+  { code: 'AVAX', name: 'Avalanche',  networks: ['AVAX-C', 'ERC20'] },
+  { code: 'MATIC', name: 'Polygon',   networks: ['Polygon', 'ERC20'] },
+  { code: 'DOGE', name: 'Dogecoin',   networks: ['DOGE'] },
+  { code: 'TRX',  name: 'TRON',       networks: ['TRC20'] },
+  { code: 'LINK', name: 'Chainlink',  networks: ['ERC20'] },
+  { code: 'LTC',  name: 'Litecoin',   networks: ['LTC'] },
+  { code: 'DOT',  name: 'Polkadot',   networks: ['DOT'] },
 ];
 
 // Approximate FX (in real app pull from exchangerate API). 1 USD = ?
