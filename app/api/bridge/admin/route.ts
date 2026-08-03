@@ -108,18 +108,33 @@ export async function POST(req: NextRequest) {
           { status: 400 },
         );
       }
-      const credit_usd = parseFloat(body.credited_amount_usd ?? request.estimated_credit_usd);
+      const credit_usd = parseFloat(body.credited_amount_usd ?? request.estimated_credit_usd ?? request.estimated_usd);
       if (!Number.isFinite(credit_usd) || credit_usd <= 0) {
         return NextResponse.json({ error: 'Invalid credit amount' }, { status: 400 });
       }
 
-      // Mark approved
+      const targetAsset = String(body.credited_asset || request.target_asset || 'USDT').toUpperCase();
+      const isUsd = targetAsset === 'USD';
+      // crypto quantity: prefer the amount estimated at request time, else derive from USD
+      const SEED: Record<string, number> = {
+        BTC: 67234, ETH: 3456, SOL: 145, BNB: 567, XRP: 0.52, ADA: 0.46, AVAX: 35.7,
+        MATIC: 0.57, DOGE: 0.082, TRX: 0.12, LINK: 14.6, LTC: 95.7, DOT: 7.9, USDT: 1, USDC: 1,
+      };
+      const cryptoQty = isUsd ? 0
+        : (Number(request.estimated_target) > 0
+            ? Number(request.estimated_target)
+            : (SEED[targetAsset] ? credit_usd / SEED[targetAsset] : 0));
+
+      // Mark completed + record final amounts + block the trigger from double-crediting
       const { data: updated, error } = await supabaseAdmin
         .from('bridge_requests')
         .update({
           credited_amount_usd: credit_usd,
-          credited_asset: body.credited_asset || request.target_asset || 'USDT',
-          credited_amount: credit_usd,
+          credited_asset: targetAsset,
+          credited_amount: cryptoQty,
+          final_credit_usd: credit_usd,
+          final_credit_target: cryptoQty,
+          crypto_credited: true,
           admin_notes: body.admin_notes || null,
           status: 'completed',
         })
@@ -129,19 +144,35 @@ export async function POST(req: NextRequest) {
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-      // SwiftBridge now credits CRYPTO (the chosen target_asset), not USD.
-      // The tg_bridge_credit_crypto DB trigger adds it to the user's crypto
-      // holdings when status becomes 'completed', which tops their dashboard.
-      const balErr = null;
+      // CREDIT the user directly — reliable, no trigger dependency.
+      if (isUsd) {
+        const { data: u } = await supabaseAdmin.from('users').select('balance_available').eq('id', request.user_id).maybeSingle();
+        await supabaseAdmin.from('users')
+          .update({ balance_available: Number(u?.balance_available || 0) + credit_usd, updated_at: new Date().toISOString() })
+          .eq('id', request.user_id);
+      } else if (cryptoQty > 0) {
+        // add the coin to the user's crypto holdings (shows on crypto page, portfolio, dashboard)
+        await supabaseAdmin.from('user_trading_data').insert({ user_id: request.user_id }).then(() => {}, () => {});
+        const { data: utd } = await supabaseAdmin.from('user_trading_data').select('spot_crypto_state').eq('user_id', request.user_id).maybeSingle();
+        const state: any = utd?.spot_crypto_state || {};
+        const positions: any[] = Array.isArray(state.positions) ? state.positions : [];
+        const idx = positions.findIndex((p: any) => String(p.symbol).toUpperCase() === targetAsset);
+        if (idx >= 0) positions[idx].quantity = Number(positions[idx].quantity || 0) + cryptoQty;
+        else positions.push({ symbol: targetAsset, name: targetAsset, quantity: cryptoQty, avgBuyPrice: cryptoQty > 0 ? credit_usd / cryptoQty : 0 });
+        await supabaseAdmin.from('user_trading_data')
+          .upsert({ user_id: request.user_id, spot_crypto_state: { ...state, positions }, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      }
 
       // Notify user
-      await supabaseAdmin.from('user_notifications').insert({
+      await supabaseAdmin.from('notifications').insert({
         user_id: request.user_id,
-        type: 'bridge.completed',
+        type: 'bridge',
         title: 'SwiftBridge — completed',
-        body: `Credited $${credit_usd.toFixed(2)} ${updated.credited_asset || 'USDT'} to your balance.`,
-        data: { request_id, amount: credit_usd },
-      });
+        message: isUsd
+          ? `$${credit_usd.toFixed(2)} added to your balance.`
+          : `${cryptoQty.toFixed(6)} ${targetAsset} added to your crypto holdings.`,
+        metadata: { request_id, usd: credit_usd, asset: targetAsset, quantity: cryptoQty },
+      }).then(() => {}, () => {});
 
       return NextResponse.json({ success: true, request: updated });
     }
