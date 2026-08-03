@@ -40,8 +40,6 @@ type BridgeRequest = {
   admin_responded_at?: string;
   proof_url?: string;
   proof_uploaded_at?: string;
-  credited_amount_usd?: number;
-  credited_asset?: string;
   status: 'awaiting_admin' | 'awaiting_payment' | 'awaiting_verification' | 'completed' | 'rejected' | 'expired' | 'cancelled';
   admin_notes?: string;
   created_at: string;
@@ -141,7 +139,7 @@ export default function SwiftBridgePage() {
               schema: 'public',
               table: 'bridge_requests',
               filter: `user_id=eq.${user.id}`,
-            }, (payload) => {
+            }, (payload: any) => {
               const newRow = payload.new as BridgeRequest;
               setRequests((prev) => {
                 const exists = prev.find((r) => r.id === newRow.id);
