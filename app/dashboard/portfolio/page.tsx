@@ -15,6 +15,9 @@ type Holding = {
   pnl?: number | null;
   pnlPct?: number | null;
   shieldEnabled: boolean;
+  autoShieldEnabled?: boolean;
+  shieldOnBelow?: number | null;
+  shieldOffAbove?: number | null;
 };
 
 const usd = (n: number) =>
@@ -30,6 +33,9 @@ export default function PortfolioPage() {
   const [stocks, setStocks] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [autoCfg, setAutoCfg] = useState<Holding | null>(null);
+  const [floor, setFloor] = useState('');
+  const [ceiling, setCeiling] = useState('');
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -74,6 +80,34 @@ export default function PortfolioPage() {
   }, [userId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // run auto-shield with the same prices we display, so it stays consistent
+  useEffect(() => {
+    const uid = (user as any)?.id;
+    if (!uid || (crypto.length + stocks.length) === 0) return;
+    const prices: Record<string, number> = {};
+    for (const h of [...crypto, ...stocks]) prices[h.symbol.toUpperCase()] = Number(h.price) || 0;
+    fetch('/api/positions/auto-shield', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: uid, prices }),
+    }).then(r => r.json()).then(j => { if (j?.changes?.length) load(); }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [crypto.length, stocks.length]);
+
+  const openAuto = (h: Holding) => {
+    setAutoCfg(h);
+    setFloor(h.shieldOnBelow != null ? String(h.shieldOnBelow) : '');
+    setCeiling(h.shieldOffAbove != null ? String(h.shieldOffAbove) : '');
+  };
+  const saveAuto = async (enabled: boolean) => {
+    const uid = (user as any)?.id; const h = autoCfg;
+    if (!uid || !h) return;
+    await fetch('/api/positions/shield-config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: uid, symbol: h.symbol, kind: h.kind, enabled, floor, ceiling }),
+    }).catch(() => {});
+    setAutoCfg(null); load();
+  };
 
   const toggleShield = async (h: Holding) => {
     if (!userId) return;
@@ -133,8 +167,8 @@ export default function PortfolioPage() {
           <p className="mt-8 text-center text-[var(--text-3)] text-sm">Loading your holdings…</p>
         ) : (
           <>
-            <Section title="Crypto" holdings={crypto} busy={busy} onShield={toggleShield} />
-            <Section title="Stocks & ETFs" holdings={stocks} busy={busy} onShield={toggleShield} />
+            <Section title="Crypto" holdings={crypto} busy={busy} onShield={toggleShield} onAuto={openAuto} />
+            <Section title="Stocks & ETFs" holdings={stocks} busy={busy} onShield={toggleShield} onAuto={openAuto} />
             {crypto.length === 0 && stocks.length === 0 && (
               <p className="mt-8 text-center text-[var(--text-3)] text-sm">
                 You don’t hold any assets yet. Buy stocks or crypto and they’ll appear here.
@@ -143,11 +177,56 @@ export default function PortfolioPage() {
           </>
         )}
 
-        <p className="mt-8 text-[11px] text-[var(--text-3)] leading-relaxed text-center">
-          Shield locks in the current value of a single holding. It applies per stock and per coin —
-          toggle it on the position you want to protect. Not financial advice.
-        </p>
+        <div className="mt-8 rounded-2xl border border-[var(--accent-2)]/20 bg-[var(--accent-2)]/[0.05] p-4">
+          <div className="flex items-center gap-2 mb-1.5">
+            <ShieldCheck className="w-4 h-4 text-[var(--accent-2)]" />
+            <span className="text-[13px] font-semibold text-[var(--text)]">What is Shield mode?</span>
+          </div>
+          <p className="text-[12px] text-[var(--text-2)] leading-relaxed">
+            When you shield a holding, it&apos;s moved into a <span className="text-[var(--text)]">stable store</span> and its value is
+            locked — it stops moving with the market, so a crash can&apos;t touch it. Turn Shield off and the holding goes right back
+            to normal, tracking live prices again. Use the 🛡️ on any position to protect it instantly.
+          </p>
+          <p className="mt-2 text-[12px] text-[var(--text-2)] leading-relaxed">
+            <span className="text-[var(--text)]">Auto-Shield</span> does it for you: set a floor and a ceiling, and it shields
+            automatically when the price drops to your floor, then un-shields when it recovers to your ceiling — for both crypto and stocks.
+          </p>
+          <p className="mt-2 text-[10.5px] text-[var(--text-3)]">Not financial advice.</p>
+        </div>
       </div>
+
+      {autoCfg && (
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setAutoCfg(null)} />
+          <div className="relative w-full sm:w-[400px] bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
+              <h3 className="text-[15px] font-semibold text-[var(--text)]">Auto-Shield · {autoCfg.symbol}</h3>
+            </div>
+            <p className="text-[12px] text-[var(--text-3)] mb-4">
+              Shields automatically when the price falls to your floor, and returns to the market when it recovers to your ceiling.
+            </p>
+            <label className="text-[11px] text-[var(--text-3)]">Shield when price drops to (floor)</label>
+            <div className="mt-1 mb-3 flex items-center rounded-xl bg-[var(--inset)] border border-[var(--border)] px-3">
+              <span className="text-[var(--text-3)]">$</span>
+              <input value={floor} onChange={e => setFloor(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" placeholder="e.g. 60000"
+                className="flex-1 bg-transparent outline-none px-2 py-2.5 text-[var(--text)] tabular-nums" />
+            </div>
+            <label className="text-[11px] text-[var(--text-3)]">Un-shield when price rises to (ceiling)</label>
+            <div className="mt-1 mb-4 flex items-center rounded-xl bg-[var(--inset)] border border-[var(--border)] px-3">
+              <span className="text-[var(--text-3)]">$</span>
+              <input value={ceiling} onChange={e => setCeiling(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" placeholder="e.g. 72000"
+                className="flex-1 bg-transparent outline-none px-2 py-2.5 text-[var(--text)] tabular-nums" />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => saveAuto(true)}
+                className="flex-1 py-3 rounded-2xl bg-[var(--accent)] text-[#04140A] font-bold">Enable Auto-Shield</button>
+              <button onClick={() => saveAuto(false)}
+                className="px-4 py-3 rounded-2xl border border-[var(--border)] text-[var(--text-2)]">Turn off</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -164,8 +243,8 @@ function Tile({ label, value, tone }: { label: string; value: string; tone?: str
 }
 
 function Section({
-  title, holdings, busy, onShield,
-}: { title: string; holdings: Holding[]; busy: string | null; onShield: (h: Holding) => void }) {
+  title, holdings, busy, onShield, onAuto,
+}: { title: string; holdings: Holding[]; busy: string | null; onShield: (h: Holding) => void; onAuto: (h: Holding) => void }) {
   if (!holdings.length) return null;
   return (
     <div className="mt-6">
@@ -195,6 +274,14 @@ function Section({
                   </div>
                 )}
               </div>
+              <button
+                onClick={() => onAuto(h)}
+                title="Auto-Shield settings"
+                className={`shrink-0 h-9 px-2.5 rounded-xl border text-[11px] font-medium transition ${
+                  h.autoShieldEnabled
+                    ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10'
+                    : 'border-[var(--border)] text-[var(--text-3)] hover:text-[var(--text)]'
+                }`}>Auto</button>
               <button
                 onClick={() => onShield(h)}
                 disabled={busy === h.symbol}
