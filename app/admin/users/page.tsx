@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { AdminUserPositions } from '@/components/admin/AdminUserPositions';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -1045,6 +1046,8 @@ export default function AdminUsersPage() {
                 </div>
 
                 <div className="p-3 bg-white/5 rounded-xl">
+                  {selectedUser && <AdminUserPositions userId={selectedUser.id} />}
+
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs text-slate-400">Deposit Wallets (Per Currency)</p>
                     <button
