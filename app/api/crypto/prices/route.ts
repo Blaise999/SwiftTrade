@@ -25,10 +25,14 @@ async function fromCoinGecko(symbols: string[]) {
   const ids = symbols.map(s => CG_IDS[s]).filter(Boolean);
   if (!ids.length) return {};
   const key = process.env.COINGECKO_API_KEY?.trim();
-  const base = key
-    ? `https://pro-api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd&include_24hr_change=true&x_cg_pro_api_key=${key}`
-    : `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd&include_24hr_change=true`;
-  const j = await (await fetch(base, { cache: 'no-store' })).json();
+  // respect a custom base URL; default to the public (demo) host
+  let base = (process.env.COINGECKO_API_URL?.trim() || 'https://api.coingecko.com/api/v3').replace(/\/+$/, '');
+  if (!/\/api\/v3$/.test(base)) base += '/api/v3';
+  const isPro = base.includes('pro-api');
+  const params = new URLSearchParams({ ids: ids.join(','), vs_currencies: 'usd', include_24hr_change: 'true' });
+  if (key) params.set(isPro ? 'x_cg_pro_api_key' : 'x_cg_demo_api_key', key);
+  const url = `${base}/simple/price?${params.toString()}`;
+  const j = await (await fetch(url, { cache: 'no-store' })).json();
   const out: Record<string, { price: number; change: number }> = {};
   for (const s of symbols) {
     const id = CG_IDS[s];
