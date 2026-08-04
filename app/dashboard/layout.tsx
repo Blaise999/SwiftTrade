@@ -25,7 +25,9 @@ import {
   Bitcoin,
   DollarSign,
   BarChart3,
-  Globe,, Crown } from 'lucide-react';
+  Globe,
+  Crown,
+} from 'lucide-react';
 
 import { useStore } from '@/lib/supabase/store-supabase';
 import { useUIStore } from '@/lib/ui-store';
