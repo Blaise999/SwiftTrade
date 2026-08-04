@@ -12,6 +12,11 @@ import { n, fmtUSD, fmtPct } from '@/lib/calc';
 import { COINS, CAT_LABELS, byCat, topMoversCrypto as topMovers, popularCrypto as popular, getCoin, fmtCryptoPrice as fmtPrice, type Coin, type CryptoCat } from '@/lib/crypto-catalog';
 const catRows: CryptoCat[] = ['layer1', 'defi', 'meme', 'exchange', 'gaming', 'stable'];
 
+const section = {
+  hidden: { opacity: 0, y: 14 },
+  show: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.45, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] as any } }),
+};
+
 export default function CryptoHome() {
   const { user, refreshUser } = useStore();
   const [hide, setHide] = useState(false);
@@ -25,7 +30,7 @@ export default function CryptoHome() {
   const [live, setLive] = useState<Record<string, { price: number; change: number }>>({});
   // live crypto prices (Binance, keyless), refreshed every 30s
   useEffect(() => {
-    const syms = COINS.map(c => c.symbol).join(',');
+    const syms = COINS.map((c: Coin) => c.symbol).join(',');
     const load = () => fetch(`/api/crypto/prices?symbols=${syms}`, { cache: 'no-store' })
       .then(r => r.json()).then(j => { if (j?.prices) setLive(j.prices); }).catch(() => {});
     load();
@@ -45,7 +50,7 @@ export default function CryptoHome() {
         if (Array.isArray(j?.holdings)) {
           // enrich each holding with a live-ish price from the catalog for valuation
           const withVal = j.holdings.map((h: any) => {
-            const meta = COINS.find(c => c.symbol === String(h.symbol).toUpperCase());
+            const meta = COINS.find((c: Coin) => c.symbol === String(h.symbol).toUpperCase());
             const lp = live[String(h.symbol).toUpperCase()];
             const price = (lp?.price ?? meta?.price) || n(h.avgPrice) || 0;   // LIVE market price
             const avg = n(h.avgPrice) || price;
@@ -72,7 +77,7 @@ export default function CryptoHome() {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return COINS.filter(c => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)).slice(0, 24);
+    return COINS.filter((c: Coin) => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)).slice(0, 24);
   }, [query]);
 
   return (
@@ -197,7 +202,7 @@ export default function CryptoHome() {
             </p>
           </div>
           <div className="space-y-2.5">
-            {COINS.slice(0, 2).map(c => <CryptoWideCard key={c.symbol} coin={liveCoin(c)} />)}
+            {COINS.slice(0, 2).map((c: Coin) => <CryptoWideCard key={c.symbol} coin={liveCoin(c)} />)}
           </div>
         </motion.section>
 
@@ -224,7 +229,7 @@ export default function CryptoHome() {
               <button onClick={() => { setSearchOpen(false); setQuery(''); }} className="p-2 text-[var(--text-3)] hover:text-[var(--text)]"><X className="w-5 h-5" /></button>
             </div>
             <div className="mt-4 space-y-1.5">
-              {results.map(c => (
+              {results.map((c: Coin) => (
                 <Link key={c.symbol} href={`/dashboard/crypto/${c.symbol}`} onClick={() => setSearchOpen(false)}
                   className="flex items-center justify-between gap-3 rounded-xl bg-[var(--card)] border border-[var(--border)] px-4 py-3 hover:bg-[var(--inset)]">
                   <div className="flex items-center gap-3">
@@ -294,7 +299,7 @@ function CryptoRail({ title, items, right, custom = 0 }: { title: string; items:
         {right}
       </div>
       <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1 snap-x">
-        {items.map(c => <CryptoCard key={c.symbol} coin={c} />)}
+        {items.map((c: Coin) => <CryptoCard key={c.symbol} coin={c} />)}
       </div>
     </motion.section>
   );
