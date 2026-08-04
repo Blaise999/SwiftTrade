@@ -1,12 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Check, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, Check, ShieldCheck, Copy, Wallet } from 'lucide-react';
 import { useStore } from '@/lib/supabase/store-supabase';
-import { TIERS } from '@/lib/tier';
-
+import { TIERS } from '@/lib/tiers';
 
 export default function TierCheckout() {
   const params = useSearchParams();
@@ -18,6 +17,19 @@ export default function TierCheckout() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState('');
+  const [wallets, setWallets] = useState<any[]>([]);
+  const [copied, setCopied] = useState('');
+  useEffect(() => {
+    const uid = (user as any)?.id;
+    if (!uid) return;
+    fetch(`/api/wallets/resolved?userId=${uid}&purpose=deposit`, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(j => {
+        const list = (j?.wallets || j?.slots || j?.resolved || []).filter((w: any) => w?.address);
+        setWallets(list);
+      }).catch(() => {});
+  }, [(user as any)?.id]);
+  const copy = (a: string) => { try { navigator.clipboard?.writeText(a); setCopied(a); setTimeout(() => setCopied(''), 1500); } catch {} };
 
   const submit = async () => {
     const uid = (user as any)?.id;
@@ -80,6 +92,29 @@ export default function TierCheckout() {
             ))}
           </div>
         </div>
+
+        {wallets.length > 0 && (
+          <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Wallet className="w-4 h-4 text-[var(--accent)]" />
+              <h3 className="text-[13px] font-semibold text-[var(--text)]">Pay to one of these wallets</h3>
+            </div>
+            <p className="text-[11.5px] text-[var(--text-3)] mb-3">Send exactly ${tier.price.toLocaleString()} to any wallet below, then tap Confirm. Our desk activates your tier once payment lands.</p>
+            <div className="space-y-2">
+              {wallets.map((w: any, i: number) => (
+                <div key={w.id || i} className="rounded-xl bg-[var(--inset)] border border-[var(--border)] p-2.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-semibold text-[var(--text-2)]">{w.currency || w.symbol}{w.network ? ` · ${w.network}` : ''}</span>
+                    <button onClick={() => copy(w.address)} className="text-[var(--text-3)] hover:text-[var(--accent)] flex items-center gap-1 text-[11px]">
+                      <Copy className="w-3 h-3" />{copied === w.address ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  <div className="text-[11.5px] font-mono text-[var(--text)] break-all">{w.address}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--inset)] p-4 flex items-start gap-2.5">
           <ShieldCheck className="w-4 h-4 text-[var(--accent-2)] mt-0.5 shrink-0" />

@@ -217,8 +217,8 @@ const TIMEFRAMES: { label: string; value: TF; pollMs: number }[] = [
   { label: '1D', value: '1D', pollMs: 65000 },
 ];
 
-const DEFAULT_OPEN_VIEW_SECONDS = 5 * 60;
-const DEFAULT_OPEN_VIEW_BARS = 8;
+const DEFAULT_OPEN_VIEW_SECONDS = 90 * 60;
+const DEFAULT_OPEN_VIEW_BARS = 110;
 
 // ===============================
 // helpers
@@ -658,7 +658,8 @@ function tfToMs(tf: TF) {
 function minimum24hCandleCount(tf: TF) {
   const base = Math.ceil(LOCAL_CACHE_TTL_MS / tfToMs(tf));
   const buffer = Math.max(2, Math.ceil(base * 0.1));
-  return Math.min(2000, base + buffer);
+  // always load a healthy history so ~110 candles fit the view on every timeframe
+  return Math.min(2000, Math.max(150, base + buffer));
 }
 
 function hashStr(s: string) {

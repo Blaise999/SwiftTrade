@@ -180,24 +180,32 @@ export async function GET(req: Request) {
 
   if (missing.length) {
     let fetched: Record<string, Quote> = {};
+    const hasAlpaca = !!(process.env.ALPACA_API_KEY_ID && process.env.ALPACA_API_SECRET_KEY);
 
-    // 2) Yahoo batch
-    try {
-      fetched = await yahooBatch(missing);
-    } catch {
-      fetched = {};
+    // 1) Alpaca first when configured — reliable from datacenter IPs (Yahoo isn't).
+    if (hasAlpaca) {
+      try { fetched = await alpacaSnapshots(missing); } catch { fetched = {}; }
     }
 
-    // 3) Yahoo per-symbol chart for anything still missing
-    const stillMissing = missing.filter((s) => !fetched[s]);
+    // 2) Yahoo batch for anything still missing
+    let stillMissing = missing.filter((s) => !fetched[s]);
+    if (stillMissing.length) {
+      try {
+        const y = await yahooBatch(stillMissing);
+        Object.assign(fetched, y);
+      } catch {}
+    }
+
+    // 3) Yahoo per-symbol chart for the rest
+    stillMissing = missing.filter((s) => !fetched[s]);
     if (stillMissing.length) {
       const results = await Promise.all(stillMissing.map((s) => yahooChartOne(s)));
       results.forEach((q) => { if (q) fetched[q.symbol] = q; });
     }
 
-    // 4) Alpaca (only if configured) for any leftovers
+    // 4) Alpaca last-resort if we didn't run it first
     const leftovers = missing.filter((s) => !fetched[s]);
-    if (leftovers.length) {
+    if (leftovers.length && !hasAlpaca) {
       try {
         const a = await alpacaSnapshots(leftovers);
         Object.assign(fetched, a);
