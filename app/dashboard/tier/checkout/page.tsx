@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, Check, ShieldCheck } from 'lucide-react';
 import { useStore } from '@/lib/supabase/store-supabase';
-import { TIERS } from '../page';
+import { TIERS } from '@/lib/tier';
+
 
 export default function TierCheckout() {
   const params = useSearchParams();
