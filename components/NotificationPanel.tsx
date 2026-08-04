@@ -90,9 +90,12 @@ export default function NotificationPanel() {
         )}
       </button>
 
-      {/* Dropdown Panel */}
+      {/* Panel */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-[min(22rem,calc(100vw-1.5rem))] bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-xl z-[60] overflow-hidden">
+        <>
+          {/* mobile backdrop */}
+          <div className="fixed inset-0 z-[59] bg-black/50 sm:hidden" onClick={() => setIsOpen(false)} />
+          <div className="fixed left-3 right-3 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[22rem] bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-2xl z-[60] overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
             <h3 className="text-sm font-semibold text-[var(--text)]">Notifications</h3>
@@ -108,7 +111,7 @@ export default function NotificationPanel() {
           </div>
 
           {/* List */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-[65vh] sm:max-h-80 overflow-y-auto overscroll-contain">
             {loading && notifications.length === 0 ? (
               <div className="p-8 text-center">
                 <div className="w-5 h-5 border-2 border-gold/30 border-t-gold rounded-full animate-spin mx-auto" />
@@ -150,6 +153,7 @@ export default function NotificationPanel() {
             )}
           </div>
         </div>
+        </>
       )}
     </div>
   );

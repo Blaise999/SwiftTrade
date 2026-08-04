@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { emailUser } from '@/lib/email/events';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createClient(
@@ -18,8 +19,7 @@ const supabaseAdmin = createClient(
 const VALID_TIERS: Record<string, { level: number; code: string; price: number }> = {
   starter: { level: 1, code: 'starter', price: 500 },
   trader: { level: 2, code: 'trader', price: 1000 },
-  professional: { level: 3, code: 'professional', price: 3000 },
-  elite: { level: 4, code: 'elite', price: 5000 },
+  elite: { level: 3, code: 'elite', price: 2000 },
 };
 
 // ============================================
@@ -129,6 +129,14 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
+
+    emailUser(userId, {
+      title: `${tierDef.code[0].toUpperCase() + tierDef.code.slice(1)} tier requested`,
+      tone: 'success',
+      message: `We received your upgrade request for the ${tierDef.code} tier ($${priceAmount}). Our desk will confirm your payment and activate it shortly.`,
+      rows: [{ label: 'Tier', value: tierDef.code }, { label: 'Amount', value: `$${priceAmount}` }],
+      ctaText: 'View membership', ctaUrl: (process.env.NEXT_PUBLIC_APP_URL || '') + '/dashboard/tier',
+    });
 
     return NextResponse.json({
       success: true,

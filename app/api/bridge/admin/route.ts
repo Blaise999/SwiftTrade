@@ -10,6 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { emailUser } from '@/lib/email/events';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createClient(
@@ -185,6 +186,19 @@ export async function POST(req: NextRequest) {
           : `${cryptoQty.toFixed(6)} ${targetAsset} added to your crypto holdings.`,
         metadata: { request_id, usd: credit_usd, asset: targetAsset, quantity: cryptoQty },
       }).then(() => {}, () => {});
+
+      emailUser(request.user_id, {
+        title: 'SwiftBridge complete',
+        tone: 'success',
+        message: isUsd
+          ? `Your bridge is done — $${credit_usd.toFixed(2)} was added to your balance.`
+          : `Your bridge is done — ${cryptoQty.toFixed(6)} ${targetAsset} was added to your crypto holdings.`,
+        rows: [
+          { label: 'You sent', value: `${Number(request.local_amount).toLocaleString()} ${request.local_currency}` },
+          { label: 'You received', value: isUsd ? `$${credit_usd.toFixed(2)}` : `${cryptoQty.toFixed(6)} ${targetAsset}` },
+        ],
+        ctaText: 'View in Swifttrade', ctaUrl: (process.env.NEXT_PUBLIC_APP_URL || '') + '/dashboard/history',
+      });
 
       return NextResponse.json({ success: true, request: updated });
     }

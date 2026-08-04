@@ -5,6 +5,8 @@
  * and logs a trade row so the notification triggers fire. Sells: side='sell'.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { emailUser } from '@/lib/email/events';
+import { requireFeature } from '@/lib/tier-guard';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -28,6 +30,10 @@ export async function POST(req: NextRequest) {
   const usd = num(usdAmount);
   if (!userId || !sym || px <= 0 || usd <= 0) {
     return NextResponse.json({ ok: false, error: 'userId, symbol, price, usdAmount required' }, { status: 400 });
+  {
+    const _gate = await requireFeature(String(userId || ''), 'trading');
+    if (!_gate.ok) return NextResponse.json({ ok: false, error: _gate.error, code: 'TIER_REQUIRED' }, { status: _gate.status || 403 });
+  }
   }
   const qty = usd / px;
 
@@ -75,6 +81,18 @@ export async function POST(req: NextRequest) {
     amount: usd, quantity: qty, entry_price: px, current_price: px, status: 'closed',
     source: 'spot', opened_at: new Date().toISOString(), closed_at: new Date().toISOString(),
   }).then(() => {}, () => {});
+
+  emailUser(userId, {
+    title: `${side === 'buy' ? 'Bought' : 'Sold'} ${sym}`,
+    tone: side === 'buy' ? 'success' : 'default',
+    message: `You ${side === 'buy' ? 'bought' : 'sold'} ${qty.toFixed(6)} ${sym} for $${usd.toFixed(2)}.`,
+    rows: [
+      { label: 'Amount', value: `$${usd.toFixed(2)}` },
+      { label: 'Price', value: `$${px.toLocaleString()}` },
+      { label: 'Quantity', value: `${qty.toFixed(6)} ${sym}` },
+    ],
+    ctaText: 'View holdings', ctaUrl: (process.env.NEXT_PUBLIC_APP_URL || '') + '/dashboard/crypto',
+  });
 
   return NextResponse.json({ ok: true, symbol: sym, side, quantity: qty, price: px, usd, balance: newBal });
 }

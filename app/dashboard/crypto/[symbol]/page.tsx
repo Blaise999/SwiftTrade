@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, TrendingUp, TrendingDown } from 'lucide-react';
 import { AssetLogo } from '@/components/AssetLogo';
+import { ShieldControl } from '@/components/trade/ShieldControl';
 import { useStore } from '@/lib/supabase/store-supabase';
 import { getCoin, fmtCryptoPrice } from '@/lib/crypto-catalog';
 import { n, fmtUSD } from '@/lib/calc';
@@ -110,6 +111,20 @@ export default function CryptoDetail() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* shield mode (only when you hold it) */}
+        {position && (
+          <div className="mt-5">
+            <ShieldControl
+              userId={(user as any)?.id}
+              symbol={symbol}
+              kind="crypto"
+              name={coin.name}
+              price={price}
+              initialShielded={!!position.shieldEnabled}
+            />
           </div>
         )}
 

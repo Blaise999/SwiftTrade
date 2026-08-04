@@ -982,6 +982,7 @@ function FXTradeInner() {
   const [loading, setLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const [balance, setBalance] = useState<number>(0);
 
@@ -1535,9 +1536,9 @@ function FXTradeInner() {
         timeVisible: true,
         secondsVisible: false,
         lockVisibleTimeRangeOnResize: true,
-        barSpacing: 9,
-        minBarSpacing: 4,
-        rightOffset: 8,
+        barSpacing: 5,
+        minBarSpacing: 2,
+        rightOffset: 6,
       },
       crosshair: { mode: CrosshairMode?.Normal ?? 0 },
     });
@@ -1812,7 +1813,16 @@ function FXTradeInner() {
 
       const candles = result.candles;
       if (!candles.length) {
-        setChartNote('No candles returned.');
+        // No data — show a clean simulated series, never an empty/giant candle.
+        const seed = clampNum(lastClose ?? marketPrice, 1.0);
+        const synth = generateSyntheticCandlesFx(seed, intervalMs, count, `${curAsset}:${curTf}`);
+        if (synth.length) {
+          setCandlesCacheLabel('SIM');
+          setChartData(synth);
+          setChartNote('Live feed unavailable — showing simulated chart.');
+        } else {
+          setChartNote('No candles returned.');
+        }
         return;
       }
 
@@ -1830,7 +1840,21 @@ function FXTradeInner() {
         retryAfterMsRef.current = e.retryAfterMs;
         setChartNote(`Rate limited. Retrying in ${Math.ceil(e.retryAfterMs / 1000)}s…`);
       } else {
-        setChartNote(e?.message || 'Failed to load chart');
+        // Feed failed (UPSTREAM_ERROR, network, etc.) — NEVER leave a broken/giant
+        // candle. Simulate a clean series so the chart always looks right.
+        try {
+          const seed = clampNum(lastClose ?? marketPrice, 1.0);
+          const synth = generateSyntheticCandlesFx(seed, intervalMs, count, `${curAsset}:${curTf}`);
+          if (synth.length) {
+            setCandlesCacheLabel('SIM');
+            setChartData(synth);
+            setChartNote('Live feed unavailable — showing simulated chart.');
+          } else {
+            setChartNote('Failed to load chart');
+          }
+        } catch {
+          setChartNote('Failed to load chart');
+        }
       }
     } finally {
       chartInFlightRef.current = false;
@@ -2509,7 +2533,7 @@ function FXTradeInner() {
       )}
 
       {/* ═══════ MAIN AREA — Desktop: chart + panel side-by-side, Mobile: chart only ═══════ */}
-      <div className="flex-1 flex min-h-0 overflow-hidden">
+      <div className="relative flex-1 flex min-h-0 overflow-hidden">
 
         {/* CHART AREA */}
         <div className="flex-1 flex flex-col min-h-0 min-w-0">
@@ -2541,11 +2565,20 @@ function FXTradeInner() {
                 {chartNote}
               </div>
             )}
+            {/* Floating Trade button — opens the panel; chart is full-width until then */}
+            {!panelOpen && (
+              <button type="button" onClick={() => setPanelOpen(true)}
+                className="hidden lg:flex absolute bottom-5 right-5 z-20 items-center gap-2 px-5 py-3 rounded-full bg-[#00C805] text-black font-bold shadow-xl hover:brightness-110 transition">
+                <TrendingUp className="w-4 h-4" /> Trade
+              </button>
+            )}
           </div>
         </div>
 
-        {/* DESKTOP TRADE PANEL — hidden on mobile */}
-        <div className="hidden lg:flex flex-col w-80 xl:w-96 border-l border-[var(--border)] bg-[var(--card)] overflow-y-auto">
+        {/* DESKTOP TRADE PANEL — slide-in overlay so the chart takes the whole space */}
+        <div className={`hidden lg:flex flex-col w-96 border-l border-[var(--border)] bg-[var(--card)] overflow-y-auto absolute right-0 top-0 bottom-0 z-30 shadow-2xl transition-transform duration-300 ${panelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <button type="button" onClick={() => setPanelOpen(false)}
+            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[var(--text)]/60">✕</button>
 
           {/* Direction buttons */}
           <div className="p-3 border-b border-[var(--border)]">

@@ -22,10 +22,14 @@ export interface TierUser {
 
 export type FeatureKey =
   | 'trading'
+  | 'bridge'
   | 'shield'
+  | 'fx'
   | 'dca_bots'
   | 'grid_bots'
   | 'trading_bots'
+  | 'auto_shield'
+  | 'airdrop'
   | 'ai_assistant'
   | 'elite';
 
@@ -34,21 +38,24 @@ export type FeatureKey =
 // ============================================
 
 export const FEATURE_TIER_MAP: Record<FeatureKey, number> = {
-  trading: 1,
-  shield: 1,
-  dca_bots: 2,
-  grid_bots: 3,
-  trading_bots: 3,
-  ai_assistant: 3,
-  elite: 4,
+  trading: 1,       // Starter — buy/sell stocks + crypto
+  bridge: 1,        // Starter — SwiftBridge
+  shield: 2,        // Trader  — Shield mode
+  fx: 2,            // Trader  — leveraged forex
+  dca_bots: 2,      // Trader
+  grid_bots: 2,     // Trader
+  trading_bots: 2,  // Trader
+  auto_shield: 3,   // Elite   — automatic shield
+  airdrop: 3,       // Elite
+  ai_assistant: 3,  // Elite
+  elite: 3,
 };
 
 export const TIER_NAMES: Record<number, string> = {
   0: 'Basic',
   1: 'Starter',
   2: 'Trader',
-  3: 'Professional',
-  4: 'Elite',
+  3: 'Elite',
 };
 
 // ============================================
@@ -88,10 +95,14 @@ export function getUpgradeMessage(feature: FeatureKey): string {
 
   const featureLabels: Record<FeatureKey, string> = {
     trading: 'live trading',
+    bridge: 'SwiftBridge',
     shield: 'Shield protection',
+    fx: 'Forex trading',
     dca_bots: 'DCA Bots',
-    grid_bots: 'GridWarrior Bots',
+    grid_bots: 'Grid Bots',
     trading_bots: 'Trading Bots',
+    auto_shield: 'Auto-Shield',
+    airdrop: 'airdrop claims',
     ai_assistant: 'AI Assistant',
     elite: 'Elite features',
   };

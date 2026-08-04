@@ -212,21 +212,29 @@ export default function DashboardOverview() {
   // crypto from the merged /api/holdings (same fresh source as the portfolio,
   // so a bridge credit shows here immediately — not the cached spot store).
   const [cryptoHoldings, setCryptoHoldings] = useState<any[]>([]);
+  const [cryptoLive, setCryptoLive] = useState<Record<string, { price: number; change: number }>>({});
   useEffect(() => {
     if (!user?.id) return;
     fetch(`/api/holdings?userId=${user.id}&market=crypto`, { cache: 'no-store' })
       .then((r) => r.json()).then((j) => { if (Array.isArray(j?.holdings)) setCryptoHoldings(j.holdings); })
       .catch(() => {});
   }, [user?.id]);
+  useEffect(() => {
+    const syms = cryptoHoldings.map((h) => String(h.symbol).toUpperCase()).join(',');
+    if (!syms) return;
+    fetch(`/api/crypto/prices?symbols=${syms}`, { cache: 'no-store' })
+      .then((r) => r.json()).then((j) => { if (j?.prices) setCryptoLive(j.prices); }).catch(() => {});
+  }, [cryptoHoldings]);
 
   const crypto = useMemo(() => {
     let value = 0, costBasis = 0, dayPnl = 0;
     for (const h of cryptoHoldings) {
       const qty = Number(h.quantity || 0);
       const avg = Number(h.avgPrice || 0);
+      const lp = cryptoLive[String(h.symbol).toUpperCase()];
       const coin = getCoin(h.symbol);
-      const price = coin?.price ?? avg;         // live-ish catalog price, else cost
-      const change24h = coin?.change ?? 0;       // 24h % change
+      const price = lp?.price ?? coin?.price ?? avg;     // LIVE price, else catalog, else cost
+      const change24h = lp?.change ?? coin?.change ?? 0; // LIVE 24h % change
       const v = qty * price;
       value += v;
       costBasis += qty * avg;

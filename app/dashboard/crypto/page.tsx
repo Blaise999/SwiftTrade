@@ -39,7 +39,7 @@ export default function CryptoHome() {
         if (Array.isArray(j?.holdings)) {
           // enrich each holding with a live-ish price from the catalog for valuation
           const withVal = j.holdings.map((h: any) => {
-            const meta = COINS.find(c => c.symbol === String(h.symbol).toUpperCase());
+            const meta = COINS.find((c: Coin) => c.symbol === String(h.symbol).toUpperCase());
             const price = meta?.price || n(h.avgPrice) || 0;   // MARKET price for value
             const avg = n(h.avgPrice) || price;                // cost basis price
             return { ...h, price, avgPrice: avg, change: meta?.change ?? 0, value: n(h.quantity) * price };
@@ -65,7 +65,7 @@ export default function CryptoHome() {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return COINS.filter(c => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)).slice(0, 24);
+    return COINS.filter((c: Coin) => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)).slice(0, 24);
   }, [query]);
 
   return (
@@ -217,7 +217,7 @@ export default function CryptoHome() {
               <button onClick={() => { setSearchOpen(false); setQuery(''); }} className="p-2 text-[var(--text-3)] hover:text-[var(--text)]"><X className="w-5 h-5" /></button>
             </div>
             <div className="mt-4 space-y-1.5">
-              {results.map(c => (
+              {results.map((c: Coin) => (
                 <Link key={c.symbol} href={`/dashboard/crypto/${c.symbol}`} onClick={() => setSearchOpen(false)}
                   className="flex items-center justify-between gap-3 rounded-xl bg-[var(--card)] border border-[var(--border)] px-4 py-3 hover:bg-[var(--inset)]">
                   <div className="flex items-center gap-3">
@@ -287,7 +287,7 @@ function CryptoRail({ title, items, right, custom = 0 }: { title: string; items:
         {right}
       </div>
       <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1 snap-x">
-        {items.map(c => <CryptoCard key={c.symbol} coin={c} />)}
+        {items.map((c: Coin) => <CryptoCard key={c.symbol} coin={c} />)}
       </div>
     </motion.section>
   );

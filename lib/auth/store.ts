@@ -415,7 +415,12 @@ export const useStore = create<AuthStore>((set, get) => ({
 
       const user = dbRowToUser(profile);
       set({ user, isAuthenticated: true });
-      return { success: true, redirect: getRegistrationRedirect(user.registrationStatus) };
+      // If KYC is actually verified, go straight to the dashboard — don't bounce
+      // through the /kyc page just because registration_status was left stale.
+      const kyc = String((profile as any)?.kyc_status || '').toLowerCase();
+      const kycDone = kyc === 'verified' || kyc === 'approved';
+      const redirect = kycDone ? '/dashboard' : getRegistrationRedirect(user.registrationStatus);
+      return { success: true, redirect };
     } catch (err: any) {
       const msg = humanError(err?.message);
       set({ error: msg });

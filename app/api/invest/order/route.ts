@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireFeature } from '@/lib/tier-guard';
 import { createClient } from '@supabase/supabase-js';
 import { avgCostAfterBuy, estimatedShares, estimatedCost, n } from '@/lib/calc';
 
@@ -38,6 +39,10 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({} as any));
     const userId = String(body?.userId || '');
+    {
+      const _gate = await requireFeature(String(userId || ''), 'trading');
+      if (!_gate.ok) return NextResponse.json({ ok: false, error: _gate.error, code: 'TIER_REQUIRED' }, { status: _gate.status || 403 });
+    }
     const symbol = String(body?.symbol || '').toUpperCase();
     const assetType = body?.assetType === 'stock' ? 'stock' : 'etf';
     const side = body?.side === 'sell' ? 'sell' : 'buy';

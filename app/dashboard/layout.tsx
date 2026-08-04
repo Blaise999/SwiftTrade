@@ -25,8 +25,7 @@ import {
   Bitcoin,
   DollarSign,
   BarChart3,
-  Globe,
-} from 'lucide-react';
+  Globe,, Crown } from 'lucide-react';
 
 import { useStore } from '@/lib/supabase/store-supabase';
 import { useUIStore } from '@/lib/ui-store';
@@ -54,6 +53,7 @@ const navigation = [
   { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
   { name: 'History', href: '/dashboard/history', icon: History },
   { name: 'Referrals', href: '/dashboard/referrals', icon: Users },
+  { name: 'Membership', href: '/dashboard/tier', icon: Crown, badge: 'PRO' },
   { name: 'Connect Wallet', href: '/dashboard/connect-wallet', icon: Wallet },
 ];
 
@@ -73,6 +73,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const { user, logout, isAuthenticated, isLoading, refreshUser } = useStore();
   const { sidebarOpen, toggleSidebar, mobileMenuOpen, toggleMobileMenu } = useUIStore();
+
+  // FX wants the whole screen — collapse the sidebar when the chart is open.
+  useEffect(() => {
+    if (pathname?.startsWith('/dashboard/trade/fx') && sidebarOpen) toggleSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const initializeAccounts = useTradingAccountStore((s) => s.initializeAccounts);
   const syncBalanceFromUser = useTradingAccountStore((s) => s.syncBalanceFromUser);

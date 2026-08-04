@@ -7,6 +7,7 @@ import {
   ArrowLeft, Star, Share2, TrendingUp, TrendingDown, Info, X, Check, Repeat,
 } from 'lucide-react';
 import { AssetLogo } from '@/components/AssetLogo';
+import { ShieldControl } from '@/components/trade/ShieldControl';
 import { getEtf } from '@/lib/etf-data';
 import { Sparkline } from '@/components/investing/EtfCards';
 import { useStore } from '@/lib/supabase/store-supabase';
@@ -291,6 +292,18 @@ export default function EtfDetail() {
                   <div><span className="text-[var(--text-3)]">Market price</span> <span className="text-[var(--text)] font-medium float-right">${Number(position.price).toFixed(2)}</span></div>
                 </div>
               </div>
+            )}
+
+            {/* shield mode (only when you hold it) */}
+            {position && (
+              <ShieldControl
+                userId={(user as any)?.id}
+                symbol={etf.symbol}
+                kind="stock"
+                name={etf.name}
+                price={Number(position.price ?? etf.seedPrice)}
+                initialShielded={!!position.shieldEnabled}
+              />
             )}
 
             {/* Chart */}
