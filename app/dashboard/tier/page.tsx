@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Check, Shield } from 'lucide-react';
 import { useStore } from '@/lib/supabase/store-supabase';
-import { TIERS, type TierDef } from '@/lib/tiers';
+import { TIERS, type TierDef } from '@/lib/tier';
 
 export default function TierPage() {
   const { user } = useStore();
