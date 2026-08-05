@@ -53,8 +53,8 @@ export default function PortfolioPage() {
       const cr: Holding[] = ((hRes?.holdings) || []).map((p: any) => {
         const qty = num(p.quantity);
         const avg = num(p.avgPrice);
-        const marketPrice = getCoin(p.symbol)?.price ?? avg;   // MARKET price — same source as the crypto page
-        const value = qty * marketPrice;
+        const marketPrice = num(p.price) || getCoin(p.symbol)?.price || avg;   // LIVE price from /api/holdings
+        const value = num(p.value) || qty * marketPrice;
         const cost = qty * avg;
         const pnl = value - cost;
         return {

@@ -9,6 +9,7 @@
  * so this never double-counts). Read-only; uses the service role.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchCryptoPrices } from '@/lib/live-prices';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -53,6 +54,19 @@ export async function GET(req: NextRequest) {
   const holdings = [...bySymbol.values()]
     .filter(h => h.quantity > 1e-9)
     .map(h => ({ ...h, value: h.quantity * h.avgPrice }));
+
+  // enrich with live market prices so every page valuing crypto shows live numbers
+  try {
+    const live = await fetchCryptoPrices(holdings.map(h => h.symbol));
+    for (const h of holdings as any[]) {
+      const lp = live[h.symbol.toUpperCase()];
+      if (lp?.price > 0) {
+        h.price = lp.price;
+        h.change = lp.change;
+        h.value = h.quantity * lp.price;   // live market value
+      }
+    }
+  } catch {}
 
   return NextResponse.json({ ok: true, holdings });
 }

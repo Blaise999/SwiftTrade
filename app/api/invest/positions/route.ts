@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getAsset } from '@/lib/asset-catalog';
+import { fetchStockPrices } from '@/lib/live-prices';
 import { positionMath, todaysGainForPosition, n } from '@/lib/calc';
 
 export const runtime = 'nodejs';
@@ -48,12 +49,17 @@ export async function GET(req: NextRequest) {
     let totalCost = 0;
     let totalDayGain = 0;
 
+    // live prices for all held symbols (Alpaca) — falls back to seed per symbol
+    const symbols = Array.from(new Set((data || []).map((p: any) => String(p.symbol).toUpperCase())));
+    const live = await fetchStockPrices(symbols);
+
     const positions = (data || []).map(p => {
       const qty = n(p.quantity);
       const avg = n(p.avg_entry_price);
       const asset = getAsset(p.symbol);
-      const price = asset?.seedPrice ?? avg;
-      const dayPct = asset?.seedChangePct ?? 0;
+      const lp = live[String(p.symbol).toUpperCase()];
+      const price = lp?.price ?? asset?.seedPrice ?? avg;
+      const dayPct = lp?.change ?? asset?.seedChangePct ?? 0;
 
       const m = positionMath({ quantity: qty, avgPrice: avg, currentPrice: price });
       const dg = todaysGainForPosition(qty, price, dayPct);

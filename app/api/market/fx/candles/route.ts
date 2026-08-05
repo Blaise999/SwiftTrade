@@ -446,7 +446,7 @@ export async function GET(req: NextRequest) {
   const started = Date.now();
 
   try {
-    const token = process.env.OANDA_API_TOKEN;
+    const token = (process.env.OANDA_API_TOKEN || '').trim().replace(/^Bearer\s+/i, '');
     if (!token) {
       const out: FailPayload = { ok: false, code: 'MISSING_API_KEY' };
       return NextResponse.json(out, { status: 500, headers: { 'Cache-Control': 'no-store' } });
