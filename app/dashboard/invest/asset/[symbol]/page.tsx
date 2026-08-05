@@ -23,6 +23,22 @@ export default function EtfDetail() {
 
   const symbol = String(params?.symbol || '').toUpperCase();
   const etf = getEtf(symbol);
+  const [livePx, setLivePx] = useState<number | null>(null);
+  const [liveChg, setLiveChg] = useState<number | null>(null);
+  useEffect(() => {
+    if (!symbol) return;
+    const load = () => fetch(`/api/market/stocks/quotes?symbols=${symbol}`, { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        const q = j?.quotes?.[symbol] || j?.[symbol];
+        const price = Number(q?.price);
+        if (price > 0) { setLivePx(price); setLiveChg(Number(q?.changePercent ?? q?.changePercent24h ?? 0)); }
+      }).catch(() => {});
+    load();
+    const t = setInterval(load, 20000);
+    return () => clearInterval(t);
+  }, [symbol]);
+  const px = livePx ?? (etf?.seedPrice ?? 0);
 
   const [range, setRange] = useState<Range>('1Y');
   const [sheet, setSheet] = useState<null | 'buy' | 'recurring'>(
@@ -65,12 +81,12 @@ export default function EtfDetail() {
 
   const estQty = useMemo(() => {
     const a = parseFloat(amount) || 0;
-    return mode === 'dollars' ? a / etf.seedPrice : a;
-  }, [amount, mode, etf.seedPrice]);
+    return mode === 'dollars' ? a / px : a;
+  }, [amount, mode, px]);
 
   const estCost = useMemo(() => {
     const a = parseFloat(amount) || 0;
-    return mode === 'dollars' ? a : a * etf.seedPrice;
+    return mode === 'dollars' ? a : a * px;
   }, [amount, mode, etf.seedPrice]);
 
   const stats = etf.assetType === 'stock'
@@ -104,7 +120,7 @@ export default function EtfDetail() {
         body: JSON.stringify({
           userId: uid, symbol: etf.symbol, assetType: etf.assetType === 'stock' ? 'stock' : 'etf',
           side: 'buy', amountType: mode === 'dollars' ? 'notional' : 'qty',
-          amount: parseFloat(amount) || 0, price: etf.seedPrice,
+          amount: parseFloat(amount) || 0, price: px,
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -198,7 +214,7 @@ export default function EtfDetail() {
         <div className="space-y-2 mb-5 text-[12.5px]">
           <Row k="Symbol" v={etf.symbol} />
           {kind === 'buy' && <Row k="Est. quantity" v={`${estQty ? estQty.toFixed(4) : '0'} shares`} />}
-          <Row k="Est. price" v={`$${etf.seedPrice.toFixed(2)}`} />
+          <Row k="Est. price" v={`$${px.toFixed(2)}`} />
           {kind === 'buy' && <Row k="Est. cost" v={`$${estCost.toFixed(2)}`} />}
           <Row k="Buying power" v={`$${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} />
           <Row k="Order type" v="Market" />
@@ -256,7 +272,7 @@ export default function EtfDetail() {
               <p className="text-[13px] text-[var(--text-2)] mt-0.5">{etf.name}</p>
               <div className="mt-3 flex items-end gap-3">
                 <div className="text-[34px] font-bold text-[var(--text)] tabular-nums leading-none">
-                  ${etf.seedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${px.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div className="flex items-center gap-1 text-[14px] font-medium pb-1 tabular-nums" style={{ color: accent }}>
                   {up ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
@@ -301,7 +317,7 @@ export default function EtfDetail() {
                 symbol={etf.symbol}
                 kind="stock"
                 name={etf.name}
-                price={Number(position.price ?? etf.seedPrice)}
+                price={Number(position.price ?? px)}
                 initialShielded={!!position.shieldEnabled}
               />
             )}

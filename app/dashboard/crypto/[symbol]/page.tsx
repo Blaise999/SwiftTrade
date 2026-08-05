@@ -15,6 +15,20 @@ export default function CryptoDetail() {
   const router = useRouter();
   const symbol = String(params?.symbol || '').toUpperCase();
   const coin = getCoin(symbol);
+  const [livePrice, setLivePrice] = useState<number | null>(null);
+  const [liveChange, setLiveChange] = useState<number | null>(null);
+  useEffect(() => {
+    if (!symbol) return;
+    const load = () => fetch(`/api/crypto/prices?symbols=${symbol}`, { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        const lp = j?.prices?.[symbol];
+        if (lp && lp.price > 0) { setLivePrice(lp.price); setLiveChange(lp.change); }
+      }).catch(() => {});
+    load();
+    const t = setInterval(load, 20000);
+    return () => clearInterval(t);
+  }, [symbol]);
 
   const { user, refreshUser } = useStore();
   const [position, setPosition] = useState<any>(null);
@@ -24,7 +38,8 @@ export default function CryptoDetail() {
   const [msg, setMsg] = useState('');
   const [done, setDone] = useState(0);
 
-  const price = coin?.price || 0;
+  const price = livePrice ?? coin?.price ?? 0;
+  const chg = liveChange ?? coin?.change ?? 0;
 
   const loadPosition = async () => {
     const uid = (user as any)?.id;
@@ -40,7 +55,7 @@ export default function CryptoDetail() {
   const cash = n((user as any)?.balance_available);
   const usd = n(amount);
   const qtyPreview = price > 0 ? usd / price : 0;
-  const up = (coin?.change ?? 0) >= 0;
+  const up = chg >= 0;
 
   const posValue = position ? n(position.quantity) * price : 0;
   const posCost = position ? n(position.costBasis ?? n(position.quantity) * n(position.avgPrice)) : 0;
@@ -92,7 +107,7 @@ export default function CryptoDetail() {
           <div className="text-[34px] font-extrabold text-[var(--text)] tabular-nums leading-none">${fmtCryptoPrice(price)}</div>
           <div className={`flex items-center gap-1 text-[14px] font-semibold mb-1 ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
             {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-            {up ? '+' : ''}{coin.change.toFixed(2)}%
+            {up ? '+' : ''}{chg.toFixed(2)}%
           </div>
         </div>
 
@@ -168,7 +183,7 @@ export default function CryptoDetail() {
         </div>
 
         <p className="mt-5 text-[11px] text-[var(--text-3)] leading-relaxed text-center">
-          Prices are reference values until the live crypto feed is connected. Not financial advice.
+          Live market prices. Not financial advice.
         </p>
       </div>
     </div>
