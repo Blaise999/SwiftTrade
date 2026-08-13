@@ -99,7 +99,7 @@ export const COINS: Coin[] = [
   { symbol: 'DYM', name: 'Dymension', price: 1.35, change: 4.1, cat: 'layer1' },
   { symbol: 'ONDO', name: 'Ondo', price: 0.92, change: 5.1, cat: 'defi' },
   { symbol: 'ETHFI', name: 'Ether.fi', price: 2.15, change: 4.6, cat: 'defi' },
-  { symbol: 'Ron', name: 'Ronin', price: 1.85, change: 2.7, cat: 'gaming' },
+  { symbol: 'RON', name: 'Ronin', price: 1.85, change: 2.7, cat: 'gaming' },
   { symbol: 'QNT', name: 'Quant', price: 88.5, change: 1.6, cat: 'defi' },
   { symbol: 'KCS', name: 'KuCoin Token', price: 9.8, change: 0.9, cat: 'exchange' },
   { symbol: 'GT', name: 'GateToken', price: 7.2, change: 1.1, cat: 'exchange' },
