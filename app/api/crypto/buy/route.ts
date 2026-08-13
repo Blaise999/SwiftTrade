@@ -71,6 +71,20 @@ export async function POST(req: NextRequest) {
   await sb.from('user_trading_data')
     .upsert({ user_id: userId, spot_crypto_state: { ...state, positions }, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
 
+  // mirror into crypto_positions too, so /api/portfolio and other surfaces see it
+  const finalPos = positions.find(p => String(p.symbol).toUpperCase() === sym);
+  if (finalPos && Number(finalPos.quantity) > 1e-9) {
+    await sb.from('crypto_positions').upsert({
+      user_id: userId, symbol: sym,
+      quantity: Number(finalPos.quantity),
+      avg_buy_price: Number(finalPos.avgBuyPrice) || px,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,symbol' }).then(() => {}, () => {});
+  } else {
+    // fully sold — remove it
+    await sb.from('crypto_positions').delete().eq('user_id', userId).eq('symbol', sym).then(() => {}, () => {});
+  }
+
   // balance move
   const newBal = side === 'buy' ? bal - usd : bal + usd;
   await sb.from('users').update({ balance_available: newBal, updated_at: new Date().toISOString() }).eq('id', userId);

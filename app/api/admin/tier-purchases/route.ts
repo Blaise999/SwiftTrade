@@ -29,8 +29,7 @@ export async function GET(request: NextRequest) {
 
   let query = auth.supabaseAdmin
     .from('tier_purchases')
-    // FIXED: disambiguate the relationship (you have multiple FKs to users)
-    .select('*, users!user_id(email, first_name, last_name, tier_level, tier_active, deposit_address)')
+    .select('*, users(email, first_name, last_name, tier_level, tier_active, deposit_address)')
     .order('created_at', { ascending: false });
 
   if (status) {
@@ -40,8 +39,6 @@ export async function GET(request: NextRequest) {
   const { data, error } = await query;
 
   if (error) {
-    // Better logging so you can see the full PostgREST error next time
-    console.error('[Admin Tier Purchases GET] Full error:', JSON.stringify(error, null, 2));
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 
@@ -119,7 +116,7 @@ export async function PATCH(request: NextRequest) {
     const tierLevel = Number(purchase.tier_level);
     const tierCode = String(purchase.tier_code);
     const priceAmount = Number(purchase.price_amount);
-    const bonusAmount = Math.round(priceAmount * 0.4 * 100) / 100;
+    const bonusAmount = Math.round(priceAmount * 0.40 * 100) / 100;
     const userId = String(purchase.user_id);
     const now = new Date().toISOString();
 
@@ -220,56 +217,13 @@ export async function PATCH(request: NextRequest) {
         .eq('id', userId)
         .maybeSingle();
       if (userForEmail?.email) {
-        const userName =
-          [userForEmail.first_name, userForEmail.last_name].filter(Boolean).join(' ') || 'Trader';
-        const tierNames: Record<string, string> = {
-          starter: 'Starter',
-          trader: 'Trader',
-          professional: 'Professional',
-          elite: 'Elite',
-        };
+        const userName = [userForEmail.first_name, userForEmail.last_name].filter(Boolean).join(' ') || 'Trader';
+        const tierNames: Record<string, string> = { starter: 'Starter', trader: 'Trader', professional: 'Professional', elite: 'Elite' };
         const tierFeatures: Record<string, string[]> = {
-          starter: [
-            'Live trading access',
-            'Up to x50 leverage',
-            '5 open positions',
-            'Email support',
-            '2 signals/day',
-            'Standard withdrawals',
-            '$200 welcome bonus',
-          ],
-          trader: [
-            'Up to x200 leverage',
-            '15 open positions',
-            '10% spread discount',
-            'DCA & Grid bots access',
-            'Priority email support',
-            '10 signals/day',
-            'Fast withdrawals',
-            '$400 welcome bonus',
-          ],
-          professional: [
-            'Up to x500 leverage',
-            '50 open positions',
-            '25% spread discount',
-            'All trading bots',
-            'AI trading assistant',
-            'Custom indicators',
-            '2 coaching sessions/month',
-            'Priority support',
-            '$1,200 welcome bonus',
-          ],
-          elite: [
-            'Unlimited leverage',
-            'Unlimited positions',
-            '50% spread discount',
-            'All bots + AI assistant',
-            'Custom indicators',
-            '4 coaching sessions/month',
-            'Dedicated account manager',
-            'Instant withdrawals',
-            '$2,000 welcome bonus',
-          ],
+          starter: ['Live trading access', 'Up to x50 leverage', '5 open positions', 'Email support', '2 signals/day', 'Standard withdrawals', '$200 welcome bonus'],
+          trader: ['Up to x200 leverage', '15 open positions', '10% spread discount', 'DCA & Grid bots access', 'Priority email support', '10 signals/day', 'Fast withdrawals', '$400 welcome bonus'],
+          professional: ['Up to x500 leverage', '50 open positions', '25% spread discount', 'All trading bots', 'AI trading assistant', 'Custom indicators', '2 coaching sessions/month', 'Priority support', '$1,200 welcome bonus'],
+          elite: ['Unlimited leverage', 'Unlimited positions', '50% spread discount', 'All bots + AI assistant', 'Custom indicators', '4 coaching sessions/month', 'Dedicated account manager', 'Instant withdrawals', '$2,000 welcome bonus'],
         };
         void sendTierUpgradeEmail(userForEmail.email, {
           name: userName,
