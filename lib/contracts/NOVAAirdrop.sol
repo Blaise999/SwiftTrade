@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
-
 /**
  * @title NOVAAirdrop
  * @dev Merkle-tree based airdrop with optional claim fee via EIP-2612 permit

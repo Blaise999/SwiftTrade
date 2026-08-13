@@ -40,8 +40,6 @@ type BridgeRequest = {
   admin_responded_at?: string;
   proof_url?: string;
   proof_uploaded_at?: string;
-  credited_amount_usd?: number;
-  credited_asset?: string;
   status: 'awaiting_admin' | 'awaiting_payment' | 'awaiting_verification' | 'completed' | 'rejected' | 'expired' | 'cancelled';
   admin_notes?: string;
   created_at: string;
