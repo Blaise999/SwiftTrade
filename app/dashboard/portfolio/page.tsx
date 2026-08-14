@@ -91,28 +91,57 @@ export default function PortfolioPage() {
   const stockValue = useMemo(() => stocks.reduce((s, h) => s + h.value, 0), [stocks]);
   const total = cash + cryptoValue + stockValue;
   const shieldCount = [...crypto, ...stocks].filter(h => h.shieldEnabled).length;
+  const totalPnl = useMemo(() => [...crypto, ...stocks].reduce((s, h) => s + (h.pnl || 0), 0), [crypto, stocks]);
+  const investedCost = (cryptoValue + stockValue) - totalPnl;
+  const totalPct = investedCost > 0 ? (totalPnl / investedCost) * 100 : 0;
+  const gain = totalPnl >= 0;
+  const alloc = total > 0
+    ? { cash: (cash / total) * 100, crypto: (cryptoValue / total) * 100, stocks: (stockValue / total) * 100 }
+    : { cash: 0, crypto: 0, stocks: 0 };
 
   return (
     <div className="min-h-screen bg-[var(--surface)] text-[var(--text)]">
       <div className="mx-auto max-w-2xl px-3 sm:px-4 pt-6 pb-28">
 
         {/* Header / totals */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-[var(--inset)] p-6">
-          <div className="pointer-events-none absolute -top-24 -right-10 w-72 h-72 rounded-full blur-[90px] opacity-40 bg-[#00C805]/25" />
+        <div className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-gradient-to-b from-[var(--inset)] to-[var(--card)] p-6">
+          <div className={`pointer-events-none absolute -top-24 -right-10 w-72 h-72 rounded-full blur-[90px] opacity-40 ${gain ? 'bg-[#00C805]/25' : 'bg-[#FF4D3D]/20'}`} />
           <div className="relative">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-3)]">Total net worth</div>
-          <div className="mt-1.5 text-[clamp(32px,10vw,44px)] leading-none font-extrabold text-[var(--text)] tracking-tight tabular-nums">{usd(total)}</div>
-          <div className="mt-5 grid grid-cols-3 gap-2.5 text-sm">
-            <Tile label="Cash" value={usd(cash)} tone="#00C805" />
-            <Tile label="Crypto" value={usd(cryptoValue)} tone="#9B7CFF" />
-            <Tile label="Stocks" value={usd(stockValue)} tone="#5B9BFF" />
-          </div>
-          </div>
-          {shieldCount > 0 && (
-            <div className="mt-4 inline-flex items-center gap-1.5 text-[12px] text-[var(--accent-2)]">
-              <ShieldCheck className="w-4 h-4" /> {shieldCount} position{shieldCount > 1 ? 's' : ''} shielded
+            <div className="flex items-center justify-between">
+              <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-3)]">Total net worth</div>
+              {shieldCount > 0 && (
+                <div className="inline-flex items-center gap-1 text-[11px] text-[var(--accent-2)] bg-[var(--accent-2)]/10 px-2 py-0.5 rounded-full">
+                  <ShieldCheck className="w-3 h-3" /> {shieldCount} shielded
+                </div>
+              )}
             </div>
-          )}
+            <div className="mt-1.5 text-[clamp(34px,11vw,48px)] leading-none font-extrabold text-[var(--text)] tracking-tight tabular-nums">{usd(total)}</div>
+
+            {(cryptoValue + stockValue) > 0 && (
+              <div className={`mt-2 inline-flex items-center gap-1.5 text-[14px] font-semibold tabular-nums ${gain ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
+                {gain ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                {gain ? '+' : ''}{usd(totalPnl)}
+                <span className="text-[var(--text-3)] font-normal">({gain ? '+' : ''}{totalPct.toFixed(2)}%) all-time</span>
+              </div>
+            )}
+
+            {/* Allocation bar */}
+            {total > 0 && (
+              <div className="mt-5">
+                <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-[var(--card)]">
+                  <div style={{ width: `${alloc.crypto}%`, background: '#9B7CFF' }} />
+                  <div style={{ width: `${alloc.stocks}%`, background: '#5B9BFF' }} />
+                  <div style={{ width: `${alloc.cash}%`, background: '#00C805' }} />
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 grid grid-cols-3 gap-2.5 text-sm">
+              <Tile label="Crypto" value={usd(cryptoValue)} tone="#9B7CFF" pct={alloc.crypto} />
+              <Tile label="Stocks" value={usd(stockValue)} tone="#5B9BFF" pct={alloc.stocks} />
+              <Tile label="Cash" value={usd(cash)} tone="#00C805" pct={alloc.cash} />
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -152,11 +181,12 @@ export default function PortfolioPage() {
   );
 }
 
-function Tile({ label, value, tone }: { label: string; value: string; tone?: string }) {
+function Tile({ label, value, tone, pct }: { label: string; value: string; tone?: string; pct?: number }) {
   return (
     <div className="rounded-xl bg-[var(--card)] border border-[var(--border)] p-3">
       <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-3)]">
         <span className="w-1.5 h-1.5 rounded-full" style={{ background: tone || 'var(--text-3)' }} />{label}
+        {pct != null && pct > 0 && <span className="ml-auto text-[10px] text-[var(--text-3)]/70">{pct.toFixed(0)}%</span>}
       </div>
       <div className="mt-1 font-semibold text-[var(--text)] num tabular-nums">{value}</div>
     </div>

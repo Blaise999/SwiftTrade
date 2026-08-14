@@ -51,19 +51,19 @@ export default function CryptoHome() {
         const r = await fetch(`/api/holdings?userId=${user.id}&market=crypto`, { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         if (Array.isArray(j?.holdings)) {
-          // enrich each holding with a live-ish price from the catalog for valuation
+          // /api/holdings already returns LIVE price + value — use them directly (no re-valuation flash)
           const withVal = j.holdings.map((h: any) => {
             const meta = COINS.find((c: Coin) => c.symbol === String(h.symbol).toUpperCase());
             const lp = live[String(h.symbol).toUpperCase()];
-            const price = (lp?.price ?? meta?.price) || n(h.avgPrice) || 0;   // LIVE market price
+            const price = n(h.price) || lp?.price || meta?.price || n(h.avgPrice) || 0;   // server live first
             const avg = n(h.avgPrice) || price;
-            return { ...h, price, avgPrice: avg, change: lp?.change ?? meta?.change ?? 0, value: n(h.quantity) * price };
+            return { ...h, price, avgPrice: avg, change: n(h.change) || lp?.change || meta?.change || 0, value: n(h.value) || n(h.quantity) * price };
           });
           setHoldings(withVal);
         }
       } catch {} finally { setReady(true); }
     })();
-  }, [user?.id, live, refetchTick]);
+  }, [user?.id, refetchTick]);
 
   useEffect(() => { if (searchOpen) setTimeout(() => searchRef.current?.focus(), 60); }, [searchOpen]);
 

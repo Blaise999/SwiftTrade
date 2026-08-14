@@ -51,6 +51,7 @@ export default function EtfDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [position, setPosition] = useState<any>(null);
+  const [optimisticSpent, setOptimisticSpent] = useState(0);
 
   // load the user's holding for THIS symbol (if any)
   useEffect(() => {
@@ -77,7 +78,7 @@ export default function EtfDetail() {
 
   const up = etf.seedChangePct >= 0;
   const accent = up ? '#00C805' : '#FF4D3D';
-  const balance = Number((user as any)?.balance_available ?? (user as any)?.balance ?? 0) || 0;
+  const balance = Math.max(0, (Number((user as any)?.balance_available ?? (user as any)?.balance ?? 0) || 0) - optimisticSpent);
 
   const estQty = useMemo(() => {
     const a = parseFloat(amount) || 0;
@@ -114,6 +115,14 @@ export default function EtfDetail() {
     const uid = (user as any)?.id;
     if (!uid) { setSubmitError('Please sign in again to place this order.'); return; }
     setSubmitting(true);
+    // optimistic: drop balance + bump position instantly
+    const spend = mode === 'dollars' ? (parseFloat(amount) || 0) : (parseFloat(amount) || 0) * px;
+    const optQty = px > 0 ? spend / px : 0;
+    setOptimisticSpent((s0) => s0 + spend);
+    setPosition((prev: any) => {
+      const prevQty = Number(prev?.quantity) || 0;
+      return { ...(prev || { symbol: etf.symbol }), quantity: prevQty + optQty, avgPrice: Number(prev?.avgPrice) || px, price: px };
+    });
     try {
       const res = await fetch('/api/invest/order', {
         method: 'POST',
@@ -129,14 +138,16 @@ export default function EtfDetail() {
         setSubmitError(j?.error === 'insufficient_balance'
           ? `Not enough balance. Need $${Number(j.need).toFixed(2)}, have $${Number(j.have).toFixed(2)}.`
           : (j?.error || 'Order could not be placed. Please try again.'));
-        setSubmitting(false);
+        setSubmitting(false); setOptimisticSpent(0); setPosLoadTick?.((t: number) => t + 1);
         return;
       }
       setSubmitting(false);
       setDone(true);
+      router.refresh();
+      setTimeout(() => setOptimisticSpent(0), 1200);
       setTimeout(() => { setSheet(null); setDone(false); setAmount(''); }, 1900);
     } catch {
-      setSubmitting(false);
+      setSubmitting(false); setOptimisticSpent(0);
       setSubmitError('Network error. Please try again.');
     }
   };

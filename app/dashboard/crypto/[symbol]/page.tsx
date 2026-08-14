@@ -32,6 +32,7 @@ export default function CryptoDetail() {
 
   const { user, refreshUser } = useStore();
   const [position, setPosition] = useState<any>(null);
+  const [optimisticSpent, setOptimisticSpent] = useState(0);
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
@@ -52,7 +53,7 @@ export default function CryptoDetail() {
   };
   useEffect(() => { loadPosition(); /* eslint-disable-next-line */ }, [(user as any)?.id, symbol, done]);
 
-  const cash = n((user as any)?.balance_available);
+  const cash = Math.max(0, n((user as any)?.balance_available) - optimisticSpent);
   const usd = n(amount);
   const qtyPreview = price > 0 ? usd / price : 0;
   const up = chg >= 0;
@@ -66,6 +67,17 @@ export default function CryptoDetail() {
     const uid = (user as any)?.id;
     if (!uid || usd <= 0) return;
     setBusy(true); setMsg('');
+
+    // ── optimistic: update balance + position instantly ──
+    const optQty = (usd / price) * (side === 'buy' ? 1 : -1);
+    setOptimisticSpent((s) => s + (side === 'buy' ? usd : -usd));
+    setPosition((prev: any) => {
+      const prevQty = n(prev?.quantity) || 0;
+      const newQty = prevQty + optQty;
+      if (newQty <= 1e-9) return null;
+      return { ...(prev || { symbol }), quantity: newQty, avgPrice: n(prev?.avgPrice) || price, price };
+    });
+
     try {
       const j = await (await fetch('/api/crypto/buy', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -74,8 +86,14 @@ export default function CryptoDetail() {
       if (j?.ok) {
         setMsg(`${side === 'buy' ? 'Bought' : 'Sold'} ${j.quantity.toFixed(6)} ${symbol}`);
         setAmount(''); setDone(d => d + 1); refreshUser(); router.refresh();
-      } else setMsg(j?.error || 'Failed');
-    } catch (e: any) { setMsg(e?.message || 'Failed'); }
+        setTimeout(() => setOptimisticSpent(0), 1200);   // let the real balance catch up
+      } else {
+        setMsg(j?.error || 'Failed');
+        setOptimisticSpent(0); setDone(d => d + 1);       // revert optimistic
+      }
+    } catch (e: any) {
+      setMsg(e?.message || 'Failed'); setOptimisticSpent(0); setDone(d => d + 1);
+    }
     finally { setBusy(false); }
   };
 

@@ -236,9 +236,9 @@ export default function DashboardOverview() {
       const avg = Number(h.avgPrice || 0);
       const lp = cryptoLive[String(h.symbol).toUpperCase()];
       const coin = getCoin(h.symbol);
-      const price = lp?.price ?? coin?.price ?? avg;     // LIVE price, else catalog, else cost
-      const change24h = lp?.change ?? coin?.change ?? 0; // LIVE 24h % change
-      const v = qty * price;
+      const price = Number(h.price) || lp?.price || coin?.price || avg;   // server live first
+      const change24h = Number(h.change) || lp?.change || coin?.change || 0;
+      const v = Number(h.value) || qty * price;
       value += v;
       costBasis += qty * avg;
       dayPnl += v - v / (1 + change24h / 100);   // today's portion of the value
