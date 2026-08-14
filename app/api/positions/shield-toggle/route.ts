@@ -8,6 +8,7 @@
  * is free. The fee is refused if the balance can't cover it.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { emailUser } from '@/lib/email/events';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -71,6 +72,15 @@ export async function POST(req: NextRequest) {
       : `${sym} returned to the market — now tracking live prices again.`,
     metadata: { symbol: sym, shielded: !!enabled, fee },
   }).then(() => {}, () => {});
+
+  emailUser(userId, {
+    title: enabled ? `Shield activated on ${sym}` : `Shield removed from ${sym}`,
+    tone: enabled ? 'success' : 'default',
+    message: enabled
+      ? `${sym} is now shielded — its value is locked.${fee > 0 ? ` Shield premium charged: $${fee.toFixed(2)}.` : ''}`
+      : `${sym} is back on the live market.`,
+    rows: enabled && fee > 0 ? [{ label: 'Shield premium', value: `$${fee.toFixed(2)}` }] : undefined,
+  });
 
   return NextResponse.json({ ok: true, symbol: sym, shielded: !!enabled, fee });
 }

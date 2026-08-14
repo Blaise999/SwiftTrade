@@ -10,6 +10,7 @@ import { AssetLogo } from '@/components/AssetLogo';
 import { ShieldControl } from '@/components/trade/ShieldControl';
 import { getEtf } from '@/lib/etf-data';
 import { Sparkline } from '@/components/investing/EtfCards';
+import { Sparkline as LiveChart } from '@/components/Sparkline';
 import { useStore } from '@/lib/supabase/store-supabase';
 
 const RANGES = ['1D', '1W', '1M', '3M', '1Y', '5Y', 'All'] as const;
@@ -338,7 +339,7 @@ export default function EtfDetail() {
             {/* Chart */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
               <div className="h-[200px] lg:h-[280px] flex items-center">
-                <Sparkline seed={etf.seedPrice + RANGES.indexOf(range)} up={up} w={900} h={260} />
+                <LiveChart symbol={symbol} kind="stock" range={range} height={260} />
               </div>
               <div className="mt-3 flex items-center gap-1.5">
                 {RANGES.map(r => (

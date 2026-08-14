@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { emailUser } from '@/lib/email/events';
 import { createClient } from '@supabase/supabase-js';
 import { avgCostAfterBuy, estimatedShares, estimatedCost, n } from '@/lib/calc';
 
@@ -169,6 +170,25 @@ export async function POST(req: NextRequest) {
         status: 'completed',
       });
     } catch {/* non-fatal */}
+
+    // in-app notification + email
+    await sb.from('notifications').insert({
+      user_id: userId, type: 'trade',
+      title: `${side === 'buy' ? 'Bought' : 'Sold'} ${symbol}`,
+      message: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(4)} ${symbol} for $${cost.toFixed(2)} at $${price.toLocaleString()}.`,
+      metadata: { market: 'stock', symbol, side, cost, price },
+    }).then(() => {}, () => {});
+    emailUser(userId, {
+      title: `${side === 'buy' ? 'Bought' : 'Sold'} ${symbol}`,
+      tone: side === 'buy' ? 'success' : 'default',
+      message: `You ${side === 'buy' ? 'bought' : 'sold'} ${qty.toFixed(4)} ${symbol} for $${cost.toFixed(2)}.`,
+      rows: [
+        { label: 'Amount', value: `$${cost.toFixed(2)}` },
+        { label: 'Price', value: `$${price.toLocaleString()}` },
+        { label: 'Shares', value: `${qty.toFixed(4)}` },
+      ],
+      ctaText: 'View portfolio', ctaUrl: (process.env.NEXT_PUBLIC_APP_URL || '') + '/dashboard/portfolio',
+    });
 
     /* ─────────────────────────────────────────────────────────────
        PHASE-2 HOOK — live broker routing

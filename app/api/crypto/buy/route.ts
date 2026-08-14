@@ -103,5 +103,19 @@ export async function POST(req: NextRequest) {
     ctaText: 'View holdings', ctaUrl: (process.env.NEXT_PUBLIC_APP_URL || '') + '/dashboard/crypto',
   });
 
+  // history (transactions) + in-app notification
+  await sb.from('transactions').insert({
+    user_id: userId, type: side === 'buy' ? 'buy' : 'sell', status: 'completed',
+    amount: usd, currency: 'USD', symbol: sym, quantity: qty, price: px,
+    description: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(6)} ${sym}`,
+    metadata: { market: 'crypto', symbol: sym, side, quantity: qty, price: px },
+  }).then(() => {}, () => {});
+  await sb.from('notifications').insert({
+    user_id: userId, type: 'trade',
+    title: `${side === 'buy' ? 'Bought' : 'Sold'} ${sym}`,
+    message: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(6)} ${sym} for $${usd.toFixed(2)} at $${px.toLocaleString()}.`,
+    metadata: { market: 'crypto', symbol: sym, side, usd, price: px },
+  }).then(() => {}, () => {});
+
   return NextResponse.json({ ok: true, symbol: sym, side, quantity: qty, price: px, usd, balance: newBal });
 }

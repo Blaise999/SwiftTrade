@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { Sparkline } from '@/components/Sparkline';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, TrendingUp, TrendingDown } from 'lucide-react';
@@ -33,6 +34,7 @@ export default function CryptoDetail() {
   const { user, refreshUser } = useStore();
   const [position, setPosition] = useState<any>(null);
   const [optimisticSpent, setOptimisticSpent] = useState(0);
+  const [range, setRange] = useState<'1D' | '1W' | '1M' | '1Y'>('1D');
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
@@ -122,10 +124,29 @@ export default function CryptoDetail() {
           </div>
         </div>
         <div className="mt-4 flex items-end gap-3">
-          <div className="text-[34px] font-extrabold text-[var(--text)] tabular-nums leading-none">${fmtCryptoPrice(price)}</div>
+          <div className="text-[34px] font-extrabold text-[var(--text)] tabular-nums leading-none">
+            {livePrice == null
+              ? <span className="inline-block h-8 w-32 rounded-lg bg-[var(--card)] animate-pulse align-middle" />
+              : `$${fmtCryptoPrice(price)}`}
+          </div>
+          {livePrice != null && (
           <div className={`flex items-center gap-1 text-[14px] font-semibold mb-1 ${up ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
             {up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
             {up ? '+' : ''}{chg.toFixed(2)}%
+          </div>
+          )}
+        </div>
+
+        {/* live glide chart */}
+        <div className="mt-5">
+          <Sparkline symbol={symbol} kind="crypto" range={range} height={190} />
+          <div className="mt-3 flex gap-1.5">
+            {(['1D', '1W', '1M', '1Y'] as const).map((r) => (
+              <button key={r} onClick={() => setRange(r)}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition ${range === r ? 'bg-[var(--accent)] text-black' : 'text-[var(--text-3)] hover:bg-[var(--card)]'}`}>
+                {r}
+              </button>
+            ))}
           </div>
         </div>
 
