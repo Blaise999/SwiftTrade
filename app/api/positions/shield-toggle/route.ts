@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // Shield premium — 1% of the position value per activation. Tune here.
-export const SHIELD_FEE_PCT = 0.01;
+const SHIELD_FEE_PCT = 0.01;
 
 function admin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
