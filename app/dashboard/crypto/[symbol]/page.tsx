@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { notifyHoldingsChanged } from '@/hooks/useRefetchOnFocus';
 import { Sparkline } from '@/components/Sparkline';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -87,7 +88,7 @@ export default function CryptoDetail() {
       })).json();
       if (j?.ok) {
         setMsg(`${side === 'buy' ? 'Bought' : 'Sold'} ${j.quantity.toFixed(6)} ${symbol}`);
-        setAmount(''); setDone(d => d + 1); refreshUser(); router.refresh();
+        setAmount(''); setDone(d => d + 1); refreshUser(); router.refresh(); notifyHoldingsChanged();
         setTimeout(() => setOptimisticSpent(0), 1200);   // let the real balance catch up
       } else {
         setMsg(j?.error || 'Failed');

@@ -195,11 +195,15 @@ function Tile({ label, value, tone, pct }: { label: string; value: string; tone?
 
 function Section({ title, holdings }: { title: string; holdings: Holding[] }) {
   if (!holdings.length) return null;
+  const sorted = [...holdings].sort((a, b) => (b.value || 0) - (a.value || 0));
   return (
     <div className="mt-6">
-      <h2 className="text-[13px] font-semibold text-[var(--text-2)] mb-2 px-1">{title}</h2>
+      <div className="flex items-center justify-between mb-2 px-1">
+        <h2 className="text-[13px] font-semibold text-[var(--text-2)]">{title}</h2>
+        <span className="text-[11px] text-[var(--text-3)]">{sorted.length} · {usd(sorted.reduce((s, h) => s + (h.value || 0), 0))}</span>
+      </div>
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
-        {holdings.map((h, i) => {
+        {sorted.map((h, i) => {
           const up = (h.pnl ?? 0) >= 0;
           const href = h.kind === 'crypto' ? `/dashboard/crypto/${h.symbol}` : `/dashboard/invest/asset/${h.symbol}`;
           return (

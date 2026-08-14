@@ -82,7 +82,7 @@ export default function DashboardOverview() {
         await Promise.all([
           supabase.from('trades').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
           supabase.from('deposits').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-          supabase.from('transactions').select('*').eq('user_id', user.id).in('type', ['bonus', 'deposit']).order('created_at', { ascending: false }).limit(3),
+          supabase.from('transactions').select('*').eq('user_id', user.id).in('type', ['bonus', 'deposit', 'buy', 'sell', 'invest_buy', 'invest_sell', 'fee']).order('created_at', { ascending: false }).limit(10),
           supabase.from('withdrawals').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
           supabase.from('referrals').select('*').eq('referrer_id', user.id).order('created_at', { ascending: false }).limit(3),
           supabase.from('bridge_requests').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
@@ -129,13 +129,20 @@ export default function DashboardOverview() {
       });
 
       (bonuses || []).forEach((b: any) => {
+        const isBuy = b.type === 'buy' || b.type === 'invest_buy';
+        const isSell = b.type === 'sell' || b.type === 'invest_sell';
+        const isFee = b.type === 'fee';
+        const isTrade = isBuy || isSell;
         items.push({
           id: `tx-${b.id}`,
-          kind: 'bonus',
-          label: b.type === 'deposit' ? 'Deposit Credit' : 'Bonus',
+          kind: isTrade ? 'trade' : isFee ? 'fee' : 'bonus',
+          label: isTrade
+            ? `${isBuy ? 'Bought' : 'Sold'} ${b.symbol || ''}`.trim()
+            : isFee ? 'Shield premium'
+            : b.type === 'deposit' ? 'Deposit Credit' : 'Bonus',
           sublabel: b.description || b.reference_type || 'Credit',
           amount: Math.abs(Number(b.amount ?? 0)),
-          pnl: Number(b.amount ?? 0),
+          pnl: isBuy || isFee ? -Math.abs(Number(b.amount ?? 0)) : Number(b.amount ?? 0),
           status: 'completed',
           created_at: b.created_at,
         });
@@ -315,7 +322,7 @@ export default function DashboardOverview() {
             </div>
             <h1 className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[color:var(--t-hi)] leading-tight">
               Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'},{' '}
-              <span className="bg-gradient-to-r from-[#00E88F] via-[#22D3EE] to-[#5B7CFF] bg-clip-text text-transparent">
+              <span className="text-[color:var(--t-hi)]">
                 {user?.firstName || 'Trader'}
               </span>
             </h1>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { notifyHoldingsChanged } from '@/hooks/useRefetchOnFocus';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -109,6 +110,7 @@ export default function EtfDetail() {
     setSubmitError(null);
     if (kind === 'recurring') {
       setDone(true);
+      notifyHoldingsChanged();
       router.refresh();
       setTimeout(() => { setSheet(null); setDone(false); setAmount(''); }, 1800);
       return;
