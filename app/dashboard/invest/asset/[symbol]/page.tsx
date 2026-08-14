@@ -138,7 +138,7 @@ export default function EtfDetail() {
         setSubmitError(j?.error === 'insufficient_balance'
           ? `Not enough balance. Need $${Number(j.need).toFixed(2)}, have $${Number(j.have).toFixed(2)}.`
           : (j?.error || 'Order could not be placed. Please try again.'));
-        setSubmitting(false); setOptimisticSpent(0); setPosLoadTick?.((t: number) => t + 1);
+        setSubmitting(false); setOptimisticSpent(0);
         return;
       }
       setSubmitting(false);
