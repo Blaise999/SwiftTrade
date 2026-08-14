@@ -108,11 +108,12 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (side === 'buy') {
+      let posErr: any = null;
       if (existing) {
         const { qty: newQty, avg: newAvg } = avgCostAfterBuy(
           n(existing.quantity), n(existing.avg_entry_price), qty, price
         );
-        await sb
+        const { error } = await sb
           .from('positions')
           .update({
             quantity: newQty,
@@ -120,8 +121,9 @@ export async function POST(req: NextRequest) {
             market_value: newQty * price,
           })
           .eq('id', existing.id);
+        posErr = error;
       } else {
-        await sb.from('positions').insert({
+        const { error } = await sb.from('positions').insert({
           user_id: userId,
           symbol,
           asset_type: assetType,
@@ -129,8 +131,19 @@ export async function POST(req: NextRequest) {
           avg_entry_price: price,
           market_value: qty * price,
         });
+        posErr = error;
       }
-      // Deduct balance
+
+      // CRITICAL: if the position didn't save, do NOT take the money.
+      if (posErr) {
+        return NextResponse.json({
+          ok: false,
+          error: `Position could not be saved: ${posErr.message}. Balance was not charged. (Run sql/FIX_TRADING_PERSISTENCE.sql if the positions table is missing.)`,
+          code: 'POSITION_WRITE_FAILED',
+        }, { status: 500 });
+      }
+
+      // Deduct balance only after the position is safely stored
       await sb
         .from('users')
         .update({ balance_available: bal - cost })

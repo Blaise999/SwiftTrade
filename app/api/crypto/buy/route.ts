@@ -63,18 +63,26 @@ export async function POST(req: NextRequest) {
     if (positions[idx].quantity <= 1e-9) positions.splice(idx, 1);
   }
 
-  await sb.from('user_trading_data')
+  const { error: stateErr } = await sb.from('user_trading_data')
     .upsert({ user_id: userId, spot_crypto_state: { ...state, positions }, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
 
   // mirror into crypto_positions too, so /api/portfolio and other surfaces see it
   const finalPos = positions.find(p => String(p.symbol).toUpperCase() === sym);
   if (finalPos && Number(finalPos.quantity) > 1e-9) {
-    await sb.from('crypto_positions').upsert({
+    const { error: cpErr } = await sb.from('crypto_positions').upsert({
       user_id: userId, symbol: sym,
       quantity: Number(finalPos.quantity),
       avg_buy_price: Number(finalPos.avgBuyPrice) || px,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,symbol' }).then(() => {}, () => {});
+    }, { onConflict: 'user_id,symbol' });
+    // CRITICAL: if BOTH stores failed, the holding doesn't exist — don't charge.
+    if (stateErr && cpErr) {
+      return NextResponse.json({
+        ok: false,
+        error: `Holding could not be saved: ${cpErr.message}. Balance was not charged. (Run sql/FIX_TRADING_PERSISTENCE.sql if columns/tables are missing.)`,
+        code: 'POSITION_WRITE_FAILED',
+      }, { status: 500 });
+    }
   } else {
     // fully sold — remove it
     await sb.from('crypto_positions').delete().eq('user_id', userId).eq('symbol', sym).then(() => {}, () => {});
