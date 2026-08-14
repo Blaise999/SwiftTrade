@@ -8,7 +8,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireFeature } from '@/lib/tier-guard';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createClient(
@@ -20,10 +19,6 @@ const supabaseAdmin = createClient(
 export async function POST(req: NextRequest) {
   try {
     const userId = req.headers.get('x-user-id');
-    {
-      const _gate = await requireFeature(String(userId || ''), 'bridge');
-      if (!_gate.ok) return NextResponse.json({ ok: false, error: _gate.error, code: 'TIER_REQUIRED' }, { status: _gate.status || 403 });
-    }
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }

@@ -9,6 +9,7 @@ import {
   Eye, EyeOff, LineChart, X, ArrowDownLeft,
 } from 'lucide-react';
 import { useStore } from '@/lib/supabase/store-supabase';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import {
   getSP500Etfs, getEtfsByCategory, getBeginnerEtfs, getMegaCapStocks,
   getTopMovers, getStocksByCategory, searchAssets, CATEGORY_LABELS, type AssetCategory,
@@ -40,6 +41,8 @@ export default function InvestHome() {
   const [invest, setInvest] = useState<{ totalValue: number; totalCost: number; totalPnl: number; totalPnlPct: number; totalDayGain: number; totalDayGainPct: number } | null>(null);
   const [holdings, setHoldings] = useState<any[]>([]);
   const [ready, setReady] = useState(false);
+  const [refetchTick, setRefetchTick] = useState(0);
+  useRefetchOnFocus(() => setRefetchTick((t) => t + 1));
 
   useEffect(() => {
     setMounted(true);
@@ -66,7 +69,7 @@ export default function InvestHome() {
         }
       } catch {} finally { setReady(true); }
     })();
-  }, [user?.id]);
+  }, [user?.id, refetchTick]);
 
   useEffect(() => {
     if (searchOpen) setTimeout(() => searchRef.current?.focus(), 60);

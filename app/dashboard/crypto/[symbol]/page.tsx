@@ -73,7 +73,7 @@ export default function CryptoDetail() {
       })).json();
       if (j?.ok) {
         setMsg(`${side === 'buy' ? 'Bought' : 'Sold'} ${j.quantity.toFixed(6)} ${symbol}`);
-        setAmount(''); setDone(d => d + 1); refreshUser();
+        setAmount(''); setDone(d => d + 1); refreshUser(); router.refresh();
       } else setMsg(j?.error || 'Failed');
     } catch (e: any) { setMsg(e?.message || 'Failed'); }
     finally { setBusy(false); }
@@ -139,6 +139,7 @@ export default function CryptoDetail() {
               name={coin.name}
               price={price}
               initialShielded={!!position.shieldEnabled}
+              positionValue={n(position.quantity) * price}
             />
           </div>
         )}

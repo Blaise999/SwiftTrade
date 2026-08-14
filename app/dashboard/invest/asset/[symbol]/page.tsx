@@ -107,6 +107,7 @@ export default function EtfDetail() {
     setSubmitError(null);
     if (kind === 'recurring') {
       setDone(true);
+      router.refresh();
       setTimeout(() => { setSheet(null); setDone(false); setAmount(''); }, 1800);
       return;
     }
@@ -319,6 +320,7 @@ export default function EtfDetail() {
                 name={etf.name}
                 price={Number(position.price ?? px)}
                 initialShielded={!!position.shieldEnabled}
+                positionValue={Number(position.quantity) * px}
               />
             )}
 

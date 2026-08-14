@@ -12,11 +12,11 @@ type Kind = 'crypto' | 'stock';
  * state has a live glowing aura + scanning ring. Includes Auto-Shield config.
  */
 export function ShieldControl({
-  userId, symbol, kind, price, name,
+  userId, symbol, kind, price, name, positionValue = 0,
   initialShielded = false, initialAuto = false, initialFloor = '', initialCeiling = '',
   onChange,
 }: {
-  userId?: string; symbol: string; kind: Kind; price: number; name?: string;
+  userId?: string; symbol: string; kind: Kind; price: number; name?: string; positionValue?: number;
   initialShielded?: boolean; initialAuto?: boolean; initialFloor?: string; initialCeiling?: string;
   onChange?: (shielded: boolean) => void;
 }) {
@@ -28,6 +28,9 @@ export function ShieldControl({
   const [floor, setFloor] = useState(initialFloor);
   const [ceiling, setCeiling] = useState(initialCeiling);
   const [lockedAt, setLockedAt] = useState<number | null>(initialShielded ? price : null);
+  const SHIELD_FEE_PCT = 0.01;
+  const fee = Math.max(0, positionValue * SHIELD_FEE_PCT);
+  const [feeErr, setFeeErr] = useState('');
 
   useEffect(() => { setShielded(initialShielded); setLockedAt(initialShielded ? price : null); }, [initialShielded]);
 
@@ -51,8 +54,15 @@ export function ShieldControl({
     onChange?.(next);
     fetch('/api/positions/shield-toggle', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, symbol, kind, enabled: next }),
-    }).catch(() => {});
+      body: JSON.stringify({ userId, symbol, kind, enabled: next, positionValue }),
+    })
+      .then((r) => r.json())
+      .then((j) => {
+        if (!j?.ok && j?.code === 'INSUFFICIENT_FOR_FEE') {
+          setFeeErr(j.error); setShielded(false); setLockedAt(null); onChange?.(false);
+        }
+      })
+      .catch(() => {});
   };
 
   const saveAuto = async (enabled: boolean) => {
@@ -128,6 +138,14 @@ export function ShieldControl({
           </div>
         </div>
       </div>
+
+      {/* fee notice */}
+      {!shielded && fee > 0 && (
+        <div className="mt-3 text-[11.5px] text-[var(--text-3)] text-center">
+          Shield premium: <span className="text-[var(--text)] font-medium">${fee.toFixed(2)}</span> (1% of ${positionValue.toLocaleString(undefined, { maximumFractionDigits: 2 })})
+        </div>
+      )}
+      {feeErr && <div className="mt-2 text-[12px] text-[#FF4D3D] text-center">{feeErr}</div>}
 
       {/* activate / deactivate */}
       <button

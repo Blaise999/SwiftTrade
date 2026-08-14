@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Search, TrendingUp, TrendingDown, ChevronRight, Sparkles, Eye, EyeOff, ArrowDownLeft, Repeat, X } from 'lucide-react';
 import { useStore } from '@/lib/supabase/store-supabase';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import { n, fmtUSD, fmtPct } from '@/lib/calc';
 
 /* ── Crypto catalog (seed prices; live feed overrides when COINGECKO_API_KEY is set) ── */
@@ -27,6 +28,8 @@ export default function CryptoHome() {
 
   const [holdings, setHoldings] = useState<any[]>([]);
   const [ready, setReady] = useState(false);
+  const [refetchTick, setRefetchTick] = useState(0);
+  useRefetchOnFocus(() => setRefetchTick((t) => t + 1));
   const [live, setLive] = useState<Record<string, { price: number; change: number }>>({});
   // live crypto prices (Binance, keyless), refreshed every 30s
   useEffect(() => {
@@ -60,7 +63,7 @@ export default function CryptoHome() {
         }
       } catch {} finally { setReady(true); }
     })();
-  }, [user?.id, live]);
+  }, [user?.id, live, refetchTick]);
 
   useEffect(() => { if (searchOpen) setTimeout(() => searchRef.current?.focus(), 60); }, [searchOpen]);
 

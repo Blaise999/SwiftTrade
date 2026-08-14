@@ -26,7 +26,6 @@ import {
   DollarSign,
   BarChart3,
   Globe,
-  Crown,
 } from 'lucide-react';
 
 import { useStore } from '@/lib/supabase/store-supabase';
@@ -55,7 +54,6 @@ const navigation = [
   { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
   { name: 'History', href: '/dashboard/history', icon: History },
   { name: 'Referrals', href: '/dashboard/referrals', icon: Users },
-  { name: 'Membership', href: '/dashboard/tier', icon: Crown, badge: 'PRO' },
   { name: 'Connect Wallet', href: '/dashboard/connect-wallet', icon: Wallet },
 ];
 

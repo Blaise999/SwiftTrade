@@ -6,7 +6,6 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { emailUser } from '@/lib/email/events';
-import { requireFeature } from '@/lib/tier-guard';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -30,10 +29,6 @@ export async function POST(req: NextRequest) {
   const usd = num(usdAmount);
   if (!userId || !sym || px <= 0 || usd <= 0) {
     return NextResponse.json({ ok: false, error: 'userId, symbol, price, usdAmount required' }, { status: 400 });
-  {
-    const _gate = await requireFeature(String(userId || ''), 'trading');
-    if (!_gate.ok) return NextResponse.json({ ok: false, error: _gate.error, code: 'TIER_REQUIRED' }, { status: _gate.status || 403 });
-  }
   }
   const qty = usd / px;
 

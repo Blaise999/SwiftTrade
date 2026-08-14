@@ -1,6 +1,7 @@
 'use client';
 
 import { AssetLogo } from '@/components/AssetLogo';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import Link from 'next/link';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { ShieldCheck, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
@@ -32,6 +33,8 @@ export default function PortfolioPage() {
   const cash = num((user as any)?.balance_available ?? (user as any)?.balance);
 
   const [crypto, setCrypto] = useState<Holding[]>([]);
+  const [refetchTick, setRefetchTick] = useState(0);
+  useRefetchOnFocus(() => setRefetchTick((t) => t + 1));
   const [stocks, setStocks] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -80,7 +83,7 @@ export default function PortfolioPage() {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, refetchTick]);
 
   useEffect(() => { load(); }, [load]);
 

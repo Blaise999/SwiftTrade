@@ -2,6 +2,7 @@
 'use client';
 
 import { getCoin } from '@/lib/crypto-catalog';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -67,6 +68,8 @@ export default function DashboardOverview() {
   const fetchBots = (_id: string) => {};
 
   const [hideBalance, setHideBalance] = useState(false);
+  const [refetchTick, setRefetchTick] = useState(0);
+  useRefetchOnFocus(() => setRefetchTick((t) => t + 1));
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   const { address: liveAddress, isConnected: liveConnected } = useAccount();
@@ -218,7 +221,7 @@ export default function DashboardOverview() {
     fetch(`/api/holdings?userId=${user.id}&market=crypto`, { cache: 'no-store' })
       .then((r) => r.json()).then((j) => { if (Array.isArray(j?.holdings)) setCryptoHoldings(j.holdings); })
       .catch(() => {});
-  }, [user?.id]);
+  }, [user?.id, refetchTick]);
   useEffect(() => {
     const syms = cryptoHoldings.map((h) => String(h.symbol).toUpperCase()).join(',');
     if (!syms) return;
@@ -273,7 +276,7 @@ export default function DashboardOverview() {
         }
       } catch {/* silent */}
     })();
-  }, [user?.id]);
+  }, [user?.id, refetchTick]);
 
   const formatBal = (val: number) =>
     hideBalance
