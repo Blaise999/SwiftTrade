@@ -3,6 +3,7 @@
 
 import { getCoin } from '@/lib/crypto-catalog';
 import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
+import { PortfolioChart } from '@/components/PortfolioChart';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -30,7 +31,6 @@ import {
 
 import { useStore } from '@/lib/supabase/store-supabase';
 import { useAccount } from 'wagmi';
-import { PortfolioCommandCard } from '@/components/dashboard/PortfolioCommandCard';
 import { useSpotTradingStore } from '@/lib/spot-trading-store';
 
 // ----- helpers
@@ -125,11 +125,14 @@ export default function DashboardOverview() {
   // crypto from the merged /api/holdings (same fresh source as the portfolio,
   // so a bridge credit shows here immediately — not the cached spot store).
   const [cryptoHoldings, setCryptoHoldings] = useState<any[]>([]);
+  const [stockHoldings, setStockHoldings] = useState<any[]>([]);
+  const [pfRange, setPfRange] = useState<'1D' | '1W' | '1M' | '1Y'>('1D');
+  const [balancesReady, setBalancesReady] = useState(false);
   const [cryptoLive, setCryptoLive] = useState<Record<string, { price: number; change: number }>>({});
   useEffect(() => {
     if (!user?.id) return;
     fetch(`/api/holdings?userId=${user.id}&market=crypto`, { cache: 'no-store' })
-      .then((r) => r.json()).then((j) => { if (Array.isArray(j?.holdings)) setCryptoHoldings(j.holdings); })
+      .then((r) => r.json()).then((j) => { if (Array.isArray(j?.holdings)) setCryptoHoldings(j.holdings); setBalancesReady(true); })
       .catch(() => {});
   }, [user?.id, refetchTick]);
   useEffect(() => {
@@ -164,6 +167,11 @@ export default function DashboardOverview() {
   // whole-balance P&L (today + all-time), so people see gain/loss % everywhere
   const todayPnlAll = invest.dayPnl + crypto.dayPnl;
   const totalPnlAll = invest.totalPnl + crypto.totalPnl;
+  const chartHoldings = useMemo(() => ([
+    ...cryptoHoldings.map((h: any) => ({ symbol: String(h.symbol).toUpperCase(), kind: 'crypto' as const, quantity: Number(h.quantity) || 0 })),
+    ...stockHoldings.map((h: any) => ({ symbol: String(h.symbol).toUpperCase(), kind: 'stock' as const, quantity: Number(h.quantity) || 0 })),
+  ]), [cryptoHoldings, stockHoldings]);
+
   const netWorthAll = cashBalance + investValue + cryptoValue;
   const todayPctAll = (netWorthAll - todayPnlAll) > 0 ? (todayPnlAll / (netWorthAll - todayPnlAll)) * 100 : 0;
   const costAll = (investValue - invest.totalPnl) + (cryptoValue - crypto.totalPnl);
@@ -176,6 +184,8 @@ export default function DashboardOverview() {
         const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         if (j?.ok) {
+          if (Array.isArray(j.positions)) setStockHoldings(j.positions);
+          setBalancesReady(true);
           setInvest({
             value: Number(j.totalValue) || 0,
             dayPnl: Number(j.totalDayGain) || 0,
@@ -199,68 +209,55 @@ export default function DashboardOverview() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* ─── HEADER (animated, on-brand) ─── */}
+      {/* ─── ROBINHOOD-STYLE HERO ─── */}
       <motion.div
-        initial={{ opacity: 0, y: -8 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl border border-[color:var(--line)] bg-gradient-to-br from-[var(--card)] to-[var(--inset)] px-5 py-5 sm:px-7 sm:py-6"
+        transition={{ duration: 0.35 }}
+        className="pt-2"
       >
-        {/* Animated gradient glow */}
-        <div
-          className="absolute -top-32 -right-24 w-[420px] h-[420px] rounded-full blur-3xl opacity-25 pointer-events-none"
-          style={{ background: 'radial-gradient(closest-side, #22D3EE, transparent 70%)' }}
-        />
-        <div
-          className="absolute -bottom-24 -left-24 w-[320px] h-[320px] rounded-full blur-3xl opacity-15 pointer-events-none"
-          style={{ background: 'radial-gradient(closest-side, var(--gold), transparent 70%)' }}
-        />
-
-        <div className="relative flex items-center justify-between gap-4 flex-wrap">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--profit)] animate-pulse" />
-              <span className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--t-sub)] font-medium">
-                Markets open · Hong Kong
-              </span>
-            </div>
-            <h1 className="text-[26px] sm:text-[32px] font-bold tracking-tight text-[color:var(--t-hi)] leading-tight">
-              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'},{' '}
-              <span className="text-[color:var(--t-hi)]">
-                {user?.firstName || 'Trader'}
-              </span>
-            </h1>
-            <p className="text-[12.5px] text-[color:var(--t-sub)] mt-1">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            </p>
-          </div>
-          <Link
-            href="/dashboard/bridge"
-            className="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[color:color-mix(in_srgb,var(--gold)_10%,transparent)] border border-[color:color-mix(in_srgb,var(--gold)_30%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--gold)_18%,transparent)] text-[color:var(--gold)] text-[13px] font-semibold transition-all group"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            SwiftBridge
-            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-[13px] text-[color:var(--t-sub)]">
+            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.firstName || 'Trader'}
+          </p>
+          <Link href="/dashboard/bridge" prefetch={false}
+            className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[color:var(--gold)] hover:opacity-80">
+            <Globe className="w-3.5 h-3.5" /> SwiftBridge
           </Link>
         </div>
-      </motion.div>
 
-      {/* ─── PORTFOLIO COMMAND CARD ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <PortfolioCommandCard
-          totalAssets={cashBalance + investValue + cryptoValue}
-          cashBalance={cashBalance}
-          investValue={investValue}
-          cryptoValue={cryptoValue}
-          dayPnl={invest.dayPnl + crypto.dayPnl}
-          dayPct={
-            (cashBalance + investValue + cryptoValue) > 0
-              ? ((invest.dayPnl + crypto.dayPnl) / Math.max(1, (cashBalance + investValue + cryptoValue) - (invest.dayPnl + crypto.dayPnl))) * 100
-              : 0
-          }
-        />
+        {/* the number */}
+        {!balancesReady ? (
+          <div className="h-[52px] w-56 rounded-xl bg-white/[0.05] animate-pulse" />
+        ) : (
+          <div className="text-[clamp(38px,12vw,54px)] leading-none font-bold text-[color:var(--t-hi)] tracking-tight tabular-nums">
+            {formatBal(netWorthAll)}
+          </div>
+        )}
+
+        {balancesReady && (
+          <div className={`mt-2 flex items-center gap-2 text-[15px] font-semibold tabular-nums ${todayPnlAll >= 0 ? 'text-[#00C805]' : 'text-[#FF4D3D]'}`}>
+            <span>{todayPnlAll >= 0 ? '▲' : '▼'} {formatBal(Math.abs(todayPnlAll))}</span>
+            <span>({todayPnlAll >= 0 ? '+' : ''}{todayPctAll.toFixed(2)}%)</span>
+            <span className="text-[color:var(--t-sub)] font-normal text-[13px]">Today</span>
+          </div>
+        )}
+
+        {/* real portfolio curve */}
+        <div className="mt-4 -mx-1">
+          <PortfolioChart holdings={chartHoldings} cash={cashBalance} range={pfRange} height={150} />
+        </div>
+
+        <div className="mt-2 flex gap-1">
+          {(['1D', '1W', '1M', '1Y'] as const).map((r) => (
+            <button key={r} onClick={() => setPfRange(r)}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition ${
+                pfRange === r ? 'text-[#00C805] bg-[#00C805]/10' : 'text-[color:var(--t-sub)] hover:text-[color:var(--t-hi)]'
+              }`}>
+              {r}
+            </button>
+          ))}
+        </div>
       </motion.div>
 
       {/* ─── ASSET BREAKDOWN CHIPS ─── */}

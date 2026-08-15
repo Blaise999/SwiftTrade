@@ -98,250 +98,39 @@ export default function FullActivityHistoryPage() {
     (typeof isSupabaseConfigured === 'function' ? isSupabaseConfigured() : !!isSupabaseConfigured) && !!supabase;
 
   const fetchAllActivity = useCallback(async () => {
-    if (!user?.id || !canUseSupabase) {
-      setError('Please sign in to view your activity history.');
-      setLoading(false);
-      return;
-    }
-
-    setError(null);
-    setLoading(true);
-
+    if (!user?.id) return;
+    setLoading(true); setError(null);
     try {
-      const items: ActivityItem[] = [];
-
-      // Date filter
-      let dateFilter: Date | null = null;
-      if (dateRange === '7d') dateFilter = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      if (dateRange === '30d') dateFilter = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      if (dateRange === '90d') dateFilter = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-
-      // =========================
-      // TRADES
-      // =========================
-      let tradesQuery = supabase
-        .from('trades')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-      if (dateFilter) tradesQuery = tradesQuery.gte('created_at', dateFilter.toISOString());
-
-      const { data: trades } = await tradesQuery;
-
-      (trades || []).forEach((t: any) => {
-        const pnl = Number(t.profit_loss ?? t.pnl ?? t.floating_pnl ?? 0);
-        const direction = t.direction || t.type || 'Trade';
-        const marketType = t.market_type || t.asset_type || '';
-
-        items.push({
-          id: `trade-${t.id}`,
-          kind: 'trade',
-          label: t.symbol || t.pair || t.asset || 'Trade',
-          sublabel: `${String(direction).toUpperCase()} • ${String(marketType).toUpperCase() || 'SPOT'} • x${
-            t.multiplier || t.leverage || 1
-          }`,
-          amount: Number(t.amount ?? t.investment ?? 0),
-          pnl,
-          status: t.status || 'closed',
-          created_at: t.created_at || t.opened_at,
-          direction: direction,
-          entry_price: Number(t.entry_price || 0),
-          exit_price: Number(t.exit_price || 0),
-          multiplier: Number(t.multiplier || t.leverage || 1),
-          market_type: marketType,
-        });
-      });
-
-      // =========================
-      // DEPOSITS  ✅ FIXED HERE
-      // =========================
-      let depositsQuery = supabase
-        .from('deposits')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-      if (dateFilter) depositsQuery = depositsQuery.gte('created_at', dateFilter.toISOString());
-
-      const { data: deposits } = await depositsQuery;
-
-      (deposits || []).forEach((d: any) => {
-        const uiStatus = normalizeDepositStatus(d.status); // pending | confirmed | rejected | unknown
-
-        items.push({
-          id: `dep-${d.id}`,
-          kind: 'deposit',
-          label: 'Deposit',
-          sublabel: `${d.network || d.currency || d.method || 'Funds'} • ${prettyDepositStatus(d.status)}`,
-          amount: Number(d.amount ?? 0),
-          pnl: Number(d.amount ?? 0),
-          status: uiStatus === 'unknown' ? (norm(d.status) || 'unknown') : uiStatus,
-          created_at: d.created_at,
-        });
-      });
-
-      // =========================
-      // WITHDRAWALS
-      // =========================
-      let withdrawalsQuery = supabase
-        .from('withdrawals')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-      if (dateFilter) withdrawalsQuery = withdrawalsQuery.gte('created_at', dateFilter.toISOString());
-
-      const { data: withdrawals } = await withdrawalsQuery;
-
-      (withdrawals || []).forEach((w: any) => {
-        items.push({
-          id: `wd-${w.id}`,
-          kind: 'withdrawal',
-          label: 'Withdrawal',
-          sublabel: `${w.method || w.network || 'Funds'} • ${w.status}`,
-          amount: Number(w.amount ?? 0),
-          pnl: -Number(w.amount ?? 0),
-          status: w.status,
-          created_at: w.created_at,
-        });
-      });
-
-      // =========================
-      // TIER PURCHASES
-      // =========================
-      let tierQuery = supabase
-        .from('tier_purchases')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (dateFilter) tierQuery = tierQuery.gte('created_at', dateFilter.toISOString());
-
-      const { data: tierPurchases } = await tierQuery;
-
-      const tierNames: Record<number, string> = {
-        1: 'Starter',
-        2: 'Trader',
-        3: 'Professional',
-        4: 'Elite',
-      };
-
-      (tierPurchases || []).forEach((tp: any) => {
-        items.push({
-          id: `tier-${tp.id}`,
-          kind: 'tier',
-          label: `${tierNames[tp.tier_level] || 'Tier'} Purchase`,
-          sublabel: `Tier ${tp.tier_level} • Bonus: $${Number(tp.bonus_amount ?? 0).toFixed(2)}`,
-          amount: Number(tp.price_amount ?? 0),
-          pnl: tp.status === 'approved' ? Number(tp.bonus_amount ?? 0) : 0,
-          status: tp.status,
-          created_at: tp.created_at,
-        });
-      });
-
-      // =========================
-      // TRANSACTIONS / BONUSES
-      // =========================
-      let bonusQuery = supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('type', ['tier_bonus', 'bonus', 'deposit', 'referral_bonus'])
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-      if (dateFilter) bonusQuery = bonusQuery.gte('created_at', dateFilter.toISOString());
-
-      const { data: bonuses } = await bonusQuery;
-
-      (bonuses || []).forEach((b: any) => {
-        const typeLabel =
-          b.type === 'tier_bonus'
-            ? 'Tier Bonus'
-            : b.type === 'referral_bonus'
-            ? 'Referral Bonus'
-            : b.type === 'deposit'
-            ? 'Deposit Credit'
-            : 'Bonus';
-
-        items.push({
-          id: `tx-${b.id}`,
-          kind: 'bonus',
-          label: typeLabel,
-          sublabel: b.description || b.reference_type || 'Credit',
-          amount: Math.abs(Number(b.amount ?? 0)),
-          pnl: Number(b.amount ?? 0),
-          status: 'completed',
-          created_at: b.created_at,
-        });
-      });
-
-      // =========================
-      // REFERRALS
-      // =========================
-      let referralsQuery = supabase
-        .from('referrals')
-        .select('*')
-        .eq('referrer_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-      if (dateFilter) referralsQuery = referralsQuery.gte('created_at', dateFilter.toISOString());
-
-      const { data: referrals } = await referralsQuery;
-
-      (referrals || []).forEach((r: any) => {
-        items.push({
-          id: `ref-${r.id}`,
-          kind: 'referral',
-          label: 'Referral',
-          sublabel: r.reward_paid ? `Earned $${Number(r.reward_amount || 0).toFixed(2)}` : 'Pending tier purchase',
-          amount: Number(r.reward_amount ?? 0),
-          pnl: r.reward_paid ? Number(r.reward_amount ?? 0) : 0,
-          status: r.reward_paid ? 'completed' : 'pending',
-          created_at: r.created_at,
-        });
-      });
-
-      // ── SwiftBridge ──
-      let bridgeQuery = supabase
-        .from('bridge_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (dateFilter) bridgeQuery = bridgeQuery.gte('created_at', dateFilter.toISOString());
-      const { data: bridges } = await bridgeQuery;
-
-      (bridges || []).forEach((b: any) => {
-        const gotCrypto = b.target_asset && b.target_asset !== 'USD';
-        items.push({
-          id: `bridge-${b.id}`,
-          kind: 'bridge',
-          label: 'SwiftBridge',
-          sublabel: `${Number(b.local_amount || 0).toLocaleString()} ${b.local_currency || ''} → ${
-            gotCrypto ? `${Number(b.final_credit_target ?? b.estimated_target ?? 0)} ${b.target_asset}` : 'USD balance'
-          } · ${String(b.status || '').replace(/_/g, ' ')}`,
-          amount: Number(b.final_credit_usd ?? b.estimated_credit_usd ?? b.estimated_usd ?? 0),
-          pnl: 0,
-          status: b.status,
-          created_at: b.created_at,
-        });
-      });
-
-      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      setActivities(items);
+      // Server-side: RLS blocks client reads (custom auth => auth.uid() is null)
+      const j = await (await fetch(`/api/history?userId=${user.id}`, { cache: 'no-store' })).json();
+      const raw: any[] = Array.isArray(j?.items) ? j.items : [];
+      const mapped: ActivityItem[] = raw.map((r) => ({
+        id: r.id,
+        kind: (r.category === 'membership' ? 'tier'
+             : r.category === 'fee' ? 'trade'
+             : (['trade','deposit','withdrawal','referral','bridge'].includes(r.category) ? r.category : 'bonus')) as ActivityItem['kind'],
+        label: r.title || '',
+        sublabel: r.subtitle || '',
+        amount: Number(r.amount) || 0,
+        pnl: r.direction === 'out' ? -(Number(r.amount) || 0) : (Number(r.amount) || 0),
+        status: r.status || 'completed',
+        created_at: r.created_at,
+        direction: r.direction,
+        market_type: r.symbol || undefined,
+      }));
+      // client-side date filter
+      const now = Date.now();
+      const cut = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : 0;
+      const filteredByDate = cut
+        ? mapped.filter((m) => now - new Date(m.created_at).getTime() <= cut * 864e5)
+        : mapped;
+      setActivities(filteredByDate);
     } catch (e: any) {
       setError(e?.message || 'Failed to load activity history');
     } finally {
       setLoading(false);
     }
-  }, [user?.id, canUseSupabase, dateRange]);
+  }, [user?.id, dateRange]);
 
   useEffect(() => {
     if (firstLoadRef.current) return;
