@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 
 import { useStore } from '@/lib/supabase/store-supabase';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAccount } from 'wagmi';
 import { PortfolioCommandCard } from '@/components/dashboard/PortfolioCommandCard';
 import { useSpotTradingStore } from '@/lib/spot-trading-store';
@@ -75,109 +74,13 @@ export default function DashboardOverview() {
   const { address: liveAddress, isConnected: liveConnected } = useAccount();
 
   const loadRecentActivity = useCallback(async () => {
-    if (!user?.id || !isSupabaseConfigured()) return;
-
+    if (!user?.id) return;
+    // Server-side: RLS blocks direct client reads (custom auth => auth.uid() is null)
     try {
-      const [{ data: trades }, { data: deposits }, { data: bonuses }, { data: withdrawals }, { data: referrals }, { data: bridges }] =
-        await Promise.all([
-          supabase.from('trades').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-          supabase.from('deposits').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-          supabase.from('transactions').select('*').eq('user_id', user.id).in('type', ['bonus', 'deposit', 'buy', 'sell', 'invest_buy', 'invest_sell', 'fee']).order('created_at', { ascending: false }).limit(10),
-          supabase.from('withdrawals').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-          supabase.from('referrals').select('*').eq('referrer_id', user.id).order('created_at', { ascending: false }).limit(3),
-          supabase.from('bridge_requests').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-        ]);
-
-      const items: any[] = [];
-
-      (bridges || []).forEach((b: any) => {
-        items.push({
-          id: `bridge-${b.id}`,
-          kind: 'bridge',
-          label: `SwiftBridge → ${b.target_asset || 'crypto'}`,
-          sublabel: `${b.local_amount || ''} ${b.local_currency || ''} • ${String(b.status || '').replace(/_/g, ' ')}`,
-          amount: Number(b.final_credit_usd ?? b.estimated_usd ?? 0),
-          status: b.status,
-          created_at: b.created_at,
-        });
-      });
-
-      (trades || []).forEach((t: any) => {
-        items.push({
-          id: `trade-${t.id}`,
-          kind: 'trade',
-          label: t.symbol || t.pair || 'Trade',
-          sublabel: `${t.direction || t.type || 'Trade'} • ${t.market_type || t.asset_type || ''}`,
-          amount: Number(t.amount ?? 0),
-          pnl: Number(t.profit_loss ?? t.pnl ?? 0),
-          status: t.status,
-          created_at: t.created_at || t.opened_at,
-        });
-      });
-
-      (deposits || []).forEach((d: any) => {
-        items.push({
-          id: `dep-${d.id}`,
-          kind: 'deposit',
-          label: 'Deposit',
-          sublabel: `${d.network || d.currency || 'Funds'} • ${d.status}`,
-          amount: Number(d.amount ?? 0),
-          pnl: Number(d.amount ?? 0),
-          status: d.status,
-          created_at: d.created_at,
-        });
-      });
-
-      (bonuses || []).forEach((b: any) => {
-        const isBuy = b.type === 'buy' || b.type === 'invest_buy';
-        const isSell = b.type === 'sell' || b.type === 'invest_sell';
-        const isFee = b.type === 'fee';
-        const isTrade = isBuy || isSell;
-        items.push({
-          id: `tx-${b.id}`,
-          kind: isTrade ? 'trade' : isFee ? 'fee' : 'bonus',
-          label: isTrade
-            ? `${isBuy ? 'Bought' : 'Sold'} ${b.symbol || ''}`.trim()
-            : isFee ? 'Shield premium'
-            : b.type === 'deposit' ? 'Deposit Credit' : 'Bonus',
-          sublabel: b.description || b.reference_type || 'Credit',
-          amount: Math.abs(Number(b.amount ?? 0)),
-          pnl: isBuy || isFee ? -Math.abs(Number(b.amount ?? 0)) : Number(b.amount ?? 0),
-          status: 'completed',
-          created_at: b.created_at,
-        });
-      });
-
-      (withdrawals || []).forEach((w: any) => {
-        items.push({
-          id: `wd-${w.id}`,
-          kind: 'withdrawal',
-          label: 'Withdrawal',
-          sublabel: `${w.method || w.network || 'Funds'} • ${w.status}`,
-          amount: Number(w.amount ?? 0),
-          pnl: -Number(w.amount ?? 0),
-          status: w.status,
-          created_at: w.created_at,
-        });
-      });
-
-      (referrals || []).forEach((r: any) => {
-        items.push({
-          id: `ref-${r.id}`,
-          kind: 'referral',
-          label: 'Referral',
-          sublabel: r.reward_paid ? `Earned $${Number(r.reward_amount || 0).toFixed(2)}` : 'New signup',
-          amount: Number(r.reward_amount ?? 0),
-          pnl: r.reward_paid ? Number(r.reward_amount ?? 0) : 0,
-          status: r.reward_paid ? 'completed' : 'pending',
-          created_at: r.created_at,
-        });
-      });
-
-      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      setRecentActivity(items.slice(0, 8));
+      const j = await (await fetch(`/api/activity?userId=${user.id}`, { cache: 'no-store' })).json();
+      if (Array.isArray(j?.items)) setRecentActivity(j.items);
     } catch {
-      // console-only
+      // leave previous list
     }
   }, [user?.id]);
 
@@ -187,7 +90,7 @@ export default function DashboardOverview() {
     refreshUser();
     loadRecentActivity();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, refetchTick]);
 
   // ✅ SINGLE SOURCE OF TRUTH FOR DISPLAY:
   const cashBalance =

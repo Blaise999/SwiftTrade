@@ -17,6 +17,14 @@ function admin() {
   if (!url || !key) return null;
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
+/** Format a price without collapsing sub-cent coins (PEPE, SHIB) to "$0". */
+function fmtPx(p: number): string {
+  if (!Number.isFinite(p) || p <= 0) return '0';
+  if (p >= 1) return p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (p >= 0.01) return p.toFixed(4);
+  return p.toPrecision(4);   // 0.000002650
+}
+
 const num = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 
 export async function POST(req: NextRequest) {
@@ -42,6 +50,9 @@ export async function POST(req: NextRequest) {
   // holdings state
   await sb.from('user_trading_data').insert({ user_id: userId }).select().maybeSingle().then(() => {}, () => {});
   const { data: utd } = await sb.from('user_trading_data').select('spot_crypto_state').eq('user_id', userId).maybeSingle();
+  // crypto_positions is the source of truth — seed from it so a missing/legacy
+  // spot_crypto_state column can never wipe or hide existing holdings.
+  const { data: cpRows } = await sb.from('crypto_positions').select('symbol, quantity, avg_buy_price').eq('user_id', userId);
   const state: any = utd?.spot_crypto_state || {};
   const positions: any[] = Array.isArray(state.positions) ? state.positions : [];
 
@@ -105,7 +116,7 @@ export async function POST(req: NextRequest) {
     message: `You ${side === 'buy' ? 'bought' : 'sold'} ${qty.toFixed(6)} ${sym} for $${usd.toFixed(2)}.`,
     rows: [
       { label: 'Amount', value: `$${usd.toFixed(2)}` },
-      { label: 'Price', value: `$${px.toLocaleString()}` },
+      { label: 'Price', value: `$${fmtPx(px)}` },
       { label: 'Quantity', value: `${qty.toFixed(6)} ${sym}` },
     ],
     ctaText: 'View holdings', ctaUrl: (process.env.NEXT_PUBLIC_APP_URL || '') + '/dashboard/crypto',
@@ -121,7 +132,7 @@ export async function POST(req: NextRequest) {
   await sb.from('notifications').insert({
     user_id: userId, type: 'trade',
     title: `${side === 'buy' ? 'Bought' : 'Sold'} ${sym}`,
-    message: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(6)} ${sym} for $${usd.toFixed(2)} at $${px.toLocaleString()}.`,
+    message: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(6)} ${sym} for $${usd.toFixed(2)} at $${fmtPx(px)}.`,
     metadata: { market: 'crypto', symbol: sym, side, usd, price: px },
   }).then(() => {}, () => {});
 
