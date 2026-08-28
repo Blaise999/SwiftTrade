@@ -503,3 +503,23 @@ input[type="password"]:focus {
   background: #0f1118;
   color: #f5f0e8;
 }
+
+/* line clamping for news cards */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* infinite marquee for the landing ticker */
+@keyframes swift-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}

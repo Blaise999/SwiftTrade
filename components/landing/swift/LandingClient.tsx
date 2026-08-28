@@ -7,6 +7,11 @@ import { ArrowRight, ArrowUpRight, Play, X, Check, Zap, ShieldCheck, TrendingUp,
 import { MarketingShell, C, Eyebrow, BtnPrimary, BtnOutline } from '@/components/marketing/Shell';
 import { SectionHead, SpecGrid, CompareTable, FAQ } from '@/components/marketing/Templates';
 import { HeroVisual, TerminalVisual, CryptoVisual, FxVisual } from '@/components/marketing/Visuals';
+import { NewsWall } from '@/components/landing/NewsWall';
+import { ShieldVsMarket } from '@/components/landing/ShieldVsMarket';
+import { LiveHeatmap, StatBand, BentoGrid, Corridor, MobileStrip } from '@/components/landing/MoreSections';
+import { MarqueeTicker, MarketMood, BridgeRates, ParallaxQuote } from '@/components/landing/TraderSections';
+import { WhyShield, WhyBridge } from '@/components/landing/DeepDive';
 
 function CountUp({ to, prefix = '', suffix = '', decimals = 0 }: { to: number; prefix?: string; suffix?: string; decimals?: number }) {
   const ref = useRef<HTMLSpanElement | null>(null);
@@ -73,7 +78,20 @@ export default function LandingClient() {
       <MarketsIntro />
       <Markets />
       <WhatYouCanTrade />
+      <MarqueeTicker />
+      <LiveHeatmap />
+      <StatBand />
+      <NewsWall />
+      <MarketMood />
+      <BentoGrid />
+      <ParallaxQuote />
       <Bridge />
+      <Corridor />
+      <WhyBridge />
+      <BridgeRates />
+      <ShieldVsMarket />
+      <WhyShield />
+      <MobileStrip />
       <Security />
       <FreeModel />
       <Steps />
