@@ -133,9 +133,9 @@ async function savePortfolioToSupabase(
     tradeHistory: SpotTrade[];
   }
 ): Promise<void> {
-  if (!isSupabaseConfigured()) return;
-
-  const uid = await getAuthUid();
+  // Prefer the APP user id — with custom auth, getAuthUid() is null and this
+  // used to return before saving anything.
+  const uid = _userId || (await getAuthUid());
   if (!uid) return;
 
   // ✅ critical: never write if state belongs to a different user
@@ -148,20 +148,13 @@ async function savePortfolioToSupabase(
       tradeHistory: (state.tradeHistory || []).slice(0, 200),
     };
 
-    const { error } = await supabase
-      .from('user_trading_data')
-      .upsert(
-        {
-          user_id: uid, // ✅ MUST be auth.uid()
-          spot_crypto_state: payload,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' }
-      );
-
-    if (error) {
-      console.warn('[CryptoTrading] Portfolio upsert failed:', error);
-    }
+    // Server-side: RLS blocks direct client writes under custom auth.
+    const res = await fetch('/api/spot-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: uid, state: payload }),
+    });
+    if (!res.ok) console.warn('[CryptoTrading] Portfolio save failed:', await res.text());
   } catch (err) {
     console.warn('[CryptoTrading] Portfolio save failed:', err);
   }
@@ -176,19 +169,18 @@ async function loadPortfolioFromSupabase(
 } | null> {
   if (!isSupabaseConfigured()) return null;
 
-  const uid = await getAuthUid();
+  // Use the APP user id — custom auth means auth.uid() is null, which used to
+  // make this bail out before it ever queried (positions never loaded).
+  const uid = _userId || (await getAuthUid());
   if (!uid) return null;
 
   try {
-    const { data, error } = await supabase
-      .from('user_trading_data')
-      .select('spot_crypto_state')
-      .eq('user_id', uid) // ✅ MUST be auth.uid()
-      .maybeSingle();
+    const res = await fetch(`/api/spot-state?userId=${uid}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const j = await res.json();
+    if (!j?.state) return null;
 
-    if (error || !data?.spot_crypto_state) return null;
-
-    const s = data.spot_crypto_state as any;
+    const s = j.state as any;
 
     const positions = (s.positions || []).map((p: any) => ({
       ...p,
@@ -324,8 +316,7 @@ export const useSpotTradingStore = create<SpotTradingState>()(
       // ✅ THIS is what fixes incognito/logout: ALWAYS attempt remote hydrate
       loadFromSupabase: async (userId, fallbackCash = 0) => {
         // effective UID must be auth.uid()
-        const uid = await getAuthUid();
-        const effectiveUid = uid ?? userId;
+        const effectiveUid = userId ?? (await getAuthUid());
         if (!effectiveUid) {
           set({ _hydrated: true, _activeUserId: null });
           return;
