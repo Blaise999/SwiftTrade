@@ -1,0 +1,26 @@
+# Free external scheduler for SwiftTrade rate alerts.
+# Runs entirely on GitHub — no Vercel cron, no plan limits.
+#
+# Setup:
+#   1. Repo → Settings → Secrets and variables → Actions
+#   2. Add secret  APP_URL      = https://your-domain.com
+#   3. Add secret  CRON_SECRET  = same value as your Vercel CRON_SECRET
+name: Rate alerts
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes
+  workflow_dispatch:          # lets you run it manually from the Actions tab
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger rate-alert check
+        run: |
+          code=$(curl -s -o /tmp/out.json -w "%{http_code}" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/rate-alerts")
+          echo "HTTP $code"
+          cat /tmp/out.json
+          if [ "$code" != "200" ]; then exit 1; fi

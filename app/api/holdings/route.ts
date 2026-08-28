@@ -9,6 +9,7 @@
  * so this never double-counts). Read-only; uses the service role.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateAlertsInBackground } from '@/lib/rate-alerts';
 import { fetchCryptoPrices } from '@/lib/live-prices';
 import { createClient } from '@supabase/supabase-js';
 
@@ -24,6 +25,8 @@ function admin() {
 const num = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 
 export async function GET(req: NextRequest) {
+  checkRateAlertsInBackground();   // opportunistic — throttled to 5 min
+
   const sb = admin();
   if (!sb) return NextResponse.json({ ok: false, error: 'service role not configured' }, { status: 503 });
   const userId = new URL(req.url).searchParams.get('userId') || req.headers.get('x-user-id');

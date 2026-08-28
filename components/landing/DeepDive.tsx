@@ -18,6 +18,7 @@ export function WhyShield() {
   return (
     <section ref={ref} className="relative py-24 sm:py-32 overflow-hidden">
       <AmbientMotion variant="mesh" tone="green" opacity={0.20} src="/motion/shield-deep.webp" />
+      <AmbientMotion variant="candles" tone="green" opacity={0.22} />
       <div className="relative mx-auto w-full max-w-5xl px-4 sm:px-6">
         <motion.div style={{ y: drift }}>
           <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--t-sub)] mb-5">
@@ -135,6 +136,7 @@ export function WhyBridge() {
   return (
     <section ref={ref} className="relative py-24 sm:py-32 overflow-hidden">
       <AmbientMotion variant="mesh" tone="violet" opacity={0.20} src="/motion/bridge-deep.webp" />
+      <AmbientMotion variant="flow" tone="violet" opacity={0.38} />
       <div className="relative mx-auto w-full max-w-5xl px-4 sm:px-6">
         <motion.div style={{ y: drift }} className="max-w-3xl">
           <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--t-sub)] mb-5">

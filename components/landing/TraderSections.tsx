@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { AmbientMotion } from './AmbientMotion';
 import Link from 'next/link';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import { TrendingUp, TrendingDown, Gauge, ArrowRight, Circle, Globe } from 'lucide-react';
@@ -72,8 +73,9 @@ export function MarketMood() {
   const tone = val >= 75 ? 'var(--profit)' : val >= 55 ? '#8FBF5A' : val >= 45 ? 'var(--gold)' : val >= 25 ? '#E08B4A' : 'var(--loss)';
 
   return (
-    <section className="py-20 sm:py-24">
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+    <section className="relative py-20 sm:py-24 overflow-hidden">
+      <AmbientMotion variant="rays" tone="gold" opacity={0.34} />
+      <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-3">
           {/* gauge */}
           <motion.div
@@ -173,8 +175,9 @@ export function BridgeRates() {
   };
 
   return (
-    <section className="py-20 sm:py-24">
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+    <section className="relative py-20 sm:py-24 overflow-hidden">
+      <AmbientMotion variant="flow" tone="violet" opacity={0.40} />
+      <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         <div className="flex items-end justify-between gap-4 mb-7 flex-wrap">
           <div>
             <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--t-sub)] mb-3">
@@ -234,6 +237,7 @@ export function ParallaxQuote() {
 
   return (
     <section ref={ref} className="relative py-28 overflow-hidden">
+      <AmbientMotion variant="noise" tone="mixed" opacity={0.30} />
       <motion.div style={{ y, opacity: o }} className="mx-auto w-full max-w-4xl px-6 text-center">
         <p className="text-[26px] sm:text-[38px] font-bold tracking-tight text-[color:var(--t-hi)] leading-[1.15]">
           Most apps make you pick a market,{' '}

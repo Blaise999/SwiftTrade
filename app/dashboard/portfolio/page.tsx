@@ -136,6 +136,10 @@ export default function PortfolioPage() {
               </div>
             )}
 
+            <a href="/dashboard/insights" className="mt-4 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[var(--accent-2)] hover:opacity-80">
+              View cross-market analysis →
+            </a>
+
             <div className="mt-4 grid grid-cols-3 gap-2.5 text-sm">
               <Tile label="Crypto" value={usd(cryptoValue)} tone="#9B7CFF" pct={alloc.crypto} />
               <Tile label="Stocks" value={usd(stockValue)} tone="#5B9BFF" pct={alloc.stocks} />

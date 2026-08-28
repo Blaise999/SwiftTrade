@@ -5,6 +5,7 @@
  *   marketOpen: whether US equities are in regular session
  */
 import { NextResponse } from 'next/server';
+import { checkRateAlertsInBackground } from '@/lib/rate-alerts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,6 +29,8 @@ function usMarketOpen() {
 }
 
 export async function GET() {
+  checkRateAlertsInBackground();   // opportunistic — throttled to 5 min
+
   if (CACHE && Date.now() - CACHE.at < TTL) {
     return NextResponse.json({ ok: true, cached: true, ...CACHE.data, marketStatus: usMarketOpen() });
   }

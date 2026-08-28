@@ -31,7 +31,8 @@ export function LiveHeatmap() {
 
   return (
     <section ref={ref} className="relative py-20 sm:py-24 overflow-hidden">
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+      <AmbientMotion variant="ticker" tone="green" opacity={0.35} />
+      <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         <div className="flex items-end justify-between gap-4 mb-7 flex-wrap">
           <div>
             <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--t-sub)] mb-3">
@@ -122,8 +123,9 @@ export function StatBand() {
     { v: 8, suffix: 's', label: 'Bridge settlement', sub: 'USD to HKD, typical' },
   ];
   return (
-    <section className="relative py-16 border-y border-[color:var(--line)]">
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+    <section className="relative py-16 border-y border-[color:var(--line)] overflow-hidden">
+      <AmbientMotion variant="scan" tone="gold" opacity={0.30} />
+      <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-9">
           {stats.map((s, i) => (
             <motion.div
@@ -220,7 +222,8 @@ export function Corridor() {
   const inView = useInView(ref, { once: true, margin: '-100px' });
   return (
     <section ref={ref} className="relative py-20 sm:py-24 overflow-hidden">
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
+      <AmbientMotion variant="flow" tone="violet" opacity={0.42} />
+      <div className="relative mx-auto w-full max-w-5xl px-4 sm:px-6">
         <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--card)] p-7 sm:p-10 relative overflow-hidden">
           <div className="relative flex flex-col sm:flex-row items-center justify-between gap-8">
             <Node label="New York" sub="USD" />
@@ -274,8 +277,9 @@ export function MobileStrip() {
     { icon: Sparkles, t: 'No account minimum', d: 'Start with a dollar. Seriously.' },
   ];
   return (
-    <section className="py-16">
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+    <section className="relative py-16 overflow-hidden">
+      <AmbientMotion variant="grid" tone="mixed" opacity={0.16} />
+      <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         <div className="grid gap-3 sm:grid-cols-3">
           {items.map((it, i) => {
             const Icon = it.icon;

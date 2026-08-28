@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { syncPortfolio, applyOptimisticTrade } from '@/hooks/usePortfolioSync';
 import { notifyHoldingsChanged } from '@/hooks/useRefetchOnFocus';
 import { Sparkline } from '@/components/Sparkline';
 import { useParams, useRouter } from 'next/navigation';
@@ -74,6 +75,11 @@ export default function CryptoDetail() {
     // ── optimistic: update balance + position instantly ──
     const optQty = (usd / price) * (side === 'buy' ? 1 : -1);
     setOptimisticSpent((s) => s + (side === 'buy' ? usd : -usd));
+    // broadcast to every mounted page instantly
+    applyOptimisticTrade({
+      symbol, kind: 'crypto', side: side === 'buy' ? 'buy' : 'sell',
+      quantity: Math.abs(usd / price), price, cost: usd,
+    });
     setPosition((prev: any) => {
       const prevQty = n(prev?.quantity) || 0;
       const newQty = prevQty + optQty;
@@ -88,11 +94,11 @@ export default function CryptoDetail() {
       })).json();
       if (j?.ok) {
         setMsg(`${side === 'buy' ? 'Bought' : 'Sold'} ${j.quantity.toFixed(6)} ${symbol}`);
-        setAmount(''); setDone(d => d + 1); refreshUser(); router.refresh(); notifyHoldingsChanged();
+        setAmount(''); setDone(d => d + 1); refreshUser(); router.refresh(); notifyHoldingsChanged(); syncPortfolio(uid);
         setTimeout(() => setOptimisticSpent(0), 1200);   // let the real balance catch up
       } else {
         setMsg(j?.error || 'Failed');
-        setOptimisticSpent(0); setDone(d => d + 1);       // revert optimistic
+        setOptimisticSpent(0); setDone(d => d + 1); syncPortfolio(uid);   // revert to server truth
       }
     } catch (e: any) {
       setMsg(e?.message || 'Failed'); setOptimisticSpent(0); setDone(d => d + 1);

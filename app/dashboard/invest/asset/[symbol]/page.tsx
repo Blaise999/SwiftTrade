@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { syncPortfolio, applyOptimisticTrade } from '@/hooks/usePortfolioSync';
 import { notifyHoldingsChanged } from '@/hooks/useRefetchOnFocus';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -111,6 +112,7 @@ export default function EtfDetail() {
     if (kind === 'recurring') {
       setDone(true);
       notifyHoldingsChanged();
+      syncPortfolio((user as any)?.id);
       router.refresh();
       setTimeout(() => { setSheet(null); setDone(false); setAmount(''); }, 1800);
       return;
@@ -122,6 +124,10 @@ export default function EtfDetail() {
     const spend = mode === 'dollars' ? (parseFloat(amount) || 0) : (parseFloat(amount) || 0) * px;
     const optQty = px > 0 ? spend / px : 0;
     setOptimisticSpent((s0) => s0 + spend);
+    applyOptimisticTrade({
+      symbol: etf.symbol, kind: 'stock', side: 'buy',
+      quantity: optQty, price: px, cost: spend,
+    });
     setPosition((prev: any) => {
       const prevQty = Number(prev?.quantity) || 0;
       return { ...(prev || { symbol: etf.symbol }), quantity: prevQty + optQty, avgPrice: Number(prev?.avgPrice) || px, price: px };
@@ -141,7 +147,7 @@ export default function EtfDetail() {
         setSubmitError(j?.error === 'insufficient_balance'
           ? `Not enough balance. Need $${Number(j.need).toFixed(2)}, have $${Number(j.have).toFixed(2)}.`
           : (j?.error || 'Order could not be placed. Please try again.'));
-        setSubmitting(false); setOptimisticSpent(0);
+        setSubmitting(false); setOptimisticSpent(0); syncPortfolio((user as any)?.id);
         return;
       }
       setSubmitting(false);
@@ -150,7 +156,7 @@ export default function EtfDetail() {
       setTimeout(() => setOptimisticSpent(0), 1200);
       setTimeout(() => { setSheet(null); setDone(false); setAmount(''); }, 1900);
     } catch {
-      setSubmitting(false); setOptimisticSpent(0);
+      setSubmitting(false); setOptimisticSpent(0); syncPortfolio((user as any)?.id);
       setSubmitError('Network error. Please try again.');
     }
   };

@@ -70,6 +70,7 @@ export function NewsWall() {
   return (
     <section ref={ref} className="relative overflow-hidden py-20 sm:py-28">
       <AmbientMotion variant="mesh" tone="mixed" opacity={0.18} src="/motion/news-ambient.webp" />
+      <AmbientMotion variant="ticker" tone="mixed" opacity={0.22} />
       <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         {/* head */}
         <div className="flex flex-wrap items-end justify-between gap-4 mb-8">

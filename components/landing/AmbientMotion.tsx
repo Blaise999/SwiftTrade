@@ -14,7 +14,7 @@ export function AmbientMotion({
   src,
   className = '',
 }: {
-  variant?: 'mesh' | 'grid' | 'orbit' | 'scan';
+  variant?: 'mesh' | 'grid' | 'orbit' | 'scan' | 'ticker' | 'candles' | 'flow' | 'noise' | 'rays';
   tone?: 'green' | 'gold' | 'violet' | 'mixed';
   opacity?: number;
   src?: string;
@@ -52,6 +52,55 @@ export function AmbientMotion({
 
       {variant === 'scan' && (
         <div className="swift-scan absolute inset-0" style={{ ['--s' as any]: c1 }} />
+      )}
+
+      {variant === 'ticker' && (
+        <div className="absolute inset-0 flex flex-col justify-around">
+          {[0, 1, 2, 3].map((i) => (
+            <span key={i} className="swift-tape" style={{
+              ['--tape' as any]: i % 2 ? c2 : c1,
+              animationDuration: `${26 + i * 7}s`,
+              animationDirection: i % 2 ? 'reverse' : 'normal',
+            }} />
+          ))}
+        </div>
+      )}
+
+      {variant === 'candles' && (
+        <div className="absolute inset-0 flex items-end justify-center gap-[6px] px-8 pb-10">
+          {Array.from({ length: 26 }).map((_, i) => (
+            <span key={i} className="swift-candle" style={{
+              background: i % 3 === 0 ? c3 : i % 2 ? c1 : c2,
+              height: `${18 + ((i * 37) % 58)}%`,
+              animationDelay: `${(i % 9) * 0.24}s`,
+            }} />
+          ))}
+        </div>
+      )}
+
+      {variant === 'flow' && (
+        <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 200">
+          {[0, 1, 2].map((i) => (
+            <path key={i}
+              d={`M -20 ${70 + i * 34} C 90 ${34 + i * 30}, 240 ${112 + i * 26}, 420 ${58 + i * 32}`}
+              fill="none" stroke={i === 0 ? c1 : i === 1 ? c2 : c3}
+              strokeWidth="1.2" strokeDasharray="7 11"
+              className="swift-flow" style={{ animationDelay: `${i * 1.1}s` }} />
+          ))}
+        </svg>
+      )}
+
+      {variant === 'rays' && (
+        <div className="absolute inset-0 grid place-items-center">
+          <span className="swift-rays" style={{ ['--r' as any]: c1 }} />
+        </div>
+      )}
+
+      {variant === 'noise' && (
+        <>
+          <span className="swift-blob swift-blob-a" style={{ background: c1 }} />
+          <div className="swift-noise absolute inset-0" />
+        </>
       )}
 
       {/* optional WebP layer — drops in later with no code change */}

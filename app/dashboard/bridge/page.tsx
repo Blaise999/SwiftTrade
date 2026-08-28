@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { RateAlerts } from '@/components/bridge/RateAlerts';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -436,6 +437,8 @@ export default function SwiftBridgePage() {
 
             {/* RIGHT */}
             <div className="lg:col-span-5 space-y-4">
+              <RateAlerts userId={user?.id} />
+
               <div className="bg-gradient-to-br from-obsidian to-charcoal border border-white/10 rounded-2xl p-6">
                 <h3 className="font-display font-semibold text-cream mb-4">How it works</h3>
                 <ol className="space-y-3">
