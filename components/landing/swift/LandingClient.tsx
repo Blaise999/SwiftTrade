@@ -12,6 +12,7 @@ import { ShieldVsMarket } from '@/components/landing/ShieldVsMarket';
 import { LiveHeatmap, StatBand, BentoGrid, Corridor, MobileStrip } from '@/components/landing/MoreSections';
 import { MarqueeTicker, MarketMood, BridgeRates, ParallaxQuote } from '@/components/landing/TraderSections';
 import { WhyShield, WhyBridge } from '@/components/landing/DeepDive';
+import { NewsHub } from '@/components/landing/NewsHub';
 
 function CountUp({ to, prefix = '', suffix = '', decimals = 0 }: { to: number; prefix?: string; suffix?: string; decimals?: number }) {
   const ref = useRef<HTMLSpanElement | null>(null);
@@ -82,6 +83,7 @@ export default function LandingClient() {
       <LiveHeatmap />
       <StatBand />
       <NewsWall />
+      <NewsHub />
       <MarketMood />
       <BentoGrid />
       <ParallaxQuote />

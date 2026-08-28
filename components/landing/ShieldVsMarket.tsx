@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { AmbientMotion } from './AmbientMotion';
 import { motion, useInView } from 'framer-motion';
 import { ShieldCheck, TrendingDown } from 'lucide-react';
 
@@ -46,16 +47,7 @@ export function ShieldVsMarket() {
 
   return (
     <section ref={ref} className="relative overflow-hidden py-20 sm:py-28">
-      {/* MOTION SLOT B — shield pulse. /public/motion/shield-pulse.webp (400x400, <=90KB) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute right-[6%] top-1/2 -translate-y-1/2 w-[420px] h-[420px] opacity-[0.16] motion-reduce:hidden"
-        style={{
-          backgroundImage: 'url(/motion/shield-pulse.webp)',
-          backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
-        }}
-      />
-
+      <AmbientMotion variant="orbit" tone="green" opacity={0.30} src="/motion/shield-pulse.webp" />
       <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-14 items-center">
           {/* copy */}

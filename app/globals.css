@@ -523,3 +523,79 @@ input[type="password"]:focus {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
+
+/* ══════════ ambient motion (no assets required) ══════════ */
+.swift-blob {
+  position: absolute;
+  width: 46vw; height: 46vw;
+  max-width: 620px; max-height: 620px;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.30;
+  will-change: transform;
+}
+.swift-blob-a { top: -14%; left: -8%;  animation: swift-drift-a 22s ease-in-out infinite; }
+.swift-blob-b { bottom: -20%; right: -6%; animation: swift-drift-b 27s ease-in-out infinite; }
+.swift-blob-c { top: 26%; left: 42%; opacity: 0.20; animation: swift-drift-c 32s ease-in-out infinite; }
+
+@keyframes swift-drift-a {
+  0%,100% { transform: translate3d(0,0,0) scale(1); }
+  33%     { transform: translate3d(9vw, 6vh, 0) scale(1.12); }
+  66%     { transform: translate3d(4vw, -5vh, 0) scale(0.94); }
+}
+@keyframes swift-drift-b {
+  0%,100% { transform: translate3d(0,0,0) scale(1); }
+  40%     { transform: translate3d(-11vw, -7vh, 0) scale(1.16); }
+  75%     { transform: translate3d(-3vw, 5vh, 0) scale(0.9); }
+}
+@keyframes swift-drift-c {
+  0%,100% { transform: translate3d(0,0,0) scale(1); }
+  50%     { transform: translate3d(-7vw, 9vh, 0) scale(1.2); }
+}
+
+/* perspective grid drift */
+.swift-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--g) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--g) 22%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at 50% 50%, black 10%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 10%, transparent 70%);
+  animation: swift-grid-move 18s linear infinite;
+}
+@keyframes swift-grid-move {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 56px 56px, 56px 56px; }
+}
+
+/* concentric orbits */
+.swift-orbit {
+  position: absolute;
+  width: 280px; height: 280px;
+  border: 1px solid; border-radius: 9999px;
+  animation: swift-pulse-ring 6s ease-out infinite;
+}
+.swift-orbit-2 { width: 420px; height: 420px; animation-delay: 1.6s; }
+.swift-orbit-3 { width: 560px; height: 560px; animation-delay: 3.2s; }
+@keyframes swift-pulse-ring {
+  0%   { transform: scale(0.82); opacity: 0; }
+  25%  { opacity: 0.9; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+
+/* diagonal light sweep */
+.swift-scan {
+  background: linear-gradient(115deg, transparent 38%,
+    color-mix(in srgb, var(--s) 26%, transparent) 50%, transparent 62%);
+  background-size: 260% 100%;
+  animation: swift-sweep 7s ease-in-out infinite;
+}
+@keyframes swift-sweep {
+  0%   { background-position: 180% 0; }
+  60%  { background-position: -60% 0; }
+  100% { background-position: -60% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swift-blob, .swift-grid, .swift-orbit, .swift-scan { animation: none !important; }
+}

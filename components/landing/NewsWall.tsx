@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { AmbientMotion } from './AmbientMotion';
 import { motion, useInView } from 'framer-motion';
 import { ArrowUpRight, Clock } from 'lucide-react';
 
@@ -68,20 +69,7 @@ export function NewsWall() {
 
   return (
     <section ref={ref} className="relative overflow-hidden py-20 sm:py-28">
-      {/* MOTION SLOT A — ambient loop behind the whole section.
-          Drop a WebP at /public/motion/news-ambient.webp (960x420, <=120KB). */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.14] motion-reduce:hidden"
-        style={{
-          backgroundImage: 'url(/motion/news-ambient.webp)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          maskImage: 'radial-gradient(ellipse at 70% 30%, black 35%, transparent 72%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at 70% 30%, black 35%, transparent 72%)',
-        }}
-      />
-
+      <AmbientMotion variant="mesh" tone="mixed" opacity={0.18} src="/motion/news-ambient.webp" />
       <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         {/* head */}
         <div className="flex flex-wrap items-end justify-between gap-4 mb-8">

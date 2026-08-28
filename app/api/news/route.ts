@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 type Item = {
-  id: string; market: 'stocks' | 'crypto' | 'fx';
+  id: string; market: 'stocks' | 'crypto' | 'fx' | 'banking';
   headline: string; summary: string; source: string;
   url: string; image: string | null; datetime: number;
 };
@@ -64,7 +64,26 @@ async function cryptoFallback(): Promise<Item[]> {
   } catch { return []; }
 }
 
+const BANK_WORDS = [
+  'bank', 'banking', 'payment', 'remittance', 'swift', 'wire', 'settlement',
+  'cross-border', 'fintech', 'stablecoin', 'central bank', 'fed', 'treasury',
+  'clearing', 'custody', 'transfer', 'currency', 'monetary',
+];
+
+async function banking(): Promise<Item[]> {
+  const gen = await finnhub('general', 'stocks');
+  const fx = await finnhub('forex', 'fx');
+  const pool = [...gen, ...fx];
+  return pool
+    .filter((n) => {
+      const t = `${n.headline} ${n.summary}`.toLowerCase();
+      return BANK_WORDS.some((w) => t.includes(w));
+    })
+    .map((n) => ({ ...n, market: 'banking' as any }));
+}
+
 async function build(market: string): Promise<Item[]> {
+  if (market === 'banking') return dedupe(await banking());
   if (market === 'crypto') {
     const a = await finnhub('crypto', 'crypto');
     return dedupe(a.length ? a : await cryptoFallback());

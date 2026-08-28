@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { AmbientMotion } from './AmbientMotion';
 import Link from 'next/link';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
@@ -16,14 +17,7 @@ export function WhyShield() {
 
   return (
     <section ref={ref} className="relative py-24 sm:py-32 overflow-hidden">
-      {/* MOTION SLOT D — /public/motion/shield-deep.webp (960x420, <=120KB) */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.11] motion-reduce:hidden"
-        style={{
-          backgroundImage: 'url(/motion/shield-deep.webp)', backgroundSize: 'cover', backgroundPosition: 'center',
-          maskImage: 'radial-gradient(ellipse at 25% 40%, black 30%, transparent 70%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at 25% 40%, black 30%, transparent 70%)',
-        }} />
-
+      <AmbientMotion variant="mesh" tone="green" opacity={0.20} src="/motion/shield-deep.webp" />
       <div className="relative mx-auto w-full max-w-5xl px-4 sm:px-6">
         <motion.div style={{ y: drift }}>
           <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--t-sub)] mb-5">
@@ -140,14 +134,7 @@ export function WhyBridge() {
 
   return (
     <section ref={ref} className="relative py-24 sm:py-32 overflow-hidden">
-      {/* MOTION SLOT E — /public/motion/bridge-deep.webp (960x420, <=120KB) */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.11] motion-reduce:hidden"
-        style={{
-          backgroundImage: 'url(/motion/bridge-deep.webp)', backgroundSize: 'cover', backgroundPosition: 'center',
-          maskImage: 'radial-gradient(ellipse at 75% 45%, black 30%, transparent 72%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at 75% 45%, black 30%, transparent 72%)',
-        }} />
-
+      <AmbientMotion variant="mesh" tone="violet" opacity={0.20} src="/motion/bridge-deep.webp" />
       <div className="relative mx-auto w-full max-w-5xl px-4 sm:px-6">
         <motion.div style={{ y: drift }} className="max-w-3xl">
           <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--t-sub)] mb-5">

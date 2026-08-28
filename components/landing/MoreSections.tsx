@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { AmbientMotion } from './AmbientMotion';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import {
@@ -150,13 +151,7 @@ export function BentoGrid() {
   const card = 'relative overflow-hidden rounded-2xl border border-[color:var(--line)] bg-[color:var(--card)] p-6 hover:border-[color:var(--line-strong)] transition-colors';
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
-      {/* MOTION SLOT C — /public/motion/bento-ambient.webp (960x420, <=120KB) */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.10] motion-reduce:hidden"
-        style={{
-          backgroundImage: 'url(/motion/bento-ambient.webp)', backgroundSize: 'cover', backgroundPosition: 'center',
-          maskImage: 'radial-gradient(ellipse at 30% 50%, black 30%, transparent 70%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at 30% 50%, black 30%, transparent 70%)',
-        }} />
+      <AmbientMotion variant="grid" tone="green" opacity={0.22} src="/motion/bento-ambient.webp" />
       <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         <h2 className="text-[30px] sm:text-[42px] font-bold tracking-tight text-[color:var(--t-hi)] leading-[1.05] mb-3">
           Built for how people<br className="hidden sm:block" /> actually trade.
