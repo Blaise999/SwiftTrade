@@ -185,12 +185,13 @@ export async function POST(req: NextRequest) {
     } catch {/* non-fatal */}
 
     // in-app notification + email
-    await sb.from('notifications').insert({
+    const { error: notifErr } = await sb.from('notifications').insert({
       user_id: userId, type: 'trade',
       title: `${side === 'buy' ? 'Bought' : 'Sold'} ${symbol}`,
       message: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(4)} ${symbol} for $${cost.toFixed(2)} at $${price.toLocaleString()}.`,
       metadata: { market: 'stock', symbol, side, cost, price },
-    }).then(() => {}, () => {});
+    });
+    if (notifErr) console.error('[invest/order] notification FAILED:', notifErr.message);
     emailUser(userId, {
       title: `${side === 'buy' ? 'Bought' : 'Sold'} ${symbol}`,
       tone: side === 'buy' ? 'success' : 'default',

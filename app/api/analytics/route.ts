@@ -78,6 +78,71 @@ async function stockHistory(sym: string): Promise<number[]> {
   } catch { return []; }
 }
 
+/** Annualised volatility from daily returns. */
+function annualVol(r: number[]): number {
+  if (r.length < 5) return 0;
+  const m = r.reduce((a, b) => a + b, 0) / r.length;
+  const v = r.reduce((a, b) => a + (b - m) ** 2, 0) / (r.length - 1);
+  return Math.sqrt(v) * Math.sqrt(365) * 100;
+}
+
+/** Sharpe-style return/risk ratio (rf assumed 0 for simplicity). */
+function sharpe(r: number[]): number {
+  if (r.length < 5) return 0;
+  const m = r.reduce((a, b) => a + b, 0) / r.length;
+  const sd = Math.sqrt(r.reduce((a, b) => a + (b - m) ** 2, 0) / (r.length - 1));
+  return sd === 0 ? 0 : (m / sd) * Math.sqrt(365);
+}
+
+/** Worst peak-to-trough decline over the window, as a positive %. */
+function maxDrawdown(p: number[]): number {
+  let peak = p[0] || 0, mdd = 0;
+  for (const v of p) {
+    if (v > peak) peak = v;
+    if (peak > 0) mdd = Math.max(mdd, (peak - v) / peak);
+  }
+  return mdd * 100;
+}
+
+/** Beta of an asset against a benchmark return series. */
+function beta(asset: number[], bench: number[]): number {
+  const n = Math.min(asset.length, bench.length);
+  if (n < 5) return 0;
+  const a = asset.slice(-n), b = bench.slice(-n);
+  const ma = a.reduce((x, y) => x + y, 0) / n;
+  const mb = b.reduce((x, y) => x + y, 0) / n;
+  let cov = 0, varb = 0;
+  for (let i = 0; i < n; i++) { cov += (a[i] - ma) * (b[i] - mb); varb += (b[i] - mb) ** 2; }
+  return varb === 0 ? 0 : cov / varb;
+}
+
+/** Analyst consensus + target from Finnhub (free tier). */
+async function analystView(sym: string) {
+  const key = process.env.FINNHUB_API_KEY?.trim();
+  if (!key) return null;
+  try {
+    const [recRes, tgtRes] = await Promise.all([
+      fetch(`https://finnhub.io/api/v1/stock/recommendation?symbol=${sym}&token=${key}`, { cache: 'no-store' }),
+      fetch(`https://finnhub.io/api/v1/stock/price-target?symbol=${sym}&token=${key}`, { cache: 'no-store' }),
+    ]);
+    const rec = recRes.ok ? (await recRes.json())?.[0] : null;
+    const tgt = tgtRes.ok ? await tgtRes.json() : null;
+    if (!rec && !tgt?.targetMean) return null;
+    const buy = num(rec?.strongBuy) + num(rec?.buy);
+    const hold = num(rec?.hold);
+    const sell = num(rec?.sell) + num(rec?.strongSell);
+    const total = buy + hold + sell;
+    return {
+      symbol: sym,
+      buy, hold, sell, total,
+      consensus: total === 0 ? null : buy / total >= 0.6 ? 'Buy' : sell / total >= 0.4 ? 'Sell' : 'Hold',
+      targetMean: num(tgt?.targetMean) || null,
+      targetHigh: num(tgt?.targetHigh) || null,
+      targetLow: num(tgt?.targetLow) || null,
+    };
+  } catch { return null; }
+}
+
 export async function GET(req: NextRequest) {
   const sb = admin();
   if (!sb) return NextResponse.json({ ok: false }, { status: 503 });
@@ -142,6 +207,42 @@ export async function GET(req: NextRequest) {
   }
   pairs.sort((x, y) => Math.abs(y.corr) - Math.abs(x.corr));
 
+  // ── portfolio-level risk metrics ──
+  const weights = top.map((h) => (totalValue ? h.value / totalValue : 0));
+  const minLen = Math.min(...rets.map((r) => r.length).filter((n) => n > 0), 30);
+  const pfRet: number[] = [];
+  if (minLen >= 5) {
+    for (let i = 0; i < minLen; i++) {
+      let acc = 0, wsum = 0;
+      rets.forEach((r, k) => {
+        if (r.length >= minLen) { acc += (r[r.length - minLen + i] || 0) * weights[k]; wsum += weights[k]; }
+      });
+      pfRet.push(wsum > 0 ? acc / wsum : 0);
+    }
+  }
+  const benchIdx = top.findIndex((h) => h.kind === 'stock');
+  const bench = benchIdx >= 0 ? rets[benchIdx] : [];
+
+  const risk = {
+    volatility: Number(annualVol(pfRet).toFixed(1)),
+    sharpe: Number(sharpe(pfRet).toFixed(2)),
+    maxDrawdown: Number(maxDrawdown(
+      pfRet.reduce((acc: number[], r) => { acc.push((acc[acc.length - 1] ?? 100) * (1 + r)); return acc; }, [100])
+    ).toFixed(1)),
+    perAsset: top.map((h, i) => ({
+      symbol: h.symbol,
+      kind: h.kind,
+      volatility: Number(annualVol(rets[i]).toFixed(1)),
+      beta: bench.length ? Number(beta(rets[i], bench).toFixed(2)) : null,
+      maxDrawdown: Number(maxDrawdown(series[i]).toFixed(1)),
+    })),
+  };
+
+  // ── analyst consensus for held stocks (free Finnhub tier) ──
+  const analysts = (await Promise.all(
+    top.filter((h) => h.kind === 'stock').slice(0, 5).map((h) => analystView(h.symbol))
+  )).filter(Boolean);
+
   // ── exposure split ──
   const cryptoValue = holdings.filter((h) => h.kind === 'crypto').reduce((s, h) => s + h.value, 0);
   const stockValue = totalValue - cryptoValue;
@@ -182,9 +283,34 @@ export async function GET(req: NextRequest) {
     insights.push({ level: 'info', title: 'Small book', body: 'With one or two positions, most portfolio maths is noise. Correlation gets useful past four or five holdings.' });
   }
 
+  if (risk.volatility > 0) {
+    if (risk.volatility >= 60) insights.push({ level: 'warn', title: 'High volatility book', body: `Your holdings have swung about ${risk.volatility.toFixed(0)}% annualised. Position sizes that feel fine in calm weeks get loud in bad ones.` });
+    else if (risk.volatility <= 20) insights.push({ level: 'good', title: 'Steady book', body: `Annualised volatility around ${risk.volatility.toFixed(0)}% — this mix is on the calmer end.` });
+  }
+  if (risk.sharpe !== 0) {
+    insights.push({
+      level: risk.sharpe >= 1 ? 'good' : risk.sharpe <= 0 ? 'warn' : 'info',
+      title: `Return per unit of risk: ${risk.sharpe.toFixed(2)}`,
+      body: risk.sharpe >= 1
+        ? 'Above 1.0 means you were paid reasonably for the risk you carried over the window.'
+        : risk.sharpe <= 0
+        ? 'Negative over this window — you carried volatility without being paid for it.'
+        : 'Middling. Most of the swing came from risk rather than edge.',
+    });
+  }
+  const bullish = analysts.filter((a: any) => a?.consensus === 'Buy');
+  if (bullish.length) {
+    insights.push({
+      level: 'info', title: 'Analyst consensus',
+      body: `Street consensus is Buy on ${bullish.map((a: any) => a.symbol).join(', ')}. Consensus is a crowd opinion, not a forecast — it is often late.`,
+    });
+  }
+
   return NextResponse.json({
     ok: true,
     totalValue,
+    risk,
+    analysts,
     exposure: { crypto: cryptoValue, stocks: stockValue },
     holdings: holdings.map((h) => ({ ...h, weight: totalValue ? (h.value / totalValue) * 100 : 0 })),
     correlations: pairs.slice(0, 10),

@@ -123,12 +123,13 @@ export async function POST(req: NextRequest) {
   });
 
   // history (transactions) + in-app notification
-  await sb.from('transactions').insert({
+  const { error: txErr } = await sb.from('transactions').insert({
     user_id: userId, type: side === 'buy' ? 'buy' : 'sell', status: 'completed',
     amount: usd, currency: 'USD', symbol: sym, quantity: qty, price: px,
     description: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(6)} ${sym}`,
     metadata: { market: 'crypto', symbol: sym, side, quantity: qty, price: px },
-  }).then(() => {}, () => {});
+  });
+  if (txErr) console.error('[crypto/buy] activity row FAILED:', txErr.message);
   await sb.from('notifications').insert({
     user_id: userId, type: 'trade',
     title: `${side === 'buy' ? 'Bought' : 'Sold'} ${sym}`,
@@ -136,5 +137,11 @@ export async function POST(req: NextRequest) {
     metadata: { market: 'crypto', symbol: sym, side, usd, price: px },
   }).then(() => {}, () => {});
 
-  return NextResponse.json({ ok: true, symbol: sym, side, quantity: qty, price: px, usd, balance: newBal });
+  return NextResponse.json({
+    ok: true, symbol: sym, side, quantity: qty, price: px, usd, balance: newBal,
+    warnings: [
+      stateErr ? `spot state: ${stateErr.message}` : null,
+      txErr ? `activity row: ${txErr.message}` : null,
+    ].filter(Boolean),
+  });
 }

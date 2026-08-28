@@ -91,6 +91,103 @@ export default function InsightsPage() {
               })}
             </div>
 
+            {/* risk metrics — the Wall Street block */}
+            {data?.risk && data.risk.volatility > 0 && (
+              <section className="mt-8">
+                <h2 className="text-[15px] font-bold text-[var(--text)] mb-1">Risk profile</h2>
+                <p className="text-[12px] text-[var(--text-3)] mb-3">Measured over the last 30 days of real price action.</p>
+                <div className="grid grid-cols-3 gap-2.5 mb-3">
+                  {[
+                    ['Volatility', `${data.risk.volatility}%`, 'annualised'],
+                    ['Return/risk', data.risk.sharpe.toFixed(2), 'Sharpe-style'],
+                    ['Max drawdown', `−${data.risk.maxDrawdown}%`, 'peak to trough'],
+                  ].map(([k, v, sub]: any) => (
+                    <div key={k} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3.5">
+                      <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--text-3)]">{k}</div>
+                      <div className="mt-1.5 text-[20px] font-bold tabular-nums text-[var(--text)]">{v}</div>
+                      <div className="text-[10.5px] text-[var(--text-3)]">{sub}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
+                  <div className="grid grid-cols-4 gap-2 px-4 py-2.5 text-[10px] uppercase tracking-[0.12em] text-[var(--text-3)] border-b border-[var(--border)]">
+                    <span>Asset</span><span className="text-right">Vol</span>
+                    <span className="text-right">Beta</span><span className="text-right">Max DD</span>
+                  </div>
+                  {data.risk.perAsset.map((a: any) => (
+                    <div key={a.symbol} className="grid grid-cols-4 gap-2 px-4 py-2.5 text-[12.5px] tabular-nums border-b border-white/[0.04] last:border-0">
+                      <span className="font-semibold text-[var(--text)]">{a.symbol}</span>
+                      <span className="text-right text-[var(--text-2)]">{a.volatility}%</span>
+                      <span className="text-right text-[var(--text-2)]">{a.beta ?? '—'}</span>
+                      <span className="text-right text-[#FF4D3D]">−{a.maxDrawdown}%</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* analyst consensus */}
+            {Array.isArray(data?.analysts) && data.analysts.length > 0 && (
+              <section className="mt-8">
+                <h2 className="text-[15px] font-bold text-[var(--text)] mb-1">Street view on your stocks</h2>
+                <p className="text-[12px] text-[var(--text-3)] mb-3">
+                  Analyst consensus and 12-month price targets. Opinions, not forecasts.
+                </p>
+                <div className="space-y-2.5">
+                  {data.analysts.map((a: any) => {
+                    const held = holdings.find((h: any) => h.symbol === a.symbol);
+                    const upside = held?.price && a.targetMean ? ((a.targetMean - held.price) / held.price) * 100 : null;
+                    const tone = a.consensus === 'Buy' ? '#00C805' : a.consensus === 'Sell' ? '#FF4D3D' : 'var(--gold)';
+                    const tot = Math.max(1, a.total);
+                    return (
+                      <div key={a.symbol} className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5">
+                            <AssetLogo symbol={a.symbol} kind="stock" size={26} className="rounded-full" />
+                            <span className="text-[14px] font-bold text-[var(--text)]">{a.symbol}</span>
+                          </div>
+                          {a.consensus && (
+                            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full"
+                              style={{ color: tone, background: `color-mix(in srgb, ${tone} 14%, transparent)` }}>
+                              {a.consensus}
+                            </span>
+                          )}
+                        </div>
+
+                        {a.total > 0 && (
+                          <div className="mt-3">
+                            <div className="flex h-1.5 rounded-full overflow-hidden bg-[var(--inset)]">
+                              <div style={{ width: `${(a.buy / tot) * 100}%`, background: '#00C805' }} />
+                              <div style={{ width: `${(a.hold / tot) * 100}%`, background: 'var(--gold)' }} />
+                              <div style={{ width: `${(a.sell / tot) * 100}%`, background: '#FF4D3D' }} />
+                            </div>
+                            <div className="mt-1.5 flex gap-3 text-[10.5px] text-[var(--text-3)]">
+                              <span>{a.buy} buy</span><span>{a.hold} hold</span><span>{a.sell} sell</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {a.targetMean && (
+                          <div className="mt-3 flex items-center justify-between text-[12px]">
+                            <span className="text-[var(--text-3)]">
+                              12m target ${a.targetMean.toFixed(2)}
+                              {a.targetLow && a.targetHigh ? ` (${a.targetLow.toFixed(0)}–${a.targetHigh.toFixed(0)})` : ''}
+                            </span>
+                            {upside != null && (
+                              <span className="font-bold tabular-nums" style={{ color: upside >= 0 ? '#00C805' : '#FF4D3D' }}>
+                                {upside >= 0 ? '+' : ''}{upside.toFixed(1)}% vs now
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
             {/* concentration */}
             <section className="mt-8">
               <h2 className="text-[15px] font-bold text-[var(--text)] mb-3">Concentration</h2>
