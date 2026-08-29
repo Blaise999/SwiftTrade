@@ -120,7 +120,8 @@ const getAdminClient = () =>
   createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    { auth: { autoRefreshToken: false, persistSession: false },
+    global: { fetch: (i: any, x: any) => fetch(i, { ...(x || {}), cache: 'no-store' }) } }
   );
 
 /**

@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
   const userId = new URL(req.url).searchParams.get('userId') || '';
   if (!userId) return jsonNoStore({ ok: true, balance_available: 0 });
 
-  const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: (i: any, x: any) => fetch(i, { ...(x || {}), cache: 'no-store' }) } });
   const { data } = await sb
     .from('users')
     .select('balance_available, balance_bonus')

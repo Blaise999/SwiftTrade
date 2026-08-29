@@ -4,6 +4,7 @@
  * Descriptive, not predictive — see lib/signals.ts.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { jsonNoStore } from '@/lib/no-store';
 import { createClient } from '@supabase/supabase-js';
 import { positionSignals } from '@/lib/signals';
@@ -14,10 +15,7 @@ export const dynamic = 'force-dynamic';
 const num = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 
 function admin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return supabaseAdmin();
 }
 
 const CG: Record<string, string> = {

@@ -8,6 +8,7 @@
  * is free. The fee is refused if the balance can't cover it.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { emailUser } from '@/lib/email/events';
 import { createClient } from '@supabase/supabase-js';
 
@@ -18,10 +19,7 @@ export const dynamic = 'force-dynamic';
 const SHIELD_FEE_PCT = 0.01;
 
 function admin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  return supabaseAdmin();
 }
 const num = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 

@@ -20,5 +20,6 @@ export function isAdminConfigured(): boolean {
 export const supabaseAdmin = createClient(
   url || 'https://stub.supabase.co',
   serviceKey || 'stub',
-  { auth: { persistSession: false, autoRefreshToken: false } }
+  { auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: (i: any, x: any) => fetch(i, { ...(x || {}), cache: 'no-store' }) } }
 );

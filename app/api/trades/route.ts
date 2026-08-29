@@ -94,6 +94,7 @@ function supabaseAdmin() {
 
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: (i: any, x: any) => fetch(i, { ...(x || {}), cache: 'no-store' }) },
     global: { headers: { 'X-Client-Info': 'swifttrade-api-trades' } },
   });
 }

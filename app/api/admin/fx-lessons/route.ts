@@ -7,6 +7,7 @@
  * The /api/demo-fx/lesson-tick processor applies each step at its scheduled time.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createClient } from '@supabase/supabase-js';
 import { sendTelegram } from '@/lib/telegram-send';
 
@@ -14,10 +15,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function admin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return supabaseAdmin();
 }
 
 export async function GET() {

@@ -42,6 +42,7 @@ function sb() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       auth: { autoRefreshToken: false, persistSession: false },
+    global: { fetch: (i: any, x: any) => fetch(i, { ...(x || {}), cache: 'no-store' }) },
     }
   );
 }
