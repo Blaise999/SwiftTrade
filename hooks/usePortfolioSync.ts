@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { trace } from '@/lib/trace';
 
 /**
  * ONE shared portfolio cache for every page.
@@ -43,6 +44,11 @@ export async function syncPortfolio(userId?: string): Promise<void> {
         fetch(`/api/invest/positions?userId=${uid}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
         fetch(`/api/user/balance?userId=${uid}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
       ]);
+      trace('sync', 'refetched', {
+        uid,
+        crypto: Array.isArray(hRes?.holdings) ? hRes.holdings.length : 'none',
+        stocks: Array.isArray(iRes?.positions) ? iRes.positions.length : 'none',
+      });
       snapshot = {
         crypto: Array.isArray(hRes?.holdings) ? hRes.holdings : snapshot.crypto,
         stocks: Array.isArray(iRes?.positions) ? iRes.positions : snapshot.stocks,
@@ -86,6 +92,7 @@ export function applyOptimisticTrade(opts: {
     balance: Math.max(0, snapshot.balance + (side === 'buy' ? -cost : cost)),
     at: Date.now(),
   };
+  trace('sync', 'optimistic applied', { symbol: sym, kind, side, quantity, cryptoCount: snapshot.crypto.length, stockCount: snapshot.stocks.length });
   emit();
 }
 

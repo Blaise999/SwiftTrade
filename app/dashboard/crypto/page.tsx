@@ -1,6 +1,7 @@
 'use client';
 
 import { AssetLogo } from '@/components/AssetLogo';
+import { trace } from '@/lib/trace';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -50,6 +51,7 @@ export default function CryptoHome() {
       try {
         const r = await fetch(`/api/holdings?userId=${user.id}&market=crypto`, { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
+        trace('crypto-page', 'fetched /api/holdings', { userId: user.id, count: j?.holdings?.length ?? 'none', raw: j });
         if (Array.isArray(j?.holdings)) {
           // /api/holdings already returns LIVE price + value — use them directly (no re-valuation flash)
           const withVal = j.holdings.map((h: any) => {
@@ -59,6 +61,7 @@ export default function CryptoHome() {
             const avg = n(h.avgPrice) || price;
             return { ...h, price, avgPrice: avg, change: n(h.change) || lp?.change || meta?.change || 0, value: n(h.value) || n(h.quantity) * price };
           });
+          trace('crypto-page', 'setHoldings', { count: withVal.length, symbols: withVal.map((h: any) => h.symbol) });
           setHoldings(withVal);
         }
       } catch {} finally { setReady(true); }

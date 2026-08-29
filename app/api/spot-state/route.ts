@@ -9,6 +9,7 @@
  *   POST { userId, state }      -> saves
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { trace } from '@/lib/trace';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  trace('spot-state', 'merged', { userId, cryptoRows: (cp || []).length, stateRows: existing.length, out: bySym.size });
   return NextResponse.json({
     ok: true,
     state: { ...state, positions: [...bySym.values()].filter((p) => (Number(p.quantity) || 0) > 0) },

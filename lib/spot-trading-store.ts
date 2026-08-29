@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { trace, traceError } from '@/lib/trace';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import {
   SpotPosition,
@@ -175,10 +176,12 @@ async function loadPortfolioFromSupabase(
   if (!uid) return null;
 
   try {
+    trace('spot-store', 'loading from /api/spot-state', { uid });
     const res = await fetch(`/api/spot-state?userId=${uid}`, { cache: 'no-store' });
-    if (!res.ok) return null;
+    if (!res.ok) { traceError('spot-store', 'spot-state fetch failed', res.status); return null; }
     const j = await res.json();
-    if (!j?.state) return null;
+    if (!j?.state) { trace('spot-store', 'no state returned'); return null; }
+    trace('spot-store', 'state loaded', { positions: (j.state.positions || []).length });
 
     const s = j.state as any;
 

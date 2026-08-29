@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { PositionSignals } from '@/components/insights/PositionSignals';
 import { RiskRadar, CorrelationMatrix, ExposureDonut } from '@/components/insights/Visuals';
 import { FmpAnalysis } from '@/components/insights/FmpAnalysis';
 import Link from 'next/link';
@@ -271,6 +272,8 @@ export default function InsightsPage() {
                 </div>
               </section>
             )}
+
+            <PositionSignals userId={(user as any)?.id} />
 
             <FmpAnalysis userId={(user as any)?.id} />
 

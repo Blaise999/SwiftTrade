@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { trace } from '@/lib/trace';
 import { createClient } from '@supabase/supabase-js';
 import { getAsset } from '@/lib/asset-catalog';
 import { fetchStockPrices } from '@/lib/live-prices';
@@ -52,6 +53,8 @@ export async function GET(req: NextRequest) {
     // live prices for all held symbols (Alpaca) — falls back to seed per symbol
     const symbols = Array.from(new Set((data || []).map((p: any) => String(p.symbol).toUpperCase())));
     const live = await fetchStockPrices(symbols);
+
+    trace('invest/positions', 'db rows', { userId, rows: (data || []).length, err: (error as any)?.message || null });
 
     const positions = (data || []).map(p => {
       const qty = n(p.quantity);

@@ -9,6 +9,7 @@
  * so this never double-counts). Read-only; uses the service role.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { trace } from '@/lib/trace';
 import { checkRateAlertsInBackground } from '@/lib/rate-alerts';
 import { fetchCryptoPrices } from '@/lib/live-prices';
 import { createClient } from '@supabase/supabase-js';
@@ -54,6 +55,14 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  trace('holdings', 'sources', {
+    userId,
+    spotStatePositions: ((utdRes.data?.spot_crypto_state as any)?.positions || []).length,
+    cryptoPositionsRows: (cpRes.data || []).length,
+    spotErr: (utdRes as any).error?.message || null,
+    cpErr: (cpRes as any).error?.message || null,
+  });
+
   const holdings = [...bySymbol.values()]
     .filter(h => h.quantity > 1e-9)
     .map(h => ({ ...h, value: h.quantity * h.avgPrice }));
@@ -71,5 +80,6 @@ export async function GET(req: NextRequest) {
     }
   } catch {}
 
+  trace('holdings', 'returning', { count: holdings.length, symbols: holdings.map(h => h.symbol) });
   return NextResponse.json({ ok: true, holdings });
 }

@@ -5,6 +5,7 @@
  * and logs a trade row so the notification triggers fire. Sells: side='sell'.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { trace, traceError } from '@/lib/trace';
 import { emailUser } from '@/lib/email/events';
 import { createClient } from '@supabase/supabase-js';
 
@@ -27,12 +28,14 @@ function fmtPx(p: number): string {
 
 const num = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 
+// TRACE-INSTRUMENTED
 export async function POST(req: NextRequest) {
   const sb = admin();
   if (!sb) return NextResponse.json({ ok: false, error: 'service role not configured' }, { status: 503 });
 
   const { userId, symbol, name, usdAmount, price, side = 'buy' } = await req.json().catch(() => ({} as any));
   const sym = String(symbol || '').toUpperCase();
+  trace('crypto/buy', 'request', { userId, sym, side, usdAmount, price });
   const px = num(price);
   const usd = num(usdAmount);
   if (!userId || !sym || px <= 0 || usd <= 0) {
@@ -87,7 +90,8 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,symbol' });
     // CRITICAL: if BOTH stores failed, the holding doesn't exist — don't charge.
-    if (stateErr && cpErr) {
+    trace('crypto/buy', 'writes', { stateErr: stateErr?.message || null, cpErr: cpErr?.message || null });
+  if (stateErr && cpErr) {
       return NextResponse.json({
         ok: false,
         error: `Holding could not be saved: ${cpErr.message}. Balance was not charged. (Run sql/FIX_TRADING_PERSISTENCE.sql if columns/tables are missing.)`,
@@ -129,7 +133,8 @@ export async function POST(req: NextRequest) {
     description: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(6)} ${sym}`,
     metadata: { market: 'crypto', symbol: sym, side, quantity: qty, price: px },
   });
-  if (txErr) console.error('[crypto/buy] activity row FAILED:', txErr.message);
+  if (txErr) traceError('crypto/buy', 'transactions insert', txErr);
+  else trace('crypto/buy', 'transactions insert ok');
   await sb.from('notifications').insert({
     user_id: userId, type: 'trade',
     title: `${side === 'buy' ? 'Bought' : 'Sold'} ${sym}`,

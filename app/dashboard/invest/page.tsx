@@ -1,6 +1,7 @@
 'use client';
 
 import { AssetLogo } from '@/components/AssetLogo';
+import { trace } from '@/lib/trace';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -65,6 +66,7 @@ export default function InvestHome() {
             totalDayGain: n(j.totalDayGain),
             totalDayGainPct: n(j.totalDayGainPct),
           });
+          trace('invest-page', 'fetched /api/invest/positions', { count: j?.positions?.length ?? 'none' });
           if (Array.isArray(j.positions)) setHoldings(j.positions);
         }
       } catch {} finally { setReady(true); }
