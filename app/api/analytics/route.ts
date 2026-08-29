@@ -6,6 +6,7 @@
  * computes concentration, correlation, and sector/market exposure.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { jsonNoStore } from '@/lib/no-store';
 import { createClient } from '@supabase/supabase-js';
 import { fetchCryptoPrices, fetchStockPrices } from '@/lib/live-prices';
 
@@ -145,9 +146,9 @@ async function analystView(sym: string) {
 
 export async function GET(req: NextRequest) {
   const sb = admin();
-  if (!sb) return NextResponse.json({ ok: false }, { status: 503 });
+  if (!sb) return jsonNoStore({ ok: false }, { status: 503 });
   const userId = new URL(req.url).searchParams.get('userId') || '';
-  if (!userId) return NextResponse.json({ ok: true, holdings: [], insights: [] });
+  if (!userId) return jsonNoStore({ ok: true, holdings: [], insights: [] });
 
   // ── gather holdings ──
   const [posRes, cpRes, utdRes] = await Promise.all([
@@ -172,7 +173,7 @@ export async function GET(req: NextRequest) {
 
   const cSyms = [...cryptoMap.keys()], sSyms = [...stockMap.keys()];
   if (!cSyms.length && !sSyms.length) {
-    return NextResponse.json({ ok: true, holdings: [], insights: [], totalValue: 0 });
+    return jsonNoStore({ ok: true, holdings: [], insights: [], totalValue: 0 });
   }
 
   // ── live prices for valuation ──
@@ -306,7 +307,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({
+  return jsonNoStore({
     ok: true,
     totalValue,
     risk,

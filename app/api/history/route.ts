@@ -5,6 +5,7 @@
  * Returns a single normalized, date-sorted list.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { jsonNoStore } from '@/lib/no-store';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -21,9 +22,9 @@ const safe = async (p: any) => { try { const r = await p; return r?.data || []; 
 
 export async function GET(req: NextRequest) {
   const sb = admin();
-  if (!sb) return NextResponse.json({ ok: false, items: [] }, { status: 503 });
+  if (!sb) return jsonNoStore({ ok: false, items: [] }, { status: 503 });
   const userId = new URL(req.url).searchParams.get('userId') || '';
-  if (!userId) return NextResponse.json({ ok: true, items: [] });
+  if (!userId) return jsonNoStore({ ok: true, items: [] });
 
   const [trades, deposits, withdrawals, tiers, txs, referrals, bridges] = await Promise.all([
     safe(sb.from('trades').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(100)),
@@ -102,5 +103,5 @@ export async function GET(req: NextRequest) {
   }
 
   items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  return NextResponse.json({ ok: true, items });
+  return jsonNoStore({ ok: true, items });
 }

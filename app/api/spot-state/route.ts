@@ -9,8 +9,10 @@
  *   POST { userId, state }      -> saves
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { jsonNoStore } from '@/lib/no-store';
 import { trace } from '@/lib/trace';
 import { createClient } from '@supabase/supabase-js';
+import { fetchCryptoPrices } from '@/lib/live-prices';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,9 +26,9 @@ function admin() {
 
 export async function GET(req: NextRequest) {
   const sb = admin();
-  if (!sb) return NextResponse.json({ ok: false, state: null }, { status: 503 });
+  if (!sb) return jsonNoStore({ ok: false, state: null }, { status: 503 });
   const userId = new URL(req.url).searchParams.get('userId') || '';
-  if (!userId) return NextResponse.json({ ok: true, state: null });
+  if (!userId) return jsonNoStore({ ok: true, state: null });
 
   const [{ data: utd }, { data: cp }] = await Promise.all([
     sb.from('user_trading_data').select('spot_crypto_state').eq('user_id', userId).maybeSingle(),
@@ -58,22 +60,76 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  trace('spot-state', 'merged', { userId, cryptoRows: (cp || []).length, stateRows: existing.length, out: bySym.size });
-  return NextResponse.json({
-    ok: true,
-    state: { ...state, positions: [...bySym.values()].filter((p) => (Number(p.quantity) || 0) > 0) },
+  const merged = [...bySym.values()].filter((p) => (Number(p.quantity) || 0) > 0);
+
+  // The spot store renders p.displayValue / p.displayPnL / p.marketValue.
+  // Rows rebuilt from crypto_positions lacked those fields, so positions showed
+  // as blank or zero. Hydrate the FULL position shape with live prices here.
+  let live: Record<string, { price: number; change: number }> = {};
+  try { live = await fetchCryptoPrices(merged.map((p: any) => String(p.symbol).toUpperCase())); } catch {}
+
+  const nowIso = new Date().toISOString();
+  const positions = merged.map((p: any, i: number) => {
+    const sym = String(p.symbol).toUpperCase();
+    const qty = Number(p.quantity) || 0;
+    const avg = Number(p.avgBuyPrice ?? p.avgPrice) || 0;
+    const cur = live[sym]?.price || Number(p.currentPrice) || avg;
+    const marketValue = qty * cur;
+    const cost = Number(p.totalCostBasis) || qty * avg;
+    const pnl = marketValue - cost;
+    const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0;
+    const shielded = !!p.shieldEnabled;
+    // a shielded position shows its locked value, not the live one
+    const shownValue = shielded && Number(p.shieldSnapValue) > 0 ? Number(p.shieldSnapValue) : marketValue;
+    const shownPnl = shielded && Number(p.shieldSnapValue) > 0 ? Number(p.shieldSnapValue) - cost : pnl;
+
+    return {
+      id: p.id || `pos_${sym}_${i}`,
+      userId,
+      symbol: sym,
+      name: p.name || sym,
+      icon: p.icon || null,
+      quantity: qty,
+      avgBuyPrice: avg,
+      totalCostBasis: cost,
+      currentPrice: cur,
+      marketValue,
+      unrealizedPnL: pnl,
+      unrealizedPnLPercent: pnlPct,
+      shieldEnabled: shielded,
+      shieldSnapPrice: p.shieldSnapPrice ?? null,
+      shieldSnapValue: p.shieldSnapValue ?? null,
+      shieldActivatedAt: p.shieldActivatedAt ?? null,
+      displayValue: shownValue,
+      displayPnL: shownPnl,
+      displayPnLPercent: cost > 0 ? (shownPnl / cost) * 100 : 0,
+      createdAt: p.createdAt || nowIso,
+      updatedAt: nowIso,
+    };
   });
+
+  const portfolioValue = positions.reduce((s2, p) => s2 + p.displayValue, 0);
+  const account = state.account
+    ? { ...state.account, portfolioValue, displayPortfolioValue: portfolioValue, updatedAt: nowIso }
+    : state.account;
+
+  trace('spot-state', 'merged', {
+    userId, cryptoRows: (cp || []).length, stateRows: existing.length,
+    out: positions.length, priced: Object.keys(live).length,
+  });
+
+  return jsonNoStore({ ok: true, state: { ...state, account, positions } });
 }
 
 export async function POST(req: NextRequest) {
   const sb = admin();
-  if (!sb) return NextResponse.json({ ok: false }, { status: 503 });
+  if (!sb) return jsonNoStore({ ok: false }, { status: 503 });
   const { userId, state } = await req.json().catch(() => ({} as any));
-  if (!userId || !state) return NextResponse.json({ ok: false, error: 'userId and state required' }, { status: 400 });
+  if (!userId || !state) return jsonNoStore({ ok: false, error: 'userId and state required' }, { status: 400 });
 
   const { error } = await sb.from('user_trading_data').upsert(
     { user_id: userId, spot_crypto_state: state, updated_at: new Date().toISOString() },
     { onConflict: 'user_id' });
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  if (error) return jsonNoStore({ ok: false, error: error.message }, { status: 500 });
+  return jsonNoStore({ ok: true });
 }

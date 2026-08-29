@@ -9,6 +9,7 @@
  * so this never double-counts). Read-only; uses the service role.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { jsonNoStore } from '@/lib/no-store';
 import { trace } from '@/lib/trace';
 import { checkRateAlertsInBackground } from '@/lib/rate-alerts';
 import { fetchCryptoPrices } from '@/lib/live-prices';
@@ -29,9 +30,9 @@ export async function GET(req: NextRequest) {
   checkRateAlertsInBackground();   // opportunistic — throttled to 5 min
 
   const sb = admin();
-  if (!sb) return NextResponse.json({ ok: false, error: 'service role not configured' }, { status: 503 });
+  if (!sb) return jsonNoStore({ ok: false, error: 'service role not configured' }, { status: 503 });
   const userId = new URL(req.url).searchParams.get('userId') || req.headers.get('x-user-id');
-  if (!userId) return NextResponse.json({ ok: false, error: 'userId required' }, { status: 400 });
+  if (!userId) return jsonNoStore({ ok: false, error: 'userId required' }, { status: 400 });
 
   const [utdRes, cpRes] = await Promise.all([
     sb.from('user_trading_data').select('spot_crypto_state').eq('user_id', userId).maybeSingle(),
@@ -81,5 +82,5 @@ export async function GET(req: NextRequest) {
   } catch {}
 
   trace('holdings', 'returning', { count: holdings.length, symbols: holdings.map(h => h.symbol) });
-  return NextResponse.json({ ok: true, holdings });
+  return jsonNoStore({ ok: true, holdings });
 }

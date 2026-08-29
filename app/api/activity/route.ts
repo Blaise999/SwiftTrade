@@ -6,6 +6,7 @@
  * client-side query returns zero rows. This route uses the service-role key.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { jsonNoStore } from '@/lib/no-store';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -22,9 +23,9 @@ const safe = async (p: any) => { try { return await p; } catch { return { data: 
 
 export async function GET(req: NextRequest) {
   const sb = admin();
-  if (!sb) return NextResponse.json({ ok: false, items: [] }, { status: 503 });
+  if (!sb) return jsonNoStore({ ok: false, items: [] }, { status: 503 });
   const userId = new URL(req.url).searchParams.get('userId') || '';
-  if (!userId) return NextResponse.json({ ok: true, items: [] });
+  if (!userId) return jsonNoStore({ ok: true, items: [] });
 
   const [tx, dep, wd, br, tr] = await Promise.all([
     safe(sb.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(25)),
@@ -96,5 +97,5 @@ export async function GET(req: NextRequest) {
   }
 
   items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  return NextResponse.json({ ok: true, items: items.slice(0, 12) });
+  return jsonNoStore({ ok: true, items: items.slice(0, 12) });
 }

@@ -5,6 +5,7 @@
  * Returns { ok, prices: { BTC: { price, change }, ... } } and never throws.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { jsonNoStore } from '@/lib/no-store';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -140,5 +141,5 @@ export async function GET(req: NextRequest) {
     }));
   }
 
-  return NextResponse.json({ ok: true, prices, source: Object.keys(prices).length ? 'live' : 'none' });
+  return jsonNoStore({ ok: true, prices, source: Object.keys(prices).length ? 'live' : 'none' });
 }

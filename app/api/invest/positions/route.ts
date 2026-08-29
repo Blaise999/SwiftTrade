@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/no-store';
 import { trace } from '@/lib/trace';
 import { createClient } from '@supabase/supabase-js';
 import { getAsset } from '@/lib/asset-catalog';
@@ -29,12 +30,12 @@ export async function GET(req: NextRequest) {
   try {
     const sb = admin();
     if (!sb) {
-      return NextResponse.json({ ok: true, positions: [], totalValue: 0 });
+      return jsonNoStore({ ok: true, positions: [], totalValue: 0 });
     }
 
     const userId = new URL(req.url).searchParams.get('userId');
     if (!userId) {
-      return NextResponse.json({ ok: false, error: 'userId required' }, { status: 400 });
+      return jsonNoStore({ ok: false, error: 'userId required' }, { status: 400 });
     }
 
     const { data, error } = await sb
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
       .eq('user_id', userId);
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      return jsonNoStore({ ok: false, error: error.message }, { status: 500 });
     }
 
     let totalValue = 0;
@@ -89,7 +90,7 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({
+    return jsonNoStore({
       ok: true,
       positions,
       totalValue,
@@ -101,7 +102,7 @@ export async function GET(req: NextRequest) {
       count: positions.length,
     });
   } catch (err: any) {
-    return NextResponse.json(
+    return jsonNoStore(
       { ok: false, error: err?.message || 'Server error' },
       { status: 500 }
     );

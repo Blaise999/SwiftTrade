@@ -4,6 +4,7 @@
  * Descriptive, not predictive — see lib/signals.ts.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { jsonNoStore } from '@/lib/no-store';
 import { createClient } from '@supabase/supabase-js';
 import { positionSignals } from '@/lib/signals';
 import { fetchCryptoPrices, fetchStockPrices } from '@/lib/live-prices';
@@ -56,9 +57,9 @@ async function stockHist(sym: string): Promise<number[]> {
 
 export async function GET(req: NextRequest) {
   const sb = admin();
-  if (!sb) return NextResponse.json({ ok: false, positions: [] }, { status: 503 });
+  if (!sb) return jsonNoStore({ ok: false, positions: [] }, { status: 503 });
   const userId = new URL(req.url).searchParams.get('userId') || '';
-  if (!userId) return NextResponse.json({ ok: true, positions: [] });
+  if (!userId) return jsonNoStore({ ok: true, positions: [] });
 
   const [{ data: cp }, { data: pos }] = await Promise.all([
     sb.from('crypto_positions').select('symbol, quantity, avg_buy_price').eq('user_id', userId),
@@ -105,5 +106,5 @@ export async function GET(req: NextRequest) {
     };
   }));
 
-  return NextResponse.json({ ok: true, positions });
+  return jsonNoStore({ ok: true, positions });
 }

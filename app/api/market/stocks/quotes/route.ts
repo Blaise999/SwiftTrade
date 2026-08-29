@@ -9,6 +9,7 @@
 // upstream from spam, and stale data is served if a refresh fails — so the
 // page never shows an empty/slow state.
 import { NextResponse } from 'next/server';
+import { jsonNoStore } from '@/lib/no-store';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -165,7 +166,7 @@ async function alpacaSnapshots(symbols: string[]): Promise<Record<string, Quote>
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const symbols = clampSymbols(url.searchParams.get('symbols') || '');
-  if (!symbols.length) return NextResponse.json({}, { status: 200 });
+  if (!symbols.length) return jsonNoStore({}, { status: 200 });
 
   const now = Date.now();
   const out: Record<string, Quote> = {};
@@ -226,5 +227,5 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json(out, { status: 200 });
+  return jsonNoStore(out, { status: 200 });
 }
