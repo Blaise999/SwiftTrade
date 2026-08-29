@@ -65,12 +65,13 @@ export async function POST(req: NextRequest) {
 
   await sb.from('notifications').insert({
     user_id: userId,
-    type: 'shield',
+    type: enabled ? 'shield' : 'unshield',
+    symbol: sym,
     title: enabled ? `🛡️ ${sym} shielded` : `${sym} unshielded`,
     message: enabled
       ? `${sym} moved to your stable store — value locked.${fee > 0 ? ` Shield premium: $${fee.toFixed(2)}.` : ''}`
       : `${sym} returned to the market — now tracking live prices again.`,
-    metadata: { symbol: sym, shielded: !!enabled, fee },
+    metadata: { symbol: sym, kind, shielded: !!enabled, fee },
   }).then(() => {}, () => {});
 
   emailUser(userId, {

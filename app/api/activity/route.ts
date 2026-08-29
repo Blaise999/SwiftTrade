@@ -55,6 +55,8 @@ export async function GET(req: NextRequest) {
       amount: Math.abs(num(t.amount)),
       pnl: isBuy || isFee ? -Math.abs(num(t.amount)) : Math.abs(num(t.amount)),
       status: t.status || 'completed',
+      symbol: t.symbol || (t.metadata as any)?.symbol || null,
+      currency: (t.metadata as any)?.currency || null,
       created_at: t.created_at,
     });
   }
@@ -67,6 +69,7 @@ export async function GET(req: NextRequest) {
       amount: Math.abs(num(t.total_value ?? t.amount)),
       pnl: num(t.realized_pnl),
       status: t.status || 'filled',
+      symbol: t.symbol || null,
       created_at: t.created_at || t.opened_at,
     });
   }
@@ -92,7 +95,9 @@ export async function GET(req: NextRequest) {
       id: `br-${b.id}`, kind: 'bridge', label: 'SwiftBridge',
       sublabel: `${b.local_amount || ''} ${b.local_currency || ''} to ${b.target_asset || ''}`.trim(),
       amount: Math.abs(num(b.estimated_credit_usd)),
-      pnl: Math.abs(num(b.estimated_credit_usd)), status: b.status, created_at: b.created_at,
+      pnl: Math.abs(num(b.estimated_credit_usd)), status: b.status,
+      symbol: b.target_asset || null, currency: b.local_currency || null,
+      created_at: b.created_at,
     });
   }
 

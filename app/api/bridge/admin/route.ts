@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
         message: isUsd
           ? `$${credit_usd.toFixed(2)} added to your balance.`
           : `${cryptoQty.toFixed(6)} ${targetAsset} added to your crypto holdings.`,
-        metadata: { request_id, usd: credit_usd, asset: targetAsset, quantity: cryptoQty },
+        metadata: { request_id, usd: credit_usd, asset: targetAsset, quantity: cryptoQty, currency: request.local_currency, symbol: targetAsset },
       }).then(() => {}, () => {});
 
       emailUser(request.user_id, {

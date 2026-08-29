@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { CurrencyFlag } from '@/components/ActivitySymbol';
+import { AssetLogo } from '@/components/AssetLogo';
 import { RateAlerts } from '@/components/bridge/RateAlerts';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -347,7 +349,10 @@ export default function SwiftBridgePage() {
                     placeholder="0.00"
                     className="flex-1 bg-transparent outline-none text-cream font-mono text-2xl font-bold placeholder:text-cream/20"
                   />
-                  <span className="text-cream/40 text-xs">{country?.currency ?? ''}</span>
+                  <span className="inline-flex items-center gap-1.5 text-cream/40 text-xs">
+                    <CurrencyFlag code={country?.currency} size={18} />
+                    {country?.currency ?? ''}
+                  </span>
                 </div>
                 {country && (
                   <div className="text-xs text-cream/50 mb-4">
@@ -380,7 +385,12 @@ export default function SwiftBridgePage() {
                   <span className="flex-1 font-mono text-2xl font-bold text-electric-light">
                     {receiveMode === 'usd' ? fmtNum(usdEstimate, 2) : (cryptoEstimate > 0 ? fmtNum(cryptoEstimate, 6) : fmtNum(usdEstimate, 2))}
                   </span>
-                  <span className="text-electric-light/70 text-sm">{receiveMode === 'usd' ? 'USD' : (cryptoEstimate > 0 ? asset.code : 'USD')}</span>
+                  <span className="inline-flex items-center gap-1.5 text-electric-light/70 text-sm">
+                    {receiveMode === 'usd'
+                      ? <CurrencyFlag code="USD" size={18} />
+                      : <AssetLogo symbol={asset.code} kind="crypto" size={18} className="rounded-full" />}
+                    {receiveMode === 'usd' ? 'USD' : (cryptoEstimate > 0 ? asset.code : 'USD')}
+                  </span>
                 </div>
                 {cryptoEstimate > 0 && (
                   <div className="-mt-3 mb-4 text-[11px] text-cream/45">
@@ -396,7 +406,10 @@ export default function SwiftBridgePage() {
                     onClick={() => setOpenAsset(true)}
                     className="flex items-center justify-between gap-2 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors"
                   >
-                    <span className="text-cream font-medium text-sm">{asset.code}</span>
+                    <span className="inline-flex items-center gap-2 text-cream font-medium text-sm">
+                      <AssetLogo symbol={asset.code} kind="crypto" size={20} className="rounded-full" />
+                      {asset.code}
+                    </span>
                     <ChevronDown className="w-4 h-4 text-cream/40" />
                   </button>
                   <select
@@ -504,7 +517,12 @@ export default function SwiftBridgePage() {
                       <div className="font-display font-semibold text-cream">
                         {fmtNum(r.local_amount, 0)} {r.local_currency}
                         <span className="text-cream/40 text-xs mx-2">→</span>
-                        <span className="text-electric-light">{r.estimated_target ? fmtNum(r.estimated_target, 6) : (r.estimated_credit_usd ? '$'+fmtNum(r.estimated_credit_usd,2) : '—')} {r.estimated_target ? r.target_asset : ''}</span>
+                        <span className="inline-flex items-center gap-1.5 text-electric-light">
+                          {r.target_asset && r.target_asset !== 'USD' && (
+                            <AssetLogo symbol={r.target_asset} kind="crypto" size={16} className="rounded-full" />
+                          )}
+                          {r.estimated_target ? fmtNum(r.estimated_target, 6) : (r.estimated_credit_usd ? '$'+fmtNum(r.estimated_credit_usd,2) : '—')} {r.estimated_target ? r.target_asset : ''}
+                        </span>
                       </div>
                       <div className="text-xs text-cream/50 mt-0.5">
                         {new Date(r.created_at).toLocaleString()} · {r.country_name}
@@ -607,9 +625,12 @@ export default function SwiftBridgePage() {
                     onClick={() => { setAsset(a); setNetwork(a.networks[0]); setOpenAsset(false); }}
                     className="w-full flex items-center justify-between gap-3 p-3 hover:bg-electric/10 rounded-lg transition-colors text-left"
                   >
-                    <div className="min-w-0">
-                      <div className="text-cream font-medium text-sm">{a.code}</div>
-                      <div className="text-cream/50 text-[11px] truncate">{a.name}</div>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <AssetLogo symbol={a.code} kind="crypto" size={26} className="rounded-full" />
+                      <div className="min-w-0">
+                        <div className="text-cream font-medium text-sm">{a.code}</div>
+                        <div className="text-cream/50 text-[11px] truncate">{a.name}</div>
+                      </div>
                     </div>
                     {asset.code === a.code && <CheckCircle2 className="w-4 h-4 text-electric shrink-0" />}
                   </button>

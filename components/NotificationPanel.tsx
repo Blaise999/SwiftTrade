@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { ActivitySymbol, extractSymbol, kindAccent } from '@/components/ActivitySymbol';
 import {
   Bell,
   CheckCircle,
@@ -127,26 +128,40 @@ export default function NotificationPanel() {
                 <button
                   key={n.id}
                   onClick={() => handleClick(n)}
-                  className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[var(--inset)] transition-colors border-b border-[var(--border)] last:border-0 ${
-                    !n.read_at ? 'bg-[var(--accent)]/[0.06]' : ''
+                  className={`relative w-full text-left px-4 py-3.5 flex items-start gap-3 hover:bg-[var(--inset)] transition-colors border-b border-[var(--border)] last:border-0 ${
+                    !n.read_at ? 'bg-white/[0.03]' : ''
                   }`}
                 >
-                  <div className="mt-0.5 flex-shrink-0">
-                    {typeIcons[n.type] || typeIcons.info}
-                  </div>
+                  {!n.read_at && (
+                    <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full"
+                      style={{ background: kindAccent(n.type) }} />
+                  )}
+                  <ActivitySymbol
+                    kind={n.type}
+                    symbol={extractSymbol(n.title, (n as any).symbol ?? (n as any).metadata?.symbol)}
+                    currency={(n as any).metadata?.currency}
+                    size={38}
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className={`text-sm font-medium truncate ${!n.read_at ? 'text-[var(--text)]' : 'text-[var(--text-3)]'}`}>
+                      <p className={`text-[13.5px] font-semibold truncate ${!n.read_at ? 'text-[var(--text)]' : 'text-[var(--text-3)]'}`}>
                         {n.title}
                       </p>
                       {!n.read_at && (
-                        <span className="w-2 h-2 rounded-full bg-[var(--accent)] flex-shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ background: kindAccent(n.type) }} />
                       )}
                     </div>
                     {n.message && (
-                      <p className="text-xs text-[var(--text-3)] mt-0.5 line-clamp-2">{n.message}</p>
+                      <p className="text-[11.5px] text-[var(--text-3)] mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
                     )}
-                    <p className="text-[10px] text-[var(--text-3)]/70 mt-1">{timeAgo(n.created_at)}</p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-[9.5px] uppercase tracking-[0.14em] font-bold px-1.5 py-0.5 rounded"
+                        style={{ color: kindAccent(n.type), background: `color-mix(in srgb, ${kindAccent(n.type)} 14%, transparent)` }}>
+                        {String(n.type).replace('_', ' ')}
+                      </span>
+                      <span className="text-[10px] text-[var(--text-3)]/70">{timeAgo(n.created_at)}</span>
+                    </div>
                   </div>
                 </button>
               ))

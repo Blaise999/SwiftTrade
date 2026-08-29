@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { NextResponse } from '@/lib/no-store';
+import { jsonNoStore } from '@/lib/no-store';
 import { trace } from '@/lib/trace';
 import { createClient } from '@supabase/supabase-js';
 import { getAsset } from '@/lib/asset-catalog';

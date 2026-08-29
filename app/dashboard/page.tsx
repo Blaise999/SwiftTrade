@@ -2,6 +2,7 @@
 'use client';
 
 import { getCoin } from '@/lib/crypto-catalog';
+import { ActivitySymbol, extractSymbol, kindAccent } from '@/components/ActivitySymbol';
 import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import { PortfolioChart } from '@/components/PortfolioChart';
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -468,12 +469,17 @@ export default function DashboardOverview() {
             ) : (
               <div className="divide-y divide-pearl-100/[0.05]">
                 {recentActivity.slice(0, 6).map((it: any) => (
-                  <div key={it.id} className="px-7 py-4 flex items-center gap-4 hover:bg-pearl-50/[0.02] transition-colors">
-                    <div className="w-8 h-8 rounded-lg border border-pearl-100/[0.10] flex items-center justify-center text-[11px] font-mono text-pearl-300/70 capitalize">
-                      {it.kind?.[0]}
-                    </div>
+                  <div key={it.id} className="relative px-7 py-4 flex items-center gap-3.5 hover:bg-pearl-50/[0.02] transition-colors">
+                    <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full"
+                      style={{ background: kindAccent(it.kind), opacity: 0.75 }} />
+                    <ActivitySymbol
+                      kind={it.kind}
+                      symbol={extractSymbol(it.label, it.symbol)}
+                      currency={it.currency}
+                      size={36}
+                    />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm text-pearl-50 font-medium truncate">{it.label}</div>
+                      <div className="text-sm text-pearl-50 font-semibold truncate">{it.label}</div>
                       <div className="text-[11px] text-pearl-300/50 truncate">{it.sublabel}</div>
                     </div>
                     <div className="text-right">
