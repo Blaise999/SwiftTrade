@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { syncPortfolio, applyOptimisticTrade } from '@/hooks/usePortfolioSync';
 import { notifyHoldingsChanged } from '@/hooks/useRefetchOnFocus';
 import { Sparkline } from '@/components/Sparkline';
@@ -22,7 +23,7 @@ export default function CryptoDetail() {
   const [liveChange, setLiveChange] = useState<number | null>(null);
   useEffect(() => {
     if (!symbol) return;
-    const load = () => fetch(`/api/crypto/prices?symbols=${symbol}`, { cache: 'no-store' })
+    const load = () => fetch(freshUrl(`/api/crypto/prices?symbols=${symbol}`), { cache: 'no-store' })
       .then((r) => r.json())
       .then((j) => {
         const lp = j?.prices?.[symbol];
@@ -50,7 +51,7 @@ export default function CryptoDetail() {
     const uid = (user as any)?.id;
     if (!uid) return;
     try {
-      const j = await (await fetch(`/api/holdings?userId=${uid}&market=crypto`, { cache: 'no-store' })).json();
+      const j = await (await fetch(freshUrl(`/api/holdings?userId=${uid}&market=crypto`), { cache: 'no-store' })).json();
       const mine = (j?.holdings || []).find((p: any) => String(p.symbol).toUpperCase() === symbol);
       setPosition(mine && n(mine.quantity) > 0 ? mine : null);
     } catch {}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { motion } from 'framer-motion';
 import { Activity, ChevronDown, TrendingUp, TrendingDown, AlertTriangle, Info } from 'lucide-react';
 import { AssetLogo } from '@/components/AssetLogo';
@@ -16,7 +17,7 @@ export function PositionSignals({ userId }: { userId?: string }) {
 
   useEffect(() => {
     if (!userId) return;
-    fetch(`/api/analytics/signals?userId=${userId}`, { cache: 'no-store' })
+    fetch(freshUrl(`/api/analytics/signals?userId=${userId}`), { cache: 'no-store' })
       .then((r) => r.json())
       .then((j) => setRows(j?.positions || []))
       .catch(() => {})

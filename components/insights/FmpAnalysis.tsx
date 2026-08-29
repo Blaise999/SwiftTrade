@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { freshUrl } from '@/lib/fetch-fresh';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Target, Lightbulb, BarChart3 } from 'lucide-react';
@@ -24,7 +25,7 @@ export function FmpAnalysis({ userId }: { userId?: string }) {
 
   useEffect(() => {
     if (!userId) return;
-    fetch(`/api/analytics/fmp?userId=${userId}`, { cache: 'no-store' })
+    fetch(freshUrl(`/api/analytics/fmp?userId=${userId}`), { cache: 'no-store' })
       .then((r) => r.json()).then(setD).catch(() => {}).finally(() => setLoading(false));
   }, [userId]);
 

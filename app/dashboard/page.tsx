@@ -2,6 +2,7 @@
 'use client';
 
 import { getCoin } from '@/lib/crypto-catalog';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { ActivitySymbol, extractSymbol, kindAccent } from '@/components/ActivitySymbol';
 import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import { PortfolioChart } from '@/components/PortfolioChart';
@@ -78,7 +79,7 @@ export default function DashboardOverview() {
     if (!user?.id) return;
     // Server-side: RLS blocks direct client reads (custom auth => auth.uid() is null)
     try {
-      const j = await (await fetch(`/api/activity?userId=${user.id}`, { cache: 'no-store' })).json();
+      const j = await (await fetch(freshUrl(`/api/activity?userId=${user.id}`), { cache: 'no-store' })).json();
       if (Array.isArray(j?.items)) setRecentActivity(j.items);
     } catch {
       // leave previous list
@@ -132,14 +133,14 @@ export default function DashboardOverview() {
   const [cryptoLive, setCryptoLive] = useState<Record<string, { price: number; change: number }>>({});
   useEffect(() => {
     if (!user?.id) return;
-    fetch(`/api/holdings?userId=${user.id}&market=crypto`, { cache: 'no-store' })
+    fetch(freshUrl(`/api/holdings?userId=${user.id}&market=crypto`), { cache: 'no-store' })
       .then((r) => r.json()).then((j) => { if (Array.isArray(j?.holdings)) setCryptoHoldings(j.holdings); setBalancesReady(true); })
       .catch(() => {});
   }, [user?.id, refetchTick]);
   useEffect(() => {
     const syms = cryptoHoldings.map((h) => String(h.symbol).toUpperCase()).join(',');
     if (!syms) return;
-    fetch(`/api/crypto/prices?symbols=${syms}`, { cache: 'no-store' })
+    fetch(freshUrl(`/api/crypto/prices?symbols=${syms}`), { cache: 'no-store' })
       .then((r) => r.json()).then((j) => { if (j?.prices) setCryptoLive(j.prices); }).catch(() => {});
   }, [cryptoHoldings]);
 
@@ -182,7 +183,7 @@ export default function DashboardOverview() {
     if (!user?.id) return;
     (async () => {
       try {
-        const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
+        const r = await fetch(freshUrl(`/api/invest/positions?userId=${user.id}`), { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         if (j?.ok) {
           if (Array.isArray(j.positions)) setStockHoldings(j.positions);

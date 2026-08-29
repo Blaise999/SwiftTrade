@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { AssetLogo } from '@/components/AssetLogo';
 import {
   RefreshCw,
@@ -103,7 +104,7 @@ export default function FullActivityHistoryPage() {
     setLoading(true); setError(null);
     try {
       // Server-side: RLS blocks client reads (custom auth => auth.uid() is null)
-      const j = await (await fetch(`/api/history?userId=${user.id}`, { cache: 'no-store' })).json();
+      const j = await (await fetch(freshUrl(`/api/history?userId=${user.id}`), { cache: 'no-store' })).json();
       const raw: any[] = Array.isArray(j?.items) ? j.items : [];
       const mapped: ActivityItem[] = raw.map((r) => ({
         id: r.id,

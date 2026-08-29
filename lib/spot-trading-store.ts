@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { trace, traceError } from '@/lib/trace';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import {
@@ -150,7 +151,7 @@ async function savePortfolioToSupabase(
     };
 
     // Server-side: RLS blocks direct client writes under custom auth.
-    const res = await fetch('/api/spot-state', {
+    const res = await fetch(freshUrl('/api/spot-state'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: uid, state: payload }),
@@ -177,7 +178,7 @@ async function loadPortfolioFromSupabase(
 
   try {
     trace('spot-store', 'loading from /api/spot-state', { uid });
-    const res = await fetch(`/api/spot-state?userId=${uid}`, { cache: 'no-store' });
+    const res = await fetch(freshUrl(`/api/spot-state?userId=${uid}`), { cache: 'no-store' });
     if (!res.ok) { traceError('spot-store', 'spot-state fetch failed', res.status); return null; }
     const j = await res.json();
     if (!j?.state) { trace('spot-store', 'no state returned'); return null; }

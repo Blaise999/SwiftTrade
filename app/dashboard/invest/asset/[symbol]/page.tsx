@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { syncPortfolio, applyOptimisticTrade } from '@/hooks/usePortfolioSync';
 import { notifyHoldingsChanged } from '@/hooks/useRefetchOnFocus';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -30,7 +31,7 @@ export default function EtfDetail() {
   const [liveChg, setLiveChg] = useState<number | null>(null);
   useEffect(() => {
     if (!symbol) return;
-    const load = () => fetch(`/api/market/stocks/quotes?symbols=${symbol}`, { cache: 'no-store' })
+    const load = () => fetch(freshUrl(`/api/market/stocks/quotes?symbols=${symbol}`), { cache: 'no-store' })
       .then((r) => r.json())
       .then((j) => {
         const q = j?.quotes?.[symbol] || j?.[symbol];
@@ -62,7 +63,7 @@ export default function EtfDetail() {
     if (!uid || !symbol) return;
     (async () => {
       try {
-        const r = await fetch(`/api/invest/positions?userId=${uid}`, { cache: 'no-store' });
+        const r = await fetch(freshUrl(`/api/invest/positions?userId=${uid}`), { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         const mine = (j?.positions || []).find((p: any) => String(p.symbol).toUpperCase() === symbol);
         if (mine && Number(mine.quantity) > 0) setPosition(mine);

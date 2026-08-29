@@ -1,6 +1,7 @@
 'use client';
 
 import { AssetLogo } from '@/components/AssetLogo';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { trace } from '@/lib/trace';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -35,7 +36,7 @@ export default function CryptoHome() {
   // live crypto prices (Binance, keyless), refreshed every 30s
   useEffect(() => {
     const syms = COINS.map((c: Coin) => c.symbol).join(',');
-    const load = () => fetch(`/api/crypto/prices?symbols=${syms}`, { cache: 'no-store' })
+    const load = () => fetch(freshUrl(`/api/crypto/prices?symbols=${syms}`), { cache: 'no-store' })
       .then(r => r.json()).then(j => { if (j?.prices) setLive(j.prices); }).catch(() => {});
     load();
     const t = setInterval(load, 30000);
@@ -49,7 +50,7 @@ export default function CryptoHome() {
     if (!user?.id) return;
     (async () => {
       try {
-        const r = await fetch(`/api/holdings?userId=${user.id}&market=crypto`, { cache: 'no-store' });
+        const r = await fetch(freshUrl(`/api/holdings?userId=${user.id}&market=crypto`), { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         trace('crypto-page', 'fetched /api/holdings', { userId: user.id, count: j?.holdings?.length ?? 'none', raw: j });
         if (Array.isArray(j?.holdings)) {

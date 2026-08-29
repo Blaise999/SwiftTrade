@@ -1,6 +1,7 @@
 'use client';
 
 import { AssetLogo } from '@/components/AssetLogo';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import Link from 'next/link';
 import { useEffect, useMemo, useState, useCallback } from 'react';
@@ -44,8 +45,8 @@ export default function PortfolioPage() {
     try {
       const [hRes, iRes, sRes] = await Promise.all([
         // crypto holdings derived from the trades table (where buys ACTUALLY land)
-        fetch(`/api/holdings?userId=${userId}&market=crypto`, { cache: 'no-store' }).then(r => r.json()).catch(() => null),
-        fetch(`/api/invest/positions?userId=${userId}`, { cache: 'no-store' }).then(r => r.json()).catch(() => null),
+        fetch(freshUrl(`/api/holdings?userId=${userId}&market=crypto`), { cache: 'no-store' }).then(r => r.json()).catch(() => null),
+        fetch(freshUrl(`/api/invest/positions?userId=${userId}`), { cache: 'no-store' }).then(r => r.json()).catch(() => null),
         // crypto_positions shield flags (if any), merged in by symbol
         fetch(`/api/portfolio?userId=${userId}`, { cache: 'no-store' }).then(r => r.json()).catch(() => null),
       ]);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { PositionSignals } from '@/components/insights/PositionSignals';
 import { RiskRadar, CorrelationMatrix, ExposureDonut } from '@/components/insights/Visuals';
 import { FmpAnalysis } from '@/components/insights/FmpAnalysis';
@@ -30,7 +31,7 @@ export default function InsightsPage() {
   useEffect(() => {
     const uid = (user as any)?.id;
     if (!uid) return;
-    fetch(`/api/analytics?userId=${uid}`, { cache: 'no-store' })
+    fetch(freshUrl(`/api/analytics?userId=${uid}`), { cache: 'no-store' })
       .then((r) => r.json()).then(setData).catch(() => {})
       .finally(() => setLoading(false));
   }, [(user as any)?.id]);

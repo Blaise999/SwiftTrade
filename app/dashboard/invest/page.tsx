@@ -1,6 +1,7 @@
 'use client';
 
 import { AssetLogo } from '@/components/AssetLogo';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { trace } from '@/lib/trace';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -55,7 +56,7 @@ export default function InvestHome() {
     if (!user?.id) return;
     (async () => {
       try {
-        const r = await fetch(`/api/invest/positions?userId=${user.id}`, { cache: 'no-store' });
+        const r = await fetch(freshUrl(`/api/invest/positions?userId=${user.id}`), { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         if (j?.ok) {
           setInvest({

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { freshUrl } from '@/lib/fetch-fresh';
 import { trace } from '@/lib/trace';
 
 /**
@@ -40,9 +41,9 @@ export async function syncPortfolio(userId?: string): Promise<void> {
   inflight = (async () => {
     try {
       const [hRes, iRes, uRes] = await Promise.all([
-        fetch(`/api/holdings?userId=${uid}&market=crypto`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
-        fetch(`/api/invest/positions?userId=${uid}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
-        fetch(`/api/user/balance?userId=${uid}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
+        fetch(freshUrl(`/api/holdings?userId=${uid}&market=crypto`), { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
+        fetch(freshUrl(`/api/invest/positions?userId=${uid}`), { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
+        fetch(freshUrl(`/api/user/balance?userId=${uid}`), { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
       ]);
       trace('sync', 'refetched', {
         uid,
