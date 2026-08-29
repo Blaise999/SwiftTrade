@@ -18,9 +18,9 @@ const noStoreFetch: typeof fetch = (input, init) =>
   fetch(input as any, {
     ...(init || {}),
     cache: 'no-store',
-    // @ts-expect-error Next-specific hint, ignored elsewhere
+    // Next-specific hint; typed in Next's fetch, ignored by other runtimes.
     next: { revalidate: 0 },
-  });
+  } as RequestInit);
 
 /** Service-role client — bypasses RLS, never cached. */
 export function supabaseAdmin(): SupabaseClient | null {
