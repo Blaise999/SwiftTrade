@@ -138,7 +138,7 @@ export default function NotificationPanel() {
                   )}
                   <ActivitySymbol
                     kind={n.type}
-                    symbol={extractSymbol(n.title, (n as any).symbol ?? (n as any).metadata?.symbol)}
+                    symbol={extractSymbol(n.title, (n as any).metadata?.symbol ?? (n as any).symbol)}
                     currency={(n as any).metadata?.currency}
                     size={38}
                   />

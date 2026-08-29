@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
   await sb.from('notifications').insert({
     user_id: userId,
     type: enabled ? 'shield' : 'unshield',
-    symbol: sym,
     title: enabled ? `🛡️ ${sym} shielded` : `${sym} unshielded`,
     message: enabled
       ? `${sym} moved to your stable store — value locked.${fee > 0 ? ` Shield premium: $${fee.toFixed(2)}.` : ''}`

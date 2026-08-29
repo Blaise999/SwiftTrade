@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
     try {
       await sb.from('transactions').insert({
         user_id: userId,
-        type: side === 'buy' ? 'invest_buy' : 'invest_sell',
+        type: side === 'buy' ? 'invest_buy' : 'invest_sell', symbol,
         amount: cost,
         description: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(4)} ${symbol}`,
         reference_type: 'order',
@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
 
     // in-app notification + email
     const { error: notifErr } = await sb.from('notifications').insert({
-      user_id: userId, type: side === 'buy' ? 'buy' : 'sell', symbol,
+      user_id: userId, type: side === 'buy' ? 'buy' : 'sell',
       title: `${side === 'buy' ? 'Bought' : 'Sold'} ${symbol}`,
       message: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty.toFixed(4)} ${symbol} for $${cost.toFixed(2)} at $${price.toLocaleString()}.`,
       metadata: { market: 'stock', symbol, side, cost, price },

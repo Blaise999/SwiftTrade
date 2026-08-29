@@ -81,6 +81,34 @@ export async function GET(req: NextRequest) {
     }
   } catch {}
 
+  // ── self-healing reconciliation ────────────────────────────────────────
+  // The audit found real divergence between the two stores (e.g. SOL 200 in
+  // spot_state vs 21 in crypto_positions; BNB/XRP in one store only). Rather
+  // than let the two drift further, push the merged truth back into
+  // crypto_positions for anything missing or behind. Best-effort and silent.
+  try {
+    const cpBySym = new Map<string, number>();
+    for (const r of (cpRes.data || []) as any[]) {
+      cpBySym.set(String(r.symbol).toUpperCase(), num(r.quantity));
+    }
+    const repairs = holdings
+      .filter(h => {
+        const have = cpBySym.get(h.symbol.toUpperCase());
+        return have === undefined || Math.abs(have - h.quantity) > 1e-9;
+      })
+      .map(h => ({
+        user_id: userId,
+        symbol: h.symbol.toUpperCase(),
+        quantity: h.quantity,
+        avg_buy_price: h.avgPrice,
+        updated_at: new Date().toISOString(),
+      }));
+    if (repairs.length) {
+      trace('holdings', 'reconciling stores', { count: repairs.length, symbols: repairs.map(r => r.symbol) });
+      await sb.from('crypto_positions').upsert(repairs, { onConflict: 'user_id,symbol' });
+    }
+  } catch {}
+
   trace('holdings', 'returning', { count: holdings.length, symbols: holdings.map(h => h.symbol) });
   return jsonNoStore({ ok: true, holdings });
 }
