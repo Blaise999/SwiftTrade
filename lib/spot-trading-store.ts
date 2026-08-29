@@ -1021,10 +1021,14 @@ export const useSpotTradingStore = create<SpotTradingState>()(
     {
       name: 'swifttrade-spot-trading',
       storage: zustandStorage,
+      // v2: holdings are NO LONGER persisted to localStorage.
+      // Persisting them meant every page load rehydrated a stale snapshot from
+      // the browser and showed that instead of the server's truth — which is
+      // why a fresh buy could take hours to appear. Only the price cache is
+      // kept locally now; positions/account always come from the server.
+      version: 2,
+      migrate: (persisted: any) => ({ prices: persisted?.prices ?? {} }),
       partialize: (state) => ({
-        account: state.account,
-        positions: state.positions,
-        tradeHistory: state.tradeHistory.slice(0, 100),
         prices: state.prices,
       }),
     }

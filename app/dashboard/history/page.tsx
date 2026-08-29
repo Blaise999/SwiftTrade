@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AssetLogo } from '@/components/AssetLogo';
 import {
   RefreshCw,
   Search,
@@ -381,34 +382,62 @@ export default function FullActivityHistoryPage() {
             {pageItems.map((item) => {
               const Icon = getKindIcon(item.kind);
               const colors = getKindColor(item.kind, item.pnl);
+              // ticker sits in market_type when the row came from a trade
+              const sym = (item as any).market_type && /^[A-Z0-9.]{1,6}$/.test(String((item as any).market_type))
+                ? String((item as any).market_type).toUpperCase()
+                : (item.label.match(/\b([A-Z]{2,6})\b/)?.[1] || null);
+              const isTrade = item.kind === 'trade';
+              const isOut = item.kind === 'withdrawal' || (isTrade && /bought|buy|shield|premium|fee/i.test(item.label));
+              const amountTone = isOut ? 'text-[#FF6B57]' : 'text-[#00C805]';
+              const accent =
+                item.kind === 'trade' ? '#00C805'
+                : item.kind === 'deposit' ? '#4EA8DE'
+                : item.kind === 'withdrawal' ? '#FF6B57'
+                : item.kind === 'bridge' ? '#7C5CFC'
+                : item.kind === 'referral' ? '#E4C883'
+                : 'var(--gold)';
 
               return (
-                <div key={item.id} className="flex items-center justify-between p-4 hover:bg-white/5 transition">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors.bg}`}>
-                      <Icon className={`w-5 h-5 ${colors.text}`} />
-                    </div>
+                <div key={item.id}
+                  className="relative flex items-center justify-between gap-3 p-4 hover:bg-white/[0.04] transition-colors">
+                  {/* left accent stripe by category */}
+                  <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full"
+                    style={{ background: accent, opacity: 0.7 }} />
 
-                    <div>
-                      <p className="font-medium text-white">{item.label}</p>
-                      <p className="text-xs text-white/50">{item.sublabel}</p>
-                      <p className="text-xs text-white/30 mt-0.5">{formatDate(item.created_at)}</p>
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    {/* real asset logo when we know the ticker, else the category icon */}
+                    {sym && isTrade ? (
+                      <div className="relative shrink-0">
+                        <AssetLogo symbol={sym} kind="stock" size={40} className="rounded-xl" />
+                        <span className="absolute -bottom-1 -right-1 w-[18px] h-[18px] rounded-full flex items-center justify-center border-2 border-[#0B0D14]"
+                          style={{ background: accent }}>
+                          <Icon className="w-2.5 h-2.5 text-black" />
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}>
+                        <Icon className="w-5 h-5" style={{ color: accent }} />
+                      </div>
+                    )}
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-white text-[14px]">{item.label}</p>
+                        <span className="text-[9.5px] uppercase tracking-[0.14em] font-bold px-1.5 py-0.5 rounded"
+                          style={{ color: accent, background: `color-mix(in srgb, ${accent} 14%, transparent)` }}>
+                          {item.kind}
+                        </span>
+                      </div>
+                      {item.sublabel && <p className="text-[11.5px] text-white/45 truncate max-w-[38ch]">{item.sublabel}</p>}
+                      <p className="text-[11px] text-white/30 mt-0.5">{formatDate(item.created_at)}</p>
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <p className={`font-semibold ${colors.text}`}>
-                      {item.kind === 'trade' ? (
-                        <>{item.pnl >= 0 ? '+' : ''}${fmt(item.pnl)}</>
-                      ) : item.kind === 'withdrawal' ? (
-                        <>-${fmt(item.amount)}</>
-                      ) : (
-                        <>+${fmt(item.amount)}</>
-                      )}
+                  <div className="text-right shrink-0">
+                    <p className={`font-bold tabular-nums text-[15px] ${amountTone}`}>
+                      {isOut ? '−' : '+'}${fmt(item.amount)}
                     </p>
-
-                    {item.kind === 'trade' && <p className="text-xs text-white/40">${fmt(item.amount)} invested</p>}
-
                     <span
                       className={`inline-block mt-1 px-2 py-0.5 rounded-lg text-[10px] font-medium ${getStatusColor(
                         item.status

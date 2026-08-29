@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { RiskRadar, CorrelationMatrix, ExposureDonut } from '@/components/insights/Visuals';
+import { FmpAnalysis } from '@/components/insights/FmpAnalysis';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle2, Info, Layers, ChevronLeft } from 'lucide-react';
@@ -90,6 +92,28 @@ export default function InsightsPage() {
                 );
               })}
             </div>
+
+            {/* shape + split */}
+            {data?.risk && data.risk.volatility > 0 && (
+              <section className="mt-8 grid gap-3 lg:grid-cols-2">
+                <RiskRadar
+                  volatility={data.risk.volatility}
+                  sharpe={data.risk.sharpe}
+                  concentration={holdings[0]?.weight || 0}
+                  diversification={
+                    pairs.length
+                      ? 100 - (pairs.reduce((s: number, p: any) => s + Math.abs(p.corr), 0) / pairs.length) * 100
+                      : 50
+                  }
+                  drawdown={data.risk.maxDrawdown}
+                />
+                <div className="space-y-3">
+                  {data?.exposure && (
+                    <ExposureDonut crypto={data.exposure.crypto} stocks={data.exposure.stocks} />
+                  )}
+                </div>
+              </section>
+            )}
 
             {/* risk metrics — the Wall Street block */}
             {data?.risk && data.risk.volatility > 0 && (
@@ -226,6 +250,9 @@ export default function InsightsPage() {
                 <p className="text-[12px] text-[var(--text-3)] mb-3">
                   30-day correlation. 1.0 means they move in lockstep; 0 means independent.
                 </p>
+                <div className="mb-3">
+                  <CorrelationMatrix pairs={pairs} />
+                </div>
                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden divide-y divide-white/[0.05]">
                   {pairs.map((p: any) => (
                     <div key={`${p.a}-${p.b}`} className="flex items-center gap-3 px-4 py-3">
@@ -244,6 +271,8 @@ export default function InsightsPage() {
                 </div>
               </section>
             )}
+
+            <FmpAnalysis userId={(user as any)?.id} />
 
             <p className="mt-6 text-[11px] text-[var(--text-3)] leading-relaxed opacity-80">
               Correlation is backward-looking and can change quickly, especially in stressed markets.

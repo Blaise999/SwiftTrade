@@ -1415,13 +1415,11 @@ export const useTradingAccountStore = create<TradingAccountState>()(
     }),
     {
       name: 'swifttrade-trading-accounts',
-      partialize: (state) => ({
-        spotAccount: state.spotAccount,
-        marginAccount: state.marginAccount,
-        stockPositions: state.stockPositions,
-        marginPositions: state.marginPositions,
-        ledger: state.ledger.slice(0, 100),
-      }),
+      // v2: holdings are not persisted — a stale localStorage snapshot was
+      // masking fresh trades until the cache happened to clear.
+      version: 2,
+      migrate: () => ({}),
+      partialize: () => ({}),
     }
   )
 );

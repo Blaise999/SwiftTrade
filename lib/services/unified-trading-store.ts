@@ -924,14 +924,11 @@ export const useUnifiedTradingStore = create<UnifiedTradingState>()(
     }),
     {
       name: 'swifttrade-unified-trading',
-      partialize: (state) => ({
-        userId: state.userId,
-        balance: state.balance,
-        fxPositions: state.fxPositions,
-        stockPositions: state.stockPositions,
-        cryptoPositions: state.cryptoPositions,
-        realizedPnLHistory: state.realizedPnLHistory.slice(-100),
-      }),
+      // v2: only the user id is kept locally. Positions and balance always
+      // come from the server so a fresh trade shows immediately.
+      version: 2,
+      migrate: (persisted: any) => ({ userId: persisted?.userId ?? null }),
+      partialize: (state) => ({ userId: state.userId }),
     }
   )
 );
